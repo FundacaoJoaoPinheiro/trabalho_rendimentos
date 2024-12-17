@@ -2,9 +2,9 @@
 
 # Pesquisa Nacional por Amostra de Domicílios Contínua Anual
 
-Scripts escritos em R que reproduzem tabelas do SIDRA, com o tema
-"Rendimento de todas as fontes", referentes à PNAD contínua anual,
-5ª visiita. Adiciona o recorte territorial dos estratos geográficos de
+Scripts em R que reproduzem as tabelas do SIDRA do tema
+"Rendimento de todas as fontes" (referentes à PNAD contínua anual,
+5ª visiita), adicionando o recorte territorial dos estratos geográficos de
 Minas Gerais.
 
 # Requisitos
@@ -15,20 +15,23 @@ Minas Gerais.
 
 # Instruções
 
-O arquivo utilitarios.R define alguns objetos e funções que podem ser utilizados
-manualmente.
+O arquivo `utilitarios.R` define alguns objetos e funções que podem ser utilizados
+manualmente. Abaixo, seguem alguns exemplos de como utilizar essas funções.
 
-Para criar um objeto com o plano amostral, fazendo o download do FTP do IBGE,
-importando as variáveis relevantes para as tabelas 7426 a 7429:
+Criar um objeto com o plano amostral, fazendo o download dos arquivos
+de microdados do FTP do IBGE e importando as variáveis relevantes para as
+tabelas 7426 a 7429:
 
+	library(PNADcIBGE)
 	source("utilitarios.R")
 	plano_amostral <- gerar_pa(c(7426:7429), download=TRUE)
 
 Ler os dados diretamente do armazenamento interno pode ser mais rápido. Para
-isso, armazenar os arquivos na pasta "Microdados". O shell script
-baixar_microdados.sh pode ser usado no Linux e no macOs. Usuários do Windows
-podem copiar os links e colar no navegador para baixar (e mover os arquivos
-da pasta "Downloads" para a pasta correta). O caminho para os arquivos de
+isso, os arquivos devem ser armazenados na pasta "Microdados". O shell
+script baixar_microdados.sh pode ser usado no Linux e no macOs e faz o
+download dos arquivos na pasta "Microdados" automaticamente. Usuários do
+Windows podem copiar os links e colar no navegador para baixar (e mover os
+arquivos para a pasta correta manualmente). O caminho para os arquivos de
 microdados pode ser alterado com o objeto [`input_dir`](utilitarios.R#L14):
 
 	library(PNADcIBGE)
@@ -36,7 +39,7 @@ microdados pode ser alterado com o objeto [`input_dir`](utilitarios.R#L14):
 	input_dir <- "Diretorio-Alternativo"
 	plano_amostral <- gerar_pa(c(7426:7429))
 
-Para criar uma lista com as estimativas populacionais por variável (da tabela
+Criar uma lista com as estimativas populacionais por variável (da tabela
 7426) e estrato geográfico de MG, e outra lista com os respectivos coeficientes
 de variação:
 
