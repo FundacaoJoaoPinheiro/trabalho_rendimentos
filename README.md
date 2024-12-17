@@ -60,7 +60,7 @@ de variação:
 	)
 	names(cv_7426) <- names(pop_estimada_7426)
 
-O arquivo exemplo_tab7426.R funciona de forma autônoma e é um arquivo teste
+O arquivo `exemplo_tab7426.R` funciona de forma autônoma e é um arquivo teste
 que trabalha separadamente com a tabela 7426. Ele cria um objeto com as
 estimativas populacionais para cada variável por estrato geográfico, e cria
 outro objeto com os respectivos coeficientes de variação
@@ -70,7 +70,7 @@ outro objeto com os respectivos coeficientes de variação
 	print(pop_estimada_7426$aluguel)
 	print(cv_7426$aluguel)
 
-O arquivo gerar_resultados.R está em construção e deverá automatizar a tarefa
+O arquivo `gerar_resultados.R` está em construção e deverá automatizar a tarefa
 para todas as tabelas do tema "Rendimento de todas as fontes":
 
 	source("gerar_resultados.R")
