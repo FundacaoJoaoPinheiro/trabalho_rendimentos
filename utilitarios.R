@@ -15,7 +15,7 @@ input_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 codvar <- list(
-	"7426" = c("VD4019", "V5004A", "V5007A", "V5006A", "V5008A"),
+	"7426" = c("VD4020", "V5004A", "V5007A", "V5006A", "V5008A"),
 	"7427" = c("VD5002"),
 	"7428" = c("VD5002"),
 	"7426" = c(),
@@ -90,51 +90,67 @@ codvar <- list(
 
 # FUNÇÕES
 
-# Função para importar os dados de forma flexível.
-# `tabelas` é um vetor com número de tabelas, cujas variáveis serão importadas;
-# `download` é um argumento lógico que define se a importação será online
+# Gerar plano amostral para MG, adicionando estratos geográficos.
+# `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
+# `download`: um argumento lógico que define se a importação será online
 gerar_pa <- function(tabelas = NULL, download = FALSE) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	if (is.null(tabelas)) {
-		tabelas <- names(codvar)   # Todas as tabelas disponíveis
+		tabelas <- names(codvar)  # se `NULL`, selecionar todas as tabelas
 	} else {
 		tabelas <- as.character(tabelas)
 	}
 	variaveis <- unique(unlist(codvar[tabelas]))
+
+	# incorporar ou não deflatores de acordo com tabelas específicas
 	requer_deflator <- any(tabelas %in% c("7427", "7428"))
 	
-	# ler os dados
+	# ler os dados (baixar apenas se download=TRUE)
 	if (download) {
 		dados <- get_pnadc(
 			year = as.numeric(pnadc_ano),
 			interview = 5,
 			design = FALSE,
 			vars = variaveis,
-			deflator = FALSE,
-			reload = FALSE,
-			savedir = input_dir
+			deflator = requer_deflator
 		)
 	} else {
-		microdata_file <- file.path(input_dir, paste0("PNADC_", pnadc_ano, "_visita5.txt"))
-		input_file <- file.path(input_dir, paste0("input_PNADC_", pnadc_ano, "_visita5.txt"))
-		dictionary_file <- file.path(input_dir, paste0("dicionario_PNADC_microdados_", pnadc_ano, "_visita5.xls"))
-		deflator_file <- file.path(paste0("deflator_PNADC_", pnadc_ano, ".xls"))
+		# definir caminho para os arquivos relevantes
+		microdados <- file.path(input_dir, paste0("PNADC_",
+			pnadc_ano, "_visita5.txt"))
+		input <- file.path(input_dir, paste0("input_PNADC_",
+			pnadc_ano, "_visita5.txt"))
+		dicionario <- file.path(input_dir, paste0("dicionario_PNADC_microdados_",
+			pnadc_ano, "_visita5.xls"))
+		deflator <- file.path(input_dir, paste0("deflator_PNADC_",
+			pnadc_ano, ".xls"))
 
+		# ler os arquivos e construir o plano amostral
 		dados <- pnadc_labeller(
 			data_pnadc = read_pnadc(
-				microdata = microdata_file,
-				input = input_file,
+				microdata = microdados,
+				input = input,
 				vars = variaveis
 			),
-			dictionary.file = dictionary_file
+			dictionary.file = dicionario
 		)
 		if (requer_deflator) {
-			dados <- pnadc_deflator(dados, deflator.file = deflator_file)
+			dados <- pnadc_deflator(dados, deflator.file = deflator)
 		}
 	}
 	dados <- pnadc_design(subset(dados, UF == "Minas Gerais"))
-	
+
+	# adicionar coluna com os códigos dos Estratos Geográficos
+	dados$variables <- transform(
+		dados$variables,
+		Possui_Renda_Habitual = factor(
+			ifelse(!is.na(VD4020), "Sim", "Não"),
+			levels = c("Sim", "Não"),  # ordem padrão das outras colunas
+		),
+		Estrato_G = factor(substr(Estrato, 1, 4)) # 4 primeiros números do Estrato
+	)                                             # formam o estrato geografico
+
 	return(dados)
 }
 
@@ -142,7 +158,7 @@ gerar_pa <- function(tabelas = NULL, download = FALSE) {
 # `pa` é o plano amostral (svyrep.design)
 # `var` é uma variável/coluna (string)
 estimar_pop <- function(pa, var) {
-	formula <- as.formula(paste0("~interaction(estrato_geo, ", var, ")"))
+	formula <- as.formula(paste0("~interaction(Estrato_G, ", var, ")"))
   	svytotal(x = formula, design = pa, na.rm = TRUE)
 }
 

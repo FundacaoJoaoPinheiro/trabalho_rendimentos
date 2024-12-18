@@ -21,15 +21,6 @@ plano_amostral <- gerar_pa()  # ler e preparar os microdados
 
 # TABELA 7426 - População residente com rendimento, por tipo de rendimento
 
-plano_amostral$variables <- transform(
-	plano_amostral$variables,
-	Possui_Renda_Habitual = factor(
-		ifelse(!is.na(VD4020), "Sim", "Não"),
-		levels = c("Sim", "Não"),     # definir essa ordem é útil para padronizar
-	),                                # o resultado da função estimar_pop()
-	Estrato_Geo = factor(substr(Estrato, 1, 4))   # 4 primeiros números do Estrato
-)                                                 # formam o estrato geografico
-
 pop_estimada_7426 <- list(
 	habitual = estimar_pop(plano_amostral, "Possui_Renda_Habitual"),
 	aposent  = estimar_pop(plano_amostral, "V5004A"),
