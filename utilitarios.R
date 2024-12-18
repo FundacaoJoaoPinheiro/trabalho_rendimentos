@@ -93,7 +93,7 @@ codvar <- list(
 # Gerar plano amostral para MG, adicionando estratos geográficos.
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `download`: um argumento lógico que define se a importação será online
-gerar_pa <- function(tabelas = NULL, download = FALSE) {
+gerar_PA <- function(tabelas = NULL, download = FALSE) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	if (is.null(tabelas)) {
@@ -111,7 +111,7 @@ gerar_pa <- function(tabelas = NULL, download = FALSE) {
 		dados <- get_pnadc(
 			year = as.numeric(pnadc_ano),
 			interview = 5,
-			design = FALSE,
+			design = FALSE,    # será feito pela função pnadc_design
 			vars = variaveis,
 			deflator = requer_deflator
 		)
@@ -144,10 +144,6 @@ gerar_pa <- function(tabelas = NULL, download = FALSE) {
 	# adicionar coluna com os códigos dos Estratos Geográficos
 	dados$variables <- transform(
 		dados$variables,
-		Possui_Renda_Habitual = factor(
-			ifelse(!is.na(VD4020), "Sim", "Não"),
-			levels = c("Sim", "Não"),  # ordem padrão das outras colunas
-		),
 		Estrato_G = factor(substr(Estrato, 1, 4)) # 4 primeiros números do Estrato
 	)                                             # formam o estrato geografico
 
