@@ -15,74 +15,74 @@ pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 codvar <- list(
-	"7426" = c("VD4020", "V5004A", "V5007A", "V5006A", "V5008A"),
-	"7427" = c("VD5002"),
-	"7428" = c("VD5002"),
-	"7429" = c(),
-	"7430" = c(),
-	"7431" = c(),
-	"7432" = c(),
-	"7433" = c(),
-	"7434" = c(),
-	"7435" = c(),
-	"7436" = c(),
-	"7437" = c(),
-	"7438" = c(),
-	"7439" = c(),
-	"7440" = c(),
-	"7441" = c(),
-	"7442" = c(),
-	"7443" = c(),
-	"7444" = c(),
-	"7445" = c(),
-	"7446" = c(),
-	"7447" = c(),
-	"7448" = c(),
-	"7449" = c(),
-	"7450" = c(),
-	"7451" = c(),
-	"7452" = c(),
-	"7453" = c(),
-	"7454" = c(),
-	"7455" = c(),
-	"7456" = c(),
-	"7457" = c(),
-	"7458" = c(),
-	"7521" = c(),
-	"7526" = c(),
-	"7527" = c(),
-	"7529" = c(),
-	"7530" = c(),
-	"7531" = c(),
-	"7532" = c(),
-	"7533" = c(),
-	"7534" = c(),
-	"7535" = c(),
-	"7536" = c(),
-	"7537" = c(),
-	"7538" = c(),
-	"7539" = c(),
-	"7540" = c(),
-	"7541" = c(),
-	"7542" = c(),
-	"7543" = c(),
-	"7544" = c(),
-	"7545" = c(),
-	"7546" = c(),
-	"7547" = c(),
-	"7548" = c(),
-	"7549" = c(),
-	"7550" = c(),
-	"7551" = c(),
-	"7552" = c(),
-	"7553" = c(),
-	"7554" = c(),
-	"7559" = c(),
-	"7560" = c(),
-	"7561" = c(),
-	"7562" = c(),
-	"7563" = c(),
-	"7564" = c()
+	"7426", = c("VD4020", "V5004A", "V5007A", "V5006A", "V5008A"),
+	"7427", = c("VD5002"),  # requer deflator
+	"7428", = c("VD5002"),  # requer deflator
+	"7429", = c(),  # requer deflator
+	"7430", = c(),
+	"7431", = c(),
+	"7432", = c(),
+	"7433", = c(),
+	"7434", = c(),
+	"7435", = c(),  # requer deflator
+	"7436", = c(),
+	"7437", = c(),  # requer deflator
+	"7438", = c(),  # requer deflator
+	"7439", = c(),
+	"7440", = c(),
+	"7441", = c(),  # requer deflator
+	"7442", = c(),  # requer deflator
+	"7443", = c(),  # requer deflator
+	"7444", = c(),  # requer deflator
+	"7445", = c(),  # requer deflator
+	"7446", = c(),  # requer deflator
+	"7447", = c(),
+	"7448", = c(),
+	"7449", = c(),
+	"7450", = c(),
+	"7451", = c(),
+	"7452", = c(),
+	"7453", = c(),  # requer deflator
+	"7454", = c(),
+	"7455", = c(),
+	"7456", = c(),
+	"7457", = c(),
+	"7458", = c(),  # requer deflator
+	"7521", = c(),
+	"7526", = c(),  # requer deflator
+	"7527", = c(),  # requer deflator
+	"7529", = c(),  # requer deflator
+	"7530", = c(),  # requer deflator
+	"7531", = c(),  # requer deflator
+	"7532", = c(),  # requer deflator
+	"7533", = c(),  # requer deflator
+	"7534", = c(),  # requer deflator
+	"7535", = c(),  # requer deflator
+	"7536", = c().
+	"7537", = c(),  # requer deflator
+	"7538", = c(),  # requer deflator
+	"7539", = c(),  # requer deflator
+	"7540", = c(),
+	"7541", = c(),  # requer deflator
+	"7542", = c(),  # requer deflator
+	"7543", = c(),  # requer deflator
+	"7544", = c(),  # requer deflator
+	"7545", = c(),  # requer deflator
+	"7546", = c(),
+	"7547", = c(),  # requer deflator
+	"7548", = c(),  # requer deflator
+	"7549", = c(),  # requer deflator
+	"7550", = c(),
+	"7551", = c(),  # requer deflator
+	"7552", = c(),  # requer deflator
+	"7553", = c(),  # requer deflator
+	"7554", = c(),  # requer deflator
+	"7559", = c(),  # requer deflator
+	"7560", = c(),  # requer deflator
+	"7561", = c(),  # requer deflator
+	"7562", = c(),  # requer deflator
+	"7563", = c(),  # requer deflator
+	"7564", = c()   # requer deflator
 )
 
 # FUNÇÕES
@@ -100,8 +100,12 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 	}
 	variaveis <- unique(unlist(codvar[tabelas]))
 
-	# incorporar ou não deflatores de acordo com tabelas específicas
-	requer_deflator <- any(tabelas %in% c("7427", "7428"))
+	nao_requer_deflator <- c( "7426", "7430", "7431", "7432", "7433", "7434",
+		"7436", "7439", "7440", "7447", "7448", "7449", "7450", "7451", "7452",
+		"7454", "7455", "7456", "7457", "7521", "7536", "7540", "7546", "7550")
+	
+	# incorporar ou não deflatores de acordo com as tabelas desejadas
+	add_deflator <- length(setdiff(tabelas, nao_requer_deflator)) > 0
 	
 	# ler os dados (baixar apenas se download=TRUE)
 	if (download) {
@@ -110,7 +114,7 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 			interview = 5,
 			design = FALSE,    # será feito pela função pnadc_design
 			vars = variaveis,
-			deflator = requer_deflator
+			deflator = add_deflator
 		)
 	} else {
 		# definir caminho para os arquivos relevantes
@@ -132,7 +136,7 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 			),
 			dictionary.file = dicionario
 		)
-		if (requer_deflator) {
+		if (add_deflator) {
 			dados <- pnadc_deflator(dados, deflator.file = deflator)
 		}
 	}
@@ -152,6 +156,6 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 # `var` é uma variável/coluna (string)
 estimar_pop <- function(PA, var) {
 	formula <- as.formula(paste0("~interaction(Estrato_G, ", var, ")"))
-  	svytotal(x = formula, design = pa, na.rm = TRUE)
+  	svytotal(x = formula, design = PA, na.rm = TRUE)
 }
 
