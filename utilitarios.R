@@ -11,16 +11,13 @@
 #----------------------------------------------------------
 # OBJETOS
 
-input_dir <- "Microdados"  # pasta com os arquivos da PNADC
+pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 codvar <- list(
 	"7426" = c("VD4020", "V5004A", "V5007A", "V5006A", "V5008A"),
 	"7427" = c("VD5002"),
 	"7428" = c("VD5002"),
-	"7426" = c(),
-	"7427" = c(),
-	"7428" = c(),
 	"7429" = c(),
 	"7430" = c(),
 	"7431" = c(),
@@ -117,13 +114,13 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 		)
 	} else {
 		# definir caminho para os arquivos relevantes
-		microdados <- file.path(input_dir, paste0("PNADC_",
+		microdados <- file.path(pnadc_dir, paste0("PNADC_",
 			pnadc_ano, "_visita5.txt"))
-		input <- file.path(input_dir, paste0("input_PNADC_",
+		input <- file.path(pnadc_dir, paste0("input_PNADC_",
 			pnadc_ano, "_visita5.txt"))
-		dicionario <- file.path(input_dir, paste0("dicionario_PNADC_microdados_",
+		dicionario <- file.path(pnadc_dir, paste0("dicionario_PNADC_microdados_",
 			pnadc_ano, "_visita5.xls"))
-		deflator <- file.path(input_dir, paste0("deflator_PNADC_",
+		deflator <- file.path(pnadc_dir, paste0("deflator_PNADC_",
 			pnadc_ano, ".xls"))
 
 		# ler os arquivos e construir o plano amostral
@@ -151,9 +148,9 @@ gerar_PA <- function(tabelas = NULL, download = FALSE) {
 }
 
 # Função para estimar população por variável e estrato geográfico
-# `pa` é o plano amostral (svyrep.design)
+# `PA` é o plano amostral (svyrep.design)
 # `var` é uma variável/coluna (string)
-estimar_pop <- function(pa, var) {
+estimar_pop <- function(PA, var) {
 	formula <- as.formula(paste0("~interaction(Estrato_G, ", var, ")"))
   	svytotal(x = formula, design = pa, na.rm = TRUE)
 }
