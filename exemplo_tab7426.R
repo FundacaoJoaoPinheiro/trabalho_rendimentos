@@ -40,10 +40,13 @@ pnadc_MG <- pnadc_design(pnadc_MG)
 
 pnadc_MG$variables <- transform(
 	pnadc_MG$variables,
+	possui_renda_habitual = factor(
+		ifelse(!is.na(VD4019), "Sim", "Não"),
+		levels = c("Sim", "Não"),     # definir essa ordem é útil para padronizar
 	possui_renda_efetiva = factor(
 		ifelse(!is.na(VD4020), "Sim", "Não"),
-		levels = c("Sim", "Não"),     # definir essa ordem é útil para padronizar
-	),                                # a saída da função svytotal() à frente
+		levels = c("Sim", "Não"),
+	),
 	estrato_geo = factor(substr(Estrato, 1, 4))   # 4 primeiros números do Estrato
 )                                                 # formam o estrato geografico
 
