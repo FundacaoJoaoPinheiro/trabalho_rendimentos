@@ -1,5 +1,3 @@
-*.txt
-*.xls
-*.zip
-.Rdata
-.RDS
+Microdados/*
+*.Rdata
+*.RDS
