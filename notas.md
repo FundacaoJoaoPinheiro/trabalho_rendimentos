@@ -1,22 +1,20 @@
 # Dúvidas e Observações
 
-- Os rendimentos de trabalho são computados apenas para individuos com mais
-de 14 anos. Devemos filtrar os dados para essa idade em __todos__ os casos?
-
 - Por que a pop. com rendimento habitual difere da pop. com rendimento
 efetivo? O primeiro tipo está correspondendo com a tabela 7426, mas o
 segundo está com o mesmo valor do primeiro, o que não corresponde com
 a tabela.
 
-- Outros rendimentos: devo incluir seguro-desemprego (V5005A)?
-
-- Estou usando "VD5011" para tabelas que abordam "rendimento domiciliar
-per capita"; poderia ser "VD5005" também.
+- Para calcular a renda domiciliar per capita, para a renda estou escluindo
+pensionistas, empregados e parentes de empregados, conforme nota no SIDRA.
+Mas devo considerar todos os moradores no denominador? Os resultados foram
+mais próximos das tabelas do SIDRA.
 
 - Em relação às tabelas 7450 e 7451, como agrupar por posse ou acesso a bens
 e serviços? Não encontrei variáveis no dicionário da quinta visita.
 
-- Usar NA's ou zero? Zero levou a estimativas mais próximas das tabelas do SIDRA
+- Usar NA's ou zero no caso de rendimentos? Zero levou a estimativas mais
+próximas das tabelas do SIDRA
 
 # Pendências
 
