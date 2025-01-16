@@ -14,6 +14,17 @@
 pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
+# não precisam de deflatores
+tabelas_pop <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
+	"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
+	"7456", "7457")
+
+# tabelas que lidam com rendimento domicilar per capita a preços do ano
+tabelas_RDCP2 <- c("7427", "7458,", "7526", "7529", "7533", "7534", "7564")
+
+# tabelas que lidam com rendimento domicilar per capita a preços do último ano
+tabelas_RDCP1 <- c("7422", "7438", "7521", "7527", "7530", "7531", "7532", "7561")
+
 codvar <- list(
 	`7426` = c("VD4052", "VD4019", "VD4020", "VD4048", # não requer deflator
                "V5004A", "V5007A", "V5006A", "V5008A", "V5005A"),
@@ -120,11 +131,6 @@ gerar_DA <- function(tabelas = "todas", year = ano, download = FALSE) {
 	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(year == 2020 | year == 2021, 5, 1)
 
-	# tabelas com estimativas para população que não precisam de deflatores
-	tabelas_pop <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
-		"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
-		"7456", "7457")
-	
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, tabelas_pop)) > 0
 	
