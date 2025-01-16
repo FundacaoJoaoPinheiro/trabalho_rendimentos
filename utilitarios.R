@@ -15,10 +15,10 @@ pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 codvar <- list(
-	`7426` = c("VD4019", "VD4020", "V5004A", "V5007A", # não requer deflator
-               "V5006A", "V5008A", "V5005A"),
-	`7427` = c("VD5011"),
-	`7428` = c("VD5011"),
+	`7426` = c("VD4052", "VD4019", "VD4020", "VD4048", # não requer deflator
+               "V5004A", "V5007A", "V5006A", "V5008A", "V5005A"),
+	`7427` = c("V2005", "VD4019", "VD4048"),
+	`7428` = c("V2005", "VD4019", "VD4048"),
 	`7429` = c("VD5011", "VD4020", "V5004A",
 	           "V5007A", "V5006A", "V5008A"),
 	`7430` = c("VD4019", "VD4020"),
@@ -26,11 +26,11 @@ codvar <- list(
 	`7432` = c("V2009", "V4009", "V4033"),     # não requer deflator
 	`7433` = c("VD3004", "V4009", "V4033"),    # não requer deflator
 	`7434` = c("V2007", "V4009", "V4033"),     # não requer deflator
-	`7435` = c("VD5011"),
+	`7435` = c("V2005", "VD4019", "VD4048"),
 	`7436` = c(),
-	`7437` = c("VD4019", "VD4020", "V5004A2", "V4007A2",
+	`7437` = c("VD4019", "VD4020", "V5004A2", "V5007A2",
 	           "V5006A2", "V5008A2", "V5005A2"),
-	`7438` = c("VD5011"),
+	`7438` = c("V2005", "VD4019", "VD4048"),
 	`7439` = c("V2005", "V4034"),              # não requer deflator
 	`7440` = c("V1023", "V2005", "V4034"),     # não requer deflator
 	`7441` = c("V2010", "VD4019", "VD4020"),
@@ -39,27 +39,27 @@ codvar <- list(
 	`7444` = c("V2007", "VD4019", "VD4020"),
 	`7445` = c("V1023", "VD4019", "VD4020"),
 	`7446` = c("V2005", "VD4019", "VD4020"),
-	`7447` = c("VD3004", "V5002A"),    # não requer deflator
-	`7448` = c("VD3004", "V5002A"),    # não requer deflator
-	`7449` = c("V5002A"),        # não requer deflator
-	`7450` = c("V5002A"),        # não requer deflator
-	`7451` = c("V5001A"),        # não requer deflator
-	`7452` = c("V5001A"),        # não requer deflator
+	`7447` = c("VD3004", "V5002A"),         # não requer deflator
+	`7448` = c("VD3004", "V5002A"),         # não requer deflator
+	`7449` = c("V5002A"),          # não requer deflator
+	`7450` = c("V5002A"),          # não requer deflator
+	`7451` = c("V5001A"),          # não requer deflator
+	`7452` = c("V5001A"),          # não requer deflator
 	`7453` = c("VD4019"),
 	`7454` = c("VD3004", "V5001A"),    # não requer deflator
 	`7455` = c("VD3004", "V5001A"),    # não requer deflator
 	`7456` = c("V2001", "V5001A", "V5002A", "V5003A"),    # não requer deflator
 	`7457` = c("V5001A", "V5002A", "V5003A"),             # não requer deflator
-	`7458` = c("VD5011", "V5001A", "V5002A", "V5003A"),
+	`7458` = c("V2005", "VD4019", "VD4048", "V5001A", "V5002A", "V5003A"),
 	`7521` = c("VD5011"),
-	`7526` = c("VD5011"),
-	`7527` = c("VD5011"),
-	`7529` = c("VD5011"),
-	`7530` = c("VD5011"),
-	`7531` = c("VD5011"),
-	`7532` = c("VD5011"),
-	`7533` = c("VD5011"),
-	`7534` = c("VD5011"),
+	`7526` = c("V2005", "VD4019", "VD4048"),
+	`7527` = c("V2005", "VD4019", "VD4048"),
+	`7529` = c("V2005", "VD4019", "VD4048"),
+	`7530` = c("V2005", "VD4019", "VD4048"),
+	`7531` = c("V2005", "VD4019", "VD4048"),
+	`7532` = c("V2005", "VD4019", "VD4048"),
+	`7533` = c("V2005", "VD4019", "VD4048"),
+	`7534` = c("V2005", "VD4019", "VD4048"),
 	`7535` = c("VD4019"),
 	`7536` = c("VD4019"),
 	`7537` = c("VD4019"),
@@ -82,10 +82,10 @@ codvar <- list(
 	`7554` = c("VD4019"),
 	`7559` = c("VD4019"),
 	`7560` = c("VD4019"),
-	`7561` = c("VD5011"),
+	`7561` = c("V2005", "VD4019", "VD4048"),
 	`7562` = c("VD4019"),
 	`7563` = c("VD4019"),
-	`7564` = c("VD5011")
+	`7564` = c("V2005", "VD4019", "VD4048")
 )
 
 estratos_geo <- c(
@@ -107,17 +107,20 @@ estratos_geo <- c(
 # Gerar desenho amostral para MG, adicionando estratos geográficos.
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `download`: um argumento lógico que define se a importação será online
-gerar_DA <- function(tabelas = NULL, download = FALSE) {
+gerar_DA <- function(tabelas = "todas", year = ano, download = FALSE) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
-	if (is.null(tabelas)) {
+	if (tabelas == "todas") {
 		tabelas <- names(codvar)  # se `NULL`, selecionar todas as tabelas
 	} else {
 		tabelas <- as.character(tabelas)
 	}
 	variaveis <- unique(unlist(codvar[tabelas]))
 
-	# tabelas com estimativas para população (não precisam de deflator)
+	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
+	visita <- ifelse(year == 2020 | year == 2021, 5, 1)
+
+	# tabelas com estimativas para população que não precisam de deflatores
 	tabelas_pop <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
 		"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
 		"7456", "7457")
@@ -125,39 +128,43 @@ gerar_DA <- function(tabelas = NULL, download = FALSE) {
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, tabelas_pop)) > 0
 	
-	# ler os dados (baixar apenas se download=TRUE)
+	# ler os dados
+	# baixar apenas se download=TRUE
 	if (download) {
 		dados <- get_pnadc(
 			year = pnadc_ano,
-			interview = 5,
-			design = FALSE,  # será feito pela função pnadc_design
-			vars = c(variaveis, "UF", "V2009"),  # sempre importar UF e Idade
+			interview = visita,
+			design = FALSE,               # será feito pela função pnadc_design
+			vars = c(variaveis, "UF", "V2009"),    # sempre importar UF e Idade
 			deflator = requer_deflator
 		)
 	} else {
-		# definir caminho para os arquivos relevantes
-		microdados <- file.path(
+		microdados <- list.files(
 			pnadc_dir,
-			paste0("PNADC_", pnadc_ano, "_visita5.txt")
+			paste0("^PNADC_", pnadc_ano, "_visita", visita, ".*txt$"),
+			full.names = TRUE
 		)
-		input <- file.path(
+		input <- list.files(
 			pnadc_dir,
-			paste0("input_PNADC_", pnadc_ano, "_visita5.txt")
+			paste0("^input_PNADC_", pnadc_ano, "_visita", visita, ".*txt$"),
+			full.names = TRUE
 		)
-		dicionario <- file.path(
+		dicionario <- list.files(
 			pnadc_dir,
-			paste0("dicionario_PNADC_microdados_",pnadc_ano, "_visita5.xls")
+			paste0("^dicionario_PNADC_microdados_", pnadc_ano,
+				"_visita", visita, ".*xls$"),
+			full.names = TRUE
 		)
 		deflator <- file.path(
 			pnadc_dir,
-			paste0("deflator_PNADC_",pnadc_ano, ".xls")
+			paste0("deflator_PNADC_", pnadc_ano, ".xls")
 		)
 
 		# ler os arquivos e gerar o desenho amostral
 		dados <- pnadc_labeller(
 			data_pnadc = read_pnadc(
-				microdata = microdados,
-				input = input,
+			microdata = microdados,
+			input = input,
 				vars = c(variaveis, "UF", "V2009")  # sempre importar UF e Idade
 			),
 			dictionary.file = dicionario
@@ -176,14 +183,3 @@ gerar_DA <- function(tabelas = NULL, download = FALSE) {
 
 	return(dados)
 }
-
-# Função para estimar totais por variável e estrato geográfico
-# `DA` é o desenho amostral (svyrep.design)
-# `var` é uma variável/coluna (string)
-#gerar_tabela <- function(DA, tab) {
-#	formula <- as.formula(paste0("~", var))
-#  	tabela <- svyby(formula, by=~Estrato_G, FUN = svytotal, vartype = "cv",
-#  		design = DA, keep.names = TRUE, na.rm = TRUE)
-#	return(tabela)
-#}
-
