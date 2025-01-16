@@ -25,7 +25,7 @@ tabelas_RDCP2 <- c("7427", "7458,", "7526", "7529", "7533", "7534", "7564")
 # tabelas que lidam com rendimento domicilar per capita a preços do último ano
 tabelas_RDCP1 <- c("7422", "7438", "7521", "7527", "7530", "7531", "7532", "7561")
 
-codvar <- list(
+variaveis <- list(
 	`7426` = c("VD4052", "VD4019", "VD4020", "VD4048", # não requer deflator
                "V5004A", "V5007A", "V5006A", "V5008A", "V5005A"),
 	`7427` = c("V2005", "VD4019", "VD4048"),
@@ -122,11 +122,11 @@ gerar_DA <- function(tabelas = "todas", year = ano, download = FALSE) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	if (tabelas == "todas") {
-		tabelas <- names(codvar)  # se `NULL`, selecionar todas as tabelas
+		tabelas <- names(variaveis)  # se `NULL`, selecionar todas as tabelas
 	} else {
 		tabelas <- as.character(tabelas)
 	}
-	variaveis <- unique(unlist(codvar[tabelas]))
+	variaveis <- unique(unlist(variaveis[tabelas]))
 
 	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(year == 2020 | year == 2021, 5, 1)
@@ -179,7 +179,7 @@ gerar_DA <- function(tabelas = "todas", year = ano, download = FALSE) {
 			dados <- pnadc_deflator(dados, deflator.file = deflator)
 		}
 	}
-	dados <- pnadc_design(subset(dados, UF == "Minas Gerais", V2009 >= 14))
+	dados <- pnadc_design(subset(dados, UF == "Minas Gerais"))
 
 	# adicionar coluna com os códigos dos Estratos Geográficos
 	dados$variables <- transform(
