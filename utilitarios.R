@@ -11,7 +11,7 @@
 #----------------------------------------------------------
 # OBJETOS
 
-pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
+pnadc_dir <- "Microdados " # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 # não precisam de deflatores
@@ -25,22 +25,31 @@ tabelas_RDCP2 <- c("7427", "7458,", "7526", "7529", "7533", "7534", "7564")
 # tabelas que lidam com rendimento domicilar per capita a preços do último ano
 tabelas_RDCP1 <- c("7422", "7438", "7521", "7527", "7530", "7531", "7532", "7561")
 
+# tabelas com categorias por tipo de rendimento
+tabelas_tipo_rend <- c("7426", "7429", "7437")
+
 variaveis <- list(
-	`7426` = c("VD4052", "VD4019", "VD4020", "VD4048", # não requer deflator
-               "V5004A", "V5007A", "V5006A", "V5008A", "V5005A"),
+	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",  # não requer deflator
+               "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+               "VD4019",  "VD4020",  "VD4048",  "VD4052",
+               "V2001",   "V2005"),
 	`7427` = c("V2005", "VD4019", "VD4048"),
 	`7428` = c("V2005", "VD4019", "VD4048"),
-	`7429` = c("VD5011", "VD4020", "V5004A",
-	           "V5007A", "V5006A", "V5008A"),
+	`7429` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",  # não requer deflator
+               "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+               "VD4019",  "VD4020",  "VD4048",  "VD4052",
+               "V2001",   "V2005"),
 	`7430` = c("VD4019", "VD4020"),
-	`7431` = c("V2010", "V4009", "V4033"),     # não requer deflator
-	`7432` = c("V2009", "V4009", "V4033"),     # não requer deflator
-	`7433` = c("VD3004", "V4009", "V4033"),    # não requer deflator
-	`7434` = c("V2007", "V4009", "V4033"),     # não requer deflator
+	`7431` = c("V2009", "VD4002", "VD4052", "V2010"),     # não requer deflator
+	`7432` = c("V2009", "VD4002", "VD4052"),              # não requer deflator
+	`7433` = c("V2009", "VD4002", "VD4052", "VD3004"),    # não requer deflator
+	`7434` = c("V2009", "VD4002", "VD4052", "V2007"),     # não requer deflator
 	`7435` = c("V2005", "VD4019", "VD4048"),
 	`7436` = c(),
-	`7437` = c("VD4019", "VD4020", "V5004A2", "V5007A2",
-	           "V5006A2", "V5008A2", "V5005A2"),
+	`7437` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",  # não requer deflator
+               "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+               "VD4019",  "VD4020",  "VD4048",  "VD4052",
+               "V2001",   "V2005"),
 	`7438` = c("V2005", "VD4019", "VD4048"),
 	`7439` = c("V2005", "V4034"),              # não requer deflator
 	`7440` = c("V1023", "V2005", "V4034"),     # não requer deflator
@@ -109,7 +118,7 @@ estratos_geo <- c(
 	"Zona da Mata (MG)",       # 3153,
 	"Norte de Minas Gerais",   # 3154,
 	"Vale do Rio Doce (MG)",   # 3155,
-	"Central de Minas Gerais"  # 3156
+	"Central de Minas Gerais " # 3156
 )
 
 #----------------------------------------------------------
@@ -184,7 +193,7 @@ gerar_DA <- function(tabelas = "todas", year = ano, download = FALSE) {
 	# adicionar coluna com os códigos dos Estratos Geográficos
 	dados$variables <- transform(
 		dados$variables,
-		Estrato_G = factor(substr(Estrato, 1, 4)) # 4 primeiros números do Estrato
+		Estrato.Geo = factor(substr(Estrato, 1, 4)) # 1o ao 4o números do Estrato
 	)                                             # formam o estrato geografico
 
 	return(dados)
