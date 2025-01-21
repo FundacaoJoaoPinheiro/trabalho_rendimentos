@@ -9,33 +9,26 @@ options(scipen = 999)
 
 variaveis <- c("V2009", "VD4002", "VD4052", "V2010", "VD3004", "V2007", "V2005")
 
-if (file.exists("desenho_pessoas.RDS")) {
-	desenho_amostral <- readRDS("desenho_pessoas.RDS")
+if (file.exists("desenho_rendimento.RDS")) {
+	desenho <- readRDS("desenho_rendimento.RDS")
 } else {
-	desenho_amostral <- gerar_DA(variaveis)
+	desenho <- gerar_DA(variaveis)
 }
 
 # Pessoas por categorias -------------------------------------------
 
 # 7440 --> V1023, área;
 
-# 7543 --> VD4019 * CO1, classe simples; Resultados muito parecidos
-sidra_7543 <- get_sidra(
-	x = 7543, variable = 10848, period = "2023",
-	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
-	header = TRUE, format = 2
-)
-names(sidra_7543)
-
 # Pessoas de 14 anos ou mais de idade ocupadas por categoria
 # --> V2009, VD4002 VD4052
 
 # 7431 --> V2010; cor/raça --------------------------
 sidra_7431 <- get_sidra(x = 7431, variable = 10765, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	Ocupadas.com.Rendimento = ifelse(
 		V2009 >= 14 & VD4002 == "Pessoas ocupadas" & !is.na(VD4052),
 		1, NA
@@ -44,21 +37,23 @@ desenho_amostral$variables <- transform(
 
 ocupadas_cor <- svyby(
 	~Ocupadas.com.Rendimento,
-	~V2010 + Estrato_G,
-	desenho_amostral,
+	~V2010 + UF,
+	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
 	na.rm = TRUE)
 	
-print(ocupadas_cor)
-unname(sidra_7431[c(7,3)])
+View(ocupadas_cor)
+View(sidra_7431[c(4,7,3)])
 
 # 7432 --> V2009; grupos de idade --------------------------
 sidra_7432 <- get_sidra(x = 7432, variable = 10765, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	Grupos.de.Idade = cut(
 		V2009,
 		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
@@ -78,42 +73,47 @@ desenho_amostral$variables <- transform(
 
 ocupadas_idade <- svyby(
 	~Ocupadas.com.Rendimento,
-	~Grupos.de.Idade + Estrato_G,
-	desenho_amostral,
+	~Grupos.de.Idade + UF,
+	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
 	na.rm = TRUE)
 	
-print(ocupadas_idade)
-unname(sidra_7432[c(7,3)])
+View(ocupadas_idade)
+View(sidra_7432[c(4, 7, 3)])
 
 # 7433 --> VD3004; instrução -------------------------
 sidra_7433 <- get_sidra(x = 7433, variable = 10765, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
 ocupadas_instrucao <- svyby(
 	~Ocupadas.com.Rendimento,
-	~VD3004 + Estrato_G,
-	desenho_amostral,
+	~VD3004 + UF,
+	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
 	na.rm = TRUE)
 	
-print(ocupadas_instrucao)
-unname(sidra_7433[c(7,3)])
+View(ocupadas_instrucao)
+View(sidra_7433[c(4, 7, 3)])
 
 # 7434 --> V2007; sexo -------------------------
 sidra_7434 <- get_sidra(x = 7434, variable = 10765, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
 ocupadas_sexo <- svyby(
 	~Ocupadas.com.Rendimento,
-	~V2007 + Estrato_G,
-	desenho_amostral,
+	~V2007 + UF,
+	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
 	na.rm = TRUE)
 	
-print(ocupadas_sexo)
-unname(sidra_7434[c(7,3)])
+unname(ocupadas_sexo)
+unname(sidra_7434[c(7, 4, 3)])
 

@@ -191,8 +191,8 @@ sidra_7446 <- data.frame(
 	Efetivo  = sidra_7446[c(2,4,6,8), 3]
 )
 
-print(sidra_7446)
-print(RMe2_responsavel)
+unname(sidra_7446)
+unname(RMe2_responsavel)
 
 # 7453 --> CO1, VD4019 ---------------------------------------
  sidra_7453 <- get_sidra(x = 7453, variable = 10806, period = "2023",
@@ -209,7 +209,7 @@ RMe2_gini <- svyby(
 unname(sidra_7453[c(4,3)])
 print(RMe2_gini)
 
-# 7535 --> CO1, VD4019 ---------------------------------------
+# 7534 --> CO1, VD4019 ---------------------------------------
  sidra_7535 <- get_sidra(x = 7535, variable = 10842, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15,29,31,52)), format = 2)
 
@@ -313,7 +313,7 @@ View(sidra_7538[c(4, 7, 3)])
 View(RMe1_acumul)
 
 # 7539 --> CO2, VD4019 ---------------------------------------
-sidra_7539 <- get_sidra(x = 7539, variable = 10842, period = "2023",
+sidra_7539 <- get_sidra(x = 7539, variable = 10774, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15,29,31,52)), format = 2)
 
 # classes simples de percentual (CSP)
@@ -375,8 +375,11 @@ RMe2_classe <- svyby(
 	na.rm = TRUE
 )
 
+View(sidra_7539[c(7,4,3)])
+View(RMe2_classe)
+
 # 7542 --> CO2, VD4019 ---------------------------------------
- sidra_7542 <- get_sidra(x = 7542, variable = 10842, period = "2023",
+ sidra_7542 <- get_sidra(x = 7542, variable = 10774, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15,29,31,52)), format = 2)
 
 # classes acumuladas de percentual (CASP)

@@ -5,34 +5,24 @@ efetivo? O primeiro tipo está correspondendo com a tabela 7426, mas o
 segundo está com idem valor do primeiro, o que não corresponde com
 a tabela.
 
-- Para calcular a renda domiciliar per capita, para a renda estou escluindo
+- Para calcular a renda domiciliar per capita, para a renda estou excluindo
 pensionistas, empregados e parentes de empregados, conforme nota no SIDRA.
-Mas devo considerar todos os moradores no denominador? Os resultados foram
-mais próximos das tabelas do SIDRA.
+Mas devo considerar todos os moradores no denominador?
 
-# Pendências
+# Comparando resultados com o SIDRA
 
-- 7426: "Efetivamente recebido em todos os trabalhos". A pop. estimada com
-rendimento habitual e efetivo estão iguais, embora sejam diferentes na
-tabela do SIDRA.
+## Resultados praticamente idênticos
 
-# Resultados Preliminares
+Tabelas: 7526, 7564, 7533, 7534, 7527, 7530, 7435, 7543, 7544, 7431, 7432, 7433,
+7434, 7439, 7440, 7436, 7447, 7441, 7442, 7443, 7444, 7445, 7446, 7453,
+7534, 7538, 7539, 7542
 
-- 7536: CV's acima de 25% apareceram para o estrato geográfico
-"Integrada de Brasília em Minas Gerais" (3140)
+## Resultados mais ou menos próximos
 
-- 7438 : CV's acima dos apresentados no SIDRA, mas em geral ficam em torno
-de 10%, passando de 20% apenas nas últimas classes
+Tabelas: 7529, 7427, 7431, 7432, 7433, 7434, 7449, 7431, 7432, 7433, 7434
 
-- 7428: CV's mais altos
-
-- 7441: CV's bastante altos. `svyby()` retornou erros, talvez tenha algo errado
-
-- 7442: a maioria dos CV's está abaixo de 10%, mas alguns estão acima
-
-- 7443: a maioria dos CV's está abaixo de 10%, mas alguns estão acima
-
-- 7535: maior parte dis CV's abaixo de 10% e poucos passam de 20%
+## Resultados diferentes
+Tabelas: 7458
 
 # Variáveis utilizadas
 

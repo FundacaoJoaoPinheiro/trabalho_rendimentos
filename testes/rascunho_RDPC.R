@@ -14,9 +14,9 @@ visita = 1
 pnadc_dir = "Microdados"
 
 if (file.exists("desenho_RDPC.RDS")) {
-	desenho_amostral <- readRDS("desenho_RDPC.RDS")
+	desenho <- readRDS("desenho_RDPC.RDS")
 } else {
-	desenho_amostral <- gerar_DA(variaveis)
+	desenho <- gerar_DA(variaveis)
 }
 	
 # 2) Rendimento Domiciliar Per Capita a preços médios do último/próprio ano
@@ -24,8 +24,8 @@ if (file.exists("desenho_RDPC.RDS")) {
 # 7534(7532), 7564(7561) --------------------------------------------------
 
 # as 3 categorias abaixos são excluídas no cálculo da rendimento domiciliar
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	V2005.Rendimento = ifelse(
 		V2005 == "Pensionista" |
 		V2005 == "Empregado(a) doméstico(a)" |
@@ -35,8 +35,8 @@ desenho_amostral$variables <- transform(
 )
 
 # moradores por domicílio incluídos no cálculo do rendimento domiciliar
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	V2001.Rendimento = ave(
 		V2005.Rendimento,
 		ID_DOMICILIO,
@@ -49,55 +49,75 @@ desenho_amostral$variables <- transform(
 # rendimento habitual de todos os trabalhos e efetivo de outras fontes
 # a preços médios do próprio/último ano
 # (obs: para o último ano, CO1 = CO2 e CO1e = CO2e)
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	VD4019.Real1 = ifelse(is.na(VD4019), NA, VD4019 * CO1),
-	VD4019.Real2 = ifelse(is.na(VD4019), NA, VD4019 * CO2),
-	VD4048.Real1 = ifelse(is.na(VD4048), NA, VD4048 * CO1e),
-	VD4048.Real2 = ifelse(is.na(VD4048), NA, VD4048 * CO2e)
+desenho$variables <- transform(
+	desenho$variables,
+	VD4019.Real = ifelse(is.na(VD4019), NA, VD4019 * CO1),
+	VD4048.Real = ifelse(is.na(VD4048), NA, VD4048 * CO1e),
+	VD4019.Real2022 = ifelse(is.na(VD4019), NA, VD4019 * CO2),
+	VD4048.Real2022 = ifelse(is.na(VD4048), NA, VD4048 * CO2e)
 )
 
 # rendimento de todas as fontes
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	VD4052.Real2 =
-		ifelse(is.na(VD4019), 0, VD4019.Real2) +
-		ifelse(is.na(VD4048), 0, VD4048.Real2)
+desenho$variables <- transform(
+	desenho$variables,
+	VD4052.Real2022 =
+		ifelse(is.na(VD4019), 0, VD4019.Real2022) +
+		ifelse(is.na(VD4048), 0, VD4048.Real2022)
 )
 
 # rendimento domiciliar a preços médios do último ano
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	VD5007.Real2 = ave(VD4052.Real2, ID_DOMICILIO, FUN = sum)
+desenho$variables <- transform(
+	desenho$variables,
+	VD5007.Real2022 = ave(VD4052.Real2022, ID_DOMICILIO, FUN = sum)
 )
 
 # rendimento domiciliar per capita a preços médios do último ano
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	VD5008.Real2 = ifelse(
+desenho$variables <- transform(
+	desenho$variables,
+	VD5008.Real2022 = ifelse(
 		is.na(V2005.Rendimento),
-		NA, VD5007.Real2 / V2001.Rendimento
+		NA, VD5007.Real2022 / V2001.Rendimento
 	)
 )
 
-# 7526 - pequenas diferenças nos últimos dois quantis
+# 7526 - pequenas diferenças nos últimos dois quantis_2022
 sidra_7526 <- get_sidra(
 	x = 7526, variable = 10838, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
 
-quantis2 <- svyby(
-	~VD5008.Real2,
+reformatar_sidra_classe <- function(tab) {
+	reshape(
+		tab[c(4,7,3)],
+		timevar = names(tab)[7],
+		idvar = names(tab)[4],
+		direction = "wide"
+	)
+}
+
+reformatar_sidra_uf <- function(tab) {
+	reshape(
+		tab[c(4,7,3)],
+		timevar = names(tab)[4],
+		idvar = names(tab)[7],
+		direction = "wide"
+	)
+}
+
+quantis_2022 <- svyby(
+	~VD5009.Real2022,
 	~UF,
-	desenho_amostral,
+	desenho,
 	FUN = svyquantile,
 	quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
+	vartype = "cv",
+	keep.names = FALSE,
 	na.rm = TRUE
 )
 
-View(quantis2)
-View(sidra_7526[c(4,7,3)])
+View(quantis_2022)
+View(sidra_7526)
 
 # 7529 - valores bem parecidos, diferença maior em P5 - P10
 sidra_7529 <- get_sidra(
@@ -124,14 +144,14 @@ rotulos_classe = c(
 	"Maior que P99"
 )
 
-rendimento_UF2 <- split(
-	desenho_amostral$variables$VD5008.Real2,
-	desenho_amostral$variables$UF
+rendimento_UF2022 <- split(
+	desenho$variables$VD5008.Real2022,
+	desenho$variables$UF
 )
 
-quantis_UF2 <-  split(quantis2[2:13], quantis2[[1]])
+quantis_UF2022 <-  split(quantis_2022[2:13], quantis_2022[[1]])
 
-classes_simples2 <- Map(
+classes_simples2022 <- Map(
 	function(renda, breaks) {
 		cut(
 			renda,
@@ -140,28 +160,31 @@ classes_simples2 <- Map(
 			right = FALSE
 		)
 	},
-	renda = rendimento_UF2,
-	breaks = quantis_UF2
+	renda = rendimento_UF2022,
+	breaks = quantis_UF2022
 )
 
 # adicionar coluna com as classes simples por percentual (CSP)
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	CSP.VD5008.Real2 = unsplit(classes_simples2, UF)
+desenho$variables <- transform(
+	desenho$variables,
+	Classes.Simples2022 = unsplit(classes_simples2022, UF)
 )
 
-pop_simples2 <- svyby(
+pop_simples2022 <- svyby(
 	~V2005.Rendimento,
-	~CSP.VD5008.Real2 + UF,
-	desenho_amostral,
+	~Classes.Simples2022 + UF,
+	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,	
 	na.rm = TRUE
 )
-pop_simples2 <- pop_simples2[c(2,1,3)]
+pop_simples2022 <- pop_simples2022[c(2,1,3)]
+colnames(pop_simples2022) <- c("UF", "Classes.Simples2022", "Valor")
+rownames(pop_simples2022) <- NULL
 
 View(sidra_7529[c(4,7,3)])
-View(pop_simples2)
+View(pop_simples2022)
 
 # 7564 - evidentemente, o mesmo de 7529
 sidra_7564 <- get_sidra(
@@ -174,14 +197,15 @@ sidra_7564 <- transform(sidra_7564, Valor = Valor * 1000)
 # classes acumuladas de percentual (CASP)
 rotulos_acumuladas = c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
-pop_simples_UF2 <- split(pop_simples2$V2005.Rendimento, pop_simples2$UF)
+pop_simples_UF2022 <- split(pop_simples2022$Valor, pop_simples2022$UF)
 
 pop_acumuladas2 <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
 	Classes.Acumuladas = rep(rotulos_acumuladas, times = 4),
 	Populacao = ave(
-		cumsum(pop_simples2$V2005.Rendimento),
-		rep(unidades_federativas, each = 13)
+		pop_simples2022$Valor,
+		pop_simples2022$UF,
+		FUN = cumsum
 	)
 )
 
@@ -196,15 +220,17 @@ sidra_7427 <- get_sidra(
 )
 sidra_7427 <- transform(sidra_7427, Valor = Valor * 10^6)
 
-massa_rendimento2 <- svyby(
-	~VD5008.Real2,
-	~CSP.VD5008.Real2 + UF,
-	desenho_amostral,
+massa_rendimento2022 <- svyby(
+	~VD5008.Real2022,
+	~Classes.Simples2022 + UF,
+	desenho,
 	FUN = svytotal,
+	vartype = "cv",
+	keep.names = FALSE,	
 	na.rm = TRUE
 )
 
-View(massa_rendimento2)
+View(massa_rendimento2022)
 View(sidra_7427[c(4,7,3)])
 
 # 7533 - valores bem parecidos, maiores diferenças em P95 e P99
@@ -214,16 +240,17 @@ sidra_7533 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-rme_simples2 <- svyby(
-	~VD5008.Real2,
-	~CSP.VD5008.Real2 + UF,
-	desenho_amostral,
+rme_simples2022 <- svyby(
+	~VD5008.Real2022,
+	~Classes.Simples2022 + UF,
+	desenho,
 	FUN = svymean,
+	keep.names = FALSE,	
 	na.rm = TRUE
 )
 
 View(sidra_7533[c(4,7,3)])
-View(rme_simples2)
+View(rme_simples2022)
 
 # 7534 - valores bem parecidos
 sidra_7534 <- get_sidra(
@@ -231,23 +258,24 @@ sidra_7534 <- get_sidra(
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
+sidra_7534 <- reformatar_sidra_uf(sidra_7534)
 
-rme_simples_UF2 <- split(
-	rme_simples2$VD5008.Real2,
-	rme_simples2$UF
+rme_simples_UF2022 <- split(
+	rme_simples2022$VD5008.Real2022,
+	rme_simples2022$UF
 )
 
-rme_acumul2 <- Map(
+rme_acumul2022 <- Map(
 	function(renda, pop) {
 		cumsum(renda * pop) / cumsum(pop)
 	},
-	renda = rme_simples_UF2,
-	pop   = pop_simples_UF2
+	renda = rme_simples_UF2022,
+	pop   = pop_simples_UF2022
 )
-rme_acumul2$Classes.Acumulada <- rotulos_acumuladas
+rme_acumul2022$Classes.Acumulada <- rotulos_acumuladas
 
-View(rme_acumul2[c(5,1:4)])
-View(sidra_7534[c(4,7,3)])
+View(rme_acumul2022[c(5,1:4)])
+View(sidra_7534)
 
 # 7458 - resultados bem distintos, principalmente para o Pará...
 sidra_7458 <- get_sidra(
@@ -256,17 +284,22 @@ sidra_7458 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-rme_progsocial2 <- svybys(
-	~VD5008.Real2,
-	by = ~interaction(V5001A, UF) +
-          interaction(V5002A, UF) +
-          interaction(V5003A, UF),
-	desenho_amostral,
+rme_progsocial2022 <- svybys(
+	~VD5008.Real2022,
+	by = ~interaction(UF, V5001A) +
+          interaction(UF, V5002A) +
+          interaction(UF, V5003A),
+	desenho,
 	FUN = svymean,
+	keep.names = FALSE,
 	na.rm = TRUE
 )
 
-View(rme_progsocial2)
+colnames(rme_progsocial2022[[1]])[1:2] <- c("UF.BPC", "Valor")
+colnames(rme_progsocial2022[[2]])[1:2] <- c("UF.Bolsa.Familia", "Valor")
+colnames(rme_progsocial2022[[3]])[1:2] <- c("UF.Outros.Programas", "Valor")
+
+View(rme_progsocial2022)
 View(sidra_7458[c(4,7,3)])
 
 # PRÓPRIO ANO -----------------------
@@ -302,21 +335,24 @@ sidra_7527 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-massa_rendimento1_UF1 = split(
-	massa_rendimento1$VD5008.Real1,
-	massa_rendimento1$UF
+# Como 2023 é o ano mais recente, não tem diferença entre as variáveis reais
+massa_rendimento <- massa_rendimento2022
+
+massa_rendimento_UF = split(
+	massa_rendimento$VD5008.Real,
+	massa_rendimento$UF
 )
 
-distribuicao_UF1 <- lapply(massa_rendimento1_UF1, function(x) x * 100/ sum(x))
+distribuicao_UF <- lapply(massa_rendimento_UF, function(x) x * 100/ sum(x))
 
-distribuicao1 <- data.frame(
+distribuicao <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
 	Classes.Simples = rep(rotulos_classe, times = 4),
-	Distribuicao.Simples.RDPC1 = unlist(distribuicao_UF1)
+	Distribuicao.Simples.RDPC1 = unlist(distribuicao_UF)
 )
 
 View(sidra_7527[c(4,7,3)])
-View(distribuicao1)
+View(distribuicao)
 
 # 7530 - valores consideravelmente próximos
 sidra_7530 <- get_sidra(
@@ -325,16 +361,16 @@ sidra_7530 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-distribuicao_acumulada_UF1 <- lapply(distribuicao_UF1, cumsum)
+distribuicao_acumulada_UF <- lapply(distribuicao_UF, cumsum)
 
-distribuicao_acumulada1 <- data.frame(
+distribuicao_acumulada <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
 	Classes.Simples = rep(rotulos_classe, times = 4),
-	Distribuicao.Simples.RDPC1 = unlist(distribuicao_acumulada_UF1)
+	Distribuicao.Simples.RDPC1 = unlist(distribuicao_acumulada_UF)
 )
 
 View(sidra_7530[c(4,7,3)])
-View(distribuicao_acumulada1)
+View(distribuicao_acumulada)
 
 # 7435 - valores próximos, iguais arredondando
 sidra_7435 <- get_sidra(
@@ -345,10 +381,11 @@ sidra_7435 <- get_sidra(
 names(sidra_7435)
 
 gini1 <- svyby(
-	~VD5008.Real1,
+	~VD5008.Real,
 	~UF,
-	desenho_amostral,
+	desenho,
 	FUN = svygini,
+	keep.names = FALSE,	
 	na.rm = TRUE
 )
 

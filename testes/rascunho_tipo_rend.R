@@ -3,6 +3,8 @@
 
 pacotes <- c("sidrar", "PNADcIBGE", "survey")
 lapply(pacotes, library, character.only = TRUE)
+source("testes/utilitarios.R")
+
 options(scipen = 999)
 
 variaveis <- c(
@@ -17,64 +19,29 @@ visita = 1
 pnadc_dir = "Microdados"
 
 if (file.exists("desenho_tipo_rend.RDS")) {
-	desenho_amostral <- readRDS("desenho_tipo_rend.RDS")
+	desenho <- readRDS("desenho_tipo_rend.RDS")
 } else {
-	microdados <- list.files(
-		pnadc_dir,
-		paste0("^PNADC_", pnadc_ano, "_visita", visita, ".*txt$"),
-		full.names = TRUE
-	)
-	input <- list.files(
-		pnadc_dir,
-		paste0("^input_PNADC_", pnadc_ano, "_visita", visita, ".*txt$"),
-		full.names = TRUE
-	)
-	dicionario <- list.files(
-		pnadc_dir,
-		paste0("^dicionario_PNADC_microdados_", pnadc_ano,
-			"_visita", visita, ".*xls$"),
-		full.names = TRUE
-	)
-	deflator <- file.path(
-		pnadc_dir,
-		paste0("deflator_PNADC_", pnadc_ano, ".xls")
-	)
-	desenho_amostral <- pnadc_deflator(
-		pnadc_labeller(
-			data_pnadc = read_pnadc(
-				microdata = microdados,
-				input = input,
-				vars = c(variaveis, "UF", "V2009")  # sempre importar UF e Idade
-			),
-			dictionary.file = dicionario
-		),
-		deflator.file = deflator
-	)
-	desenho_amostral <- pnadc_design(
-		subset(desenho_amostral, UF == "Minas Gerais")
-	)
-	desenho_amostral$variables <- transform(
-		desenho_amostral$variables,
-		Estrato.Geo = factor(substr(Estrato, 1, 4))
-	)
+	desenho <- gerar_DA(variaveis)
 }
+	
 
 # 7426 ------------------------------------------------
 
 sidra_7426 <- get_sidra(x = 7426, variable = 10486, period = "2023", geo = "State",
-	geo.filter = 31, header = TRUE, format = 2)
+	geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 sidra_7426 <- transform(sidra_7426, Valor = Valor * 1000)
 
 # Rendimentos Habitual e Efetivo (V, ?)
-svytotal(~is.na(VD4019) + is.na(VD4020), subset(desenho_amostral, V2009 >= 14))
+svytotal(~is.na(VD4019) + is.na(VD4020), subset(desenho, V2009 >= 14))
 sidra_7426[c(7,3)]
 
 # Aposentadoria..., aluguel..., pensão... (V,V,V)
-svytotal(~is.na(V5004A2) + is.na(V5007A2) + is.na(V5006A2), desenho_amostral)
+svytotal(~is.na(V5004A2) + is.na(V5007A2) + is.na(V5006A2), desenho)
 
 # Outros rendimentos (V)
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	Outros.Rendimentos = factor(
 		ifelse(
 			!is.na(V5001A2) | !is.na(V5002A2) | !is.na(V5003A2) |
@@ -84,20 +51,21 @@ desenho_amostral$variables <- transform(
 	)
 )
 
-svytotal(~Outros.Rendimentos, desenho_amostral)
+svytotal(~Outros.Rendimentos, desenho)
 sidra_7426[c(7,3)]
 
 # Todas as fontes e Outras fontes (V,V)
-svytotal(~is.na(VD4052) + is.na(VD4048), desenho_amostral)
+svytotal(~is.na(VD4052) + is.na(VD4048), desenho)
 sidra_7426[c(7,3)]
 
 # 7429 --------------------------------------
 sidra_7429 <- get_sidra(x = 7429, variable = 10497, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
 # as 3 categorias abaixos são excluídas no cálculo da rendimento domiciliar
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	V2005.Incluidas = ifelse(
 		V2005 == "Pensionista" |
 		V2005 == "Empregado(a) doméstico(a)" |
@@ -107,8 +75,8 @@ desenho_amostral$variables <- transform(
 )
 
 # moradores por domicílio incluídos no cálculo do rendimento domiciliar
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	V2001.Incluidos = ave(
 		V2005.Incluidas,
 		ID_DOMICILIO,
@@ -118,8 +86,8 @@ desenho_amostral$variables <- transform(
 
 # Deflacionar variáveis de rendimento
 # (obs: para o ano mais recente, CO1 = CO2 e CO1e = CO2e)
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	VD4019.Real1 = ifelse(
 		is.na(VD4019) | V2009 <= 14,
 		0, VD4019 * CO1
@@ -157,8 +125,8 @@ desenho_amostral$variables <- transform(
 # Determinar a renda domiciliar per capita
 
 # rendimento domiciliar a preços médios do último ano
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	VD5007.Real1 = ave(
 		VD4019.Real1 + VD4048.Real1,
 		ID_DOMICILIO,
@@ -167,8 +135,8 @@ desenho_amostral$variables <- transform(
 )
 
 # rendimento domiciliar per capita a preços médios do último ano
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	VD5008.Real1 = ifelse(
 		is.na(V2005.Incluidas),
 		0, VD5007.Real1 / V2001.Incluidos
@@ -181,17 +149,18 @@ svyratio(
 		VD4019.Real1 + VD4048.Real1 + V5004A2.Real1 +
 		V5007A2.Real1 + V5006A2.Real1 + Outros.Rendimentos.Real1,
 	denominator = ~VD5008.Real1,
-	design = desenho_amostral
+	design = desenho
 )
 
 unname(sidra_7429[c(7,3)])
 
 # 7437 ----------------------------------------------
 sidra_7437 <- get_sidra(x = 7437, variable = 10750, period = "2023",
-	geo = "State", geo.filter = 31, header = TRUE, format = 2)
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2)
 
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	VD4052.Real1 =VD4019.Real1 + VD4048.Real1,
 	VD4052.Real2 = ifelse(
 		is.na(VD4019) | is.na(VD4048),
@@ -199,16 +168,16 @@ desenho_amostral$variables <- transform(
 	)
 )
 
-svymean(~VD4052.Real1, subset(desenho_amostral, VD4052.Real1 >0))
-svymean(~VD4019.Real1, subset(desenho_amostral, VD4019.Real1 >0))
-svymean(~VD4020.Real1, subset(desenho_amostral, VD4020.Real1 >0))
-svymean(~VD4048.Real1, subset(desenho_amostral, VD4048.Real1 >0))
-svymean(~V5004A2.Real1, subset(desenho_amostral, V5004A2.Real1 >0))
-svymean(~V5007A2.Real1, subset(desenho_amostral, V5007A2.Real1 >0))
-svymean(~V5006A2.Real1, subset(desenho_amostral, V5006A2.Real1 >0))
+svymean(~VD4052.Real1, subset(desenho, VD4052.Real1 >0))
+svymean(~VD4019.Real1, subset(desenho, VD4019.Real1 >0))
+svymean(~VD4020.Real1, subset(desenho, VD4020.Real1 >0))
+svymean(~VD4048.Real1, subset(desenho, VD4048.Real1 >0))
+svymean(~V5004A2.Real1, subset(desenho, V5004A2.Real1 >0))
+svymean(~V5007A2.Real1, subset(desenho, V5007A2.Real1 >0))
+svymean(~V5006A2.Real1, subset(desenho, V5006A2.Real1 >0))
 svymean(~
 	Outros.Rendimentos.Real1,
-	subset(desenho_amostral, Outros.Rendimentos.Real1 >0)
+	subset(desenho, Outros.Rendimentos.Real1 >0)
 )
 
 unname(sidra_7437[c(7,3)])
@@ -230,7 +199,7 @@ RMe_por_tipo <- lapply(
 		svyby(
 			as.formula(paste0("~", var)),
 			~Estrato.Geo,
-			subset(desenho_amostral, get(var) > 0),
+			subset(desenho, get(var) > 0),
 			svymean,
 			vartype = "cv"
 		)

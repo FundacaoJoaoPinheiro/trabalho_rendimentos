@@ -10,16 +10,16 @@ options(scipen = 999)
 variaveis <- c("V2009", "VD4002", "VD4019", "VD4020")
 
 if (file.exists("desenho_distribuicao.RDS")) {
-	desenho_amostral <- readRDS("desenho_distribuicao.RDS")
+	desenho <- readRDS("desenho_distribuicao.RDS")
 } else {
-	desenho_amostral <- gerar_DA(variaveis)
+	desenho <- gerar_DA(variaveis)
 }
 
 # Distribuição do rendimento mensal -------------------------------------------
 
 # Deflacionar variáveis de rendimento
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	VD4019.Real1 = ifelse(is.na(VD4019) | V2009 <= 14, NA, VD4019 * CO1),
 	VD4019.Real2 = ifelse(is.na(VD4019) | V2009 <= 14, NA, VD4019 * CO2),
 	VD4020.Real1 = ifelse(is.na(VD4020) | V2009 <= 14, NA, VD4020 * CO1e),
@@ -54,15 +54,15 @@ rotulos_classe = c(
 quantis2 <- svyby(
 	~VD4019.Real1,
 	~UF,
-	desenho_amostral,
+	desenho,
 	FUN = svyquantile,
 	quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
 	na.rm = TRUE
 )
 
 rendimento_UF1 <- split(
-	desenho_amostral$variables$VD4019.Real1,
-	desenho_amostral$variables$UF
+	desenho$variables$VD4019.Real1,
+	desenho$variables$UF
 )
 
 quantis_UF1 <-  split(quantis2[2:13], quantis2[[1]])
@@ -81,15 +81,15 @@ classes_simples1 <- Map(
 )
 
 # adicionar coluna com as classes simples por percentual (CSP)
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
+desenho$variables <- transform(
+	desenho$variables,
 	CSP.VD4019.Real1 = unsplit(classes_simples1, UF)
 )
 
 massa_rendimento1 <- svyby(
 	~VD4019.Real1,
 	~CSP.VD4019.Real1 + UF,
-	desenho_amostral,
+	desenho,
 	FUN = svytotal,
 	na.rm = TRUE
 )
