@@ -2,47 +2,33 @@
 # comparar valores estimados para MG na sessão do R com aqueles disponíveis 
 # nas tabelas da plataforma SIDRA
 
-pacotes <- c("sidrar", "PNADcIBGE", "survey")
+pacotes <- c("sidrar", "PNADcIBGE", "survey", "convey")
 lapply(pacotes, library, character.only = TRUE)
+source("testes/utilitarios.R")
 options(scipen = 999)
 
-variaveis <- c("V2009", "VD4002", "VD4052", "V4034", "V2010", "VD3004", "V2007")
+variaveis <- c("V2009", "VD4002", "VD4052", "V2010", "VD3004", "V2007", "V2005")
 
-pnadc_ano = 2023
-visita = 1
-
-if (file.exists("desenho_ocupadas.RDS")) {
-	desenho_amostral <- readRDS("desenho_ocupadas.RDS")
+if (file.exists("desenho_pessoas.RDS")) {
+	desenho_amostral <- readRDS("desenho_pessoas.RDS")
 } else {
-	microdados <- "Microdados/PNADC_2023_visita1.txt"
-	input <- "Microdados/input_PNADC_2023_visita1_20241220.txt"
-	dict <- "Microdados/dicionario_PNADC_microdados_2023_visita1_20241220.xls"
-	deflator <- "Microdados/deflator_PNADC_2023.xls"
-	desenho_amostral <- pnadc_deflator(
-		pnadc_labeller(
-			data_pnadc = read_pnadc(
-				microdata = microdados,
-				input = input,
-				vars = c(variaveis, "UF", "V2009")  # sempre importar UF e Idade
-			),
-			dictionary.file = dict
-		),
-		deflator.file = deflator
-	)
-	desenho_amostral <- pnadc_design(
-		subset(desenho_amostral, UF == "Minas Gerais")
-	)
+	desenho_amostral <- gerar_DA(variaveis)
 }
-desenho_amostral$variables <- transform(
-	desenho_amostral$variables,
-	Estrato_G = factor(substr(Estrato, 1, 4))
+
+# Pessoas por categorias -------------------------------------------
+
+# 7543 --> VD4019 * CO1, classe simples; Resultados muito parecidos
+sidra_7543 <- get_sidra(
+	x = 7543, variable = 10848, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
 )
+names(sidra_7543)
 
-# 7431, 7432, 7433 e 7434 -------------------------------------
-# Pessoas de 14 anos ou mais de idade ocupadas por categoria --> V2009, VD4002,
-# VD4052
+# Pessoas de 14 anos ou mais de idade ocupadas por categoria
+# --> V2009, VD4002, VD4052
 
-# 7431 --> V2010 --------------------------
+# 7431 --> V2010; cor/raça -----------------------------------
 sidra_7431 <- get_sidra(x = 7431, variable = 10765, period = "2023",
 	geo = "State", geo.filter = 31, header = TRUE, format = 2)
 
@@ -65,7 +51,7 @@ ocupadas_cor <- svyby(
 print(ocupadas_cor)
 unname(sidra_7431[c(7,3)])
 
-# 7432 --> V2009 --------------------------
+# 7432 --> V2009; grupos de idade -------------------------
 sidra_7432 <- get_sidra(x = 7432, variable = 10765, period = "2023",
 	geo = "State", geo.filter = 31, header = TRUE, format = 2)
 
@@ -99,7 +85,7 @@ ocupadas_idade <- svyby(
 print(ocupadas_idade)
 unname(sidra_7432[c(7,3)])
 
-# 7433 --> VD3004 -------------------------
+# 7433 --> VD3004; instrução -------------------------
 sidra_7433 <- get_sidra(x = 7433, variable = 10765, period = "2023",
 	geo = "State", geo.filter = 31, header = TRUE, format = 2)
 
@@ -114,7 +100,7 @@ ocupadas_instrucao <- svyby(
 print(ocupadas_instrucao)
 unname(sidra_7433[c(7,3)])
 
-# 7434 --> V2007 -------------------------
+# 7434 --> V2007; sexo --------------------------------
 sidra_7434 <- get_sidra(x = 7434, variable = 10765, period = "2023",
 	geo = "State", geo.filter = 31, header = TRUE, format = 2)
 
@@ -128,4 +114,8 @@ ocupadas_sexo <- svyby(
 	
 print(ocupadas_sexo)
 unname(sidra_7434[c(7,3)])
+
+# 7439 --> V2005, responsáveis;
+
+# 7440 --> V1023, área;
 

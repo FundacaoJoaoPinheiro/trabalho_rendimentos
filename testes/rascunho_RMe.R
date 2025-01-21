@@ -230,7 +230,7 @@ rotulos_classes = c(
 	"Maior que P99"
 )
 
-quantis_RMe1 <- svyby(
+quantis1 <- svyby(
 	~VD4019.Real1,
 	~UF,
 	desenho_amostral,
@@ -239,7 +239,7 @@ quantis_RMe1 <- svyby(
 	na.rm = TRUE
 )
 
-quantis_UF <- split(quantis_RMe1[2:13], quantis_RMe1[[1]])
+quantis_UF1 <- split(quantis1[2:13], quantis1[[1]])
 
 VD4019_real1_UF <- split(
 	desenho_amostral$variables$VD4019.Real1,
@@ -256,7 +256,7 @@ classes_VD4019_real1 <- Map(
 		)
 	},
 	renda = VD4019_real1_UF,
-	breaks = quantis_UF
+	breaks = quantis_UF1
 )
 
 desenho_amostral$variables <- transform(

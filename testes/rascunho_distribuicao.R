@@ -121,7 +121,7 @@ distribuicao_acumulada_UF1 <- lapply(distribuicao_UF1, cumsum)
 
 distribuicao_acumulada1 <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
-	Classes.Simples = rep(rotulos_classe, times = 4),
+	Classes.Acumuladas = rep(rotulos_cap, times = 4),
 	Distribuicao.Simples.RDPC1 = unlist(distribuicao_acumulada_UF1)
 )
 
