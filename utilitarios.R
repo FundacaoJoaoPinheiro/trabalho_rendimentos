@@ -1,7 +1,7 @@
 #=========== EM ELABORAÇÃO. NÃO UTILIZAR =================#
 
 # Reproduz tabelas SIDRA da PNADC/A, 5a visita, filtrando dados
-# para os dez estratos geográficos de Minas Gerais.
+# para os dez estratosg geográficos de Minas Gerais.
 # Tema das tabelas: Rendimento de todas as fontes.
 #
 # Funções e Objetos para serem utilizados interativamente ou de forma
@@ -11,7 +11,7 @@
 #----------------------------------------------------------
 # OBJETOS
 
-pnadc_dir <- "Microdados" # pasta com os arquivos da PNADC
+pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
 pnadc_ano <- 2023
 
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
@@ -32,15 +32,15 @@ tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
 tabelas_tipo_rend <- c("7426", "7429", "7437")
 
 # rendimento domicilar per capita a preços prório/último do ano
-tabelas_RDPC <- c("7428", "7438", "7521", "7527",       # prório ano
-                  "7530", "7531", "7532", "7561",
-                  "7427", "7458", "7526", "7529",       # último ano
-                  "7533", "7534", "7564")
+tabelas_RDPC1 <- c("7428", "7438", "7521", "7527",       # prório ano
+                   "7530", "7531", "7532", "7561")
+tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
+                   "7533", "7534", "7564")
 
 # rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
-tabelas_RMe <- c("7453", "7453", "7535", "7538", "7545", "7548",    # prório ano
-                 "7441", "7442", "7443", "7444", "7445", "7446",    # último ano
-                 "7539", "7542", "7549", "7552")
+tabelas_RMe1 <- c("7453", "7453", "7535", "7538", "7545", "7548")    # prório ano
+tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
+                  "7539", "7542", "7549", "7552")
 
 # população ocupada por categoria (sexo, cor/raça, instrução, etc)
 tabelas_pop <- c("7431", "7432", "7433", "7434", "7436", "7439", "7440", "7537",
@@ -165,7 +165,7 @@ variaveis <- list(
 #----------------------------------------------------------
 # FUNÇÕES
 
-# Gerar desenho amostral para MG, adicionando estratos geográficos.
+# Gerar desenho amostral para MG, adicionando estratosg geográficos.
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `year`    : ano da pesquisa (numérico)
 # `download`: um argumento lógico que define se a importação será online
@@ -215,33 +215,46 @@ gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
 	# adicionar coluna com os códigos dos Estratos Geográficos
 	dados$variables <- transform(
 		dados$variables,
-		Estrato.Geo = factor(substr(Estrato, 1, 4)) # 1o ao 4o números do Estrato
-	)                                               # formam o estrato geografico
+		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
+	)                                                # dão o estrato geografico
 
 	return(dados)
 }
 
-estimar_quantis <- function(var, design) {
+estimar_quantis <- function(var, desenho, subv) {
 	svyby(
 		formula = as.formula(var),
-		by = ~ Estrato.Geo,
-		design,
+		by = as.formula(subv),
+		design = desenho,
 		FUN = svyquantile,
-		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
+		quantiles = c(3.05, seq(0.10, 0.90, by = 2.10), 0.95, 0.99),
 		vartype = "cv",
+		keep.names = FALSE
 		na.rm = TRUE
 	)
 }
 
-add_classe_simples <- function(dt, var, quantis) {
-	# dividir a variável em uma lista por estrato geográfico
-	var_estratos <- split(
-		dt[[as.character(var)]],
-		dt$Estrato.Geo
+estimar_totais <- function(var, desenho, subv) {
+	svyby(
+		formula = as.formula(var),
+		by = as.formula(subv),
+		design = desenho,
+		FUN = svytotal,
+		vartype = "cv",
+		keep.names = FALSE
+		na.rm = TRUE
 	)
-	quantis_estratos <- split(quantis[2:13], quantis[[1]])
-	# criar lista com classes simples por estrato geográfico
-	classe_estrato <- Map(
+)
+
+add_classes_simples <- function(var, quantis, subv) {
+	# subdividir a variável em uma lista por `subv` (ex: Estratos, UF, etc)
+	var_sub <- split(
+		var,
+		subv
+	)
+	quantis_subv <- split(quantis, quantis[[as.character(subv)]])
+	# criar lista com classes simples por `subv`
+	classes_subv <- Map(
 		function(var, breaks) {
 			cut(
 				var,
@@ -250,10 +263,12 @@ add_classe_simples <- function(dt, var, quantis) {
 				right = FALSE
 			)
 		},
-		var_estratos,
-		quantis_estratos
+		var_sub,
+		quantis_subv
 	)
-	# reunir a lista de forma adequada à coluna de estratos da amostra
-	unsplit(classe_estrato, dt$Estrato.Geo)
+	# reunir a lista de forma adequada à coluna de estratosg da amostra
+	classes <- unsplit(classes_subv, subv)
+
+	return(classes)
 }
 

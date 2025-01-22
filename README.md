@@ -13,6 +13,8 @@ Minas Gerais.
 - [PNADcIBGE](https://cran.r-project.org/web/packages/PNADcIBGE/index.html)
 - [survey](https://cran.r-project.org/web/packages/survey/index.html)
 
+- opcional: [sidrar](https://cran.r-project.org/web/packages/sidrar/index.html)).
+
 # Instruções
 
 O arquivo `utilitarios.R` define alguns objetos e funções que podem ser utilizados
@@ -24,7 +26,7 @@ tabelas 7426 a 7429:
 
 	library(PNADcIBGE)
 	source("utilitarios.R")
-	plano_amostral <- gerar_pa(c(7426:7429), download=TRUE)
+	desenho <- gerar_desenho(c(7426:7429), download=TRUE)
 
 Ler os dados diretamente do armazenamento interno pode ser mais rápido. Para
 isso, os arquivos devem ser armazenados na pasta "Microdados". O shell
@@ -32,48 +34,17 @@ script baixar_microdados.sh pode ser usado no Linux e no macOs e faz o
 download dos arquivos na pasta "Microdados" automaticamente. Usuários do
 Windows podem copiar os links e colar no navegador para baixar (e mover os
 arquivos para a pasta correta manualmente). O caminho para os arquivos de
-microdados pode ser alterado com o objeto [`input_dir`](utilitarios.R#L14):
+microdados pode ser alterado com o objeto [`pnadc_dir`](utilitarios.R#L14):
 
 	library(PNADcIBGE)
 	source("utilitarios.R")
-	input_dir <- "Diretorio-Alternativo"
-	plano_amostral <- gerar_pa(c(7426:7429))
+	pnadc_dir <- "Diretorio-Alternativo"
+	desenho <- gerar_desenho(c(7426:7429))
 
-Criar uma lista com as estimativas populacionais por variável (da tabela
-7426) e estrato geográfico de MG, e outra lista com os respectivos coeficientes
-de variação:
-
-	library(PNADcIBGE)
-	library(survey)
-	source("utilitarios.R")
-	plano_amostral <- gerar_pa(c(7426))
-	pop_estimada_7426 <- list(
-		efetiva  = estimar_pop(pnadc_MG, "possui_renda_efetiva"),
-		aposent  = estimar_pop(pnadc_MG, "V5004A"),
-		aluguel  = estimar_pop(pnadc_MG, "V5007A"),
-		pensao_aliment = estimar_pop(pnadc_MG, "V5006A"),
-		outros = estimar_pop(pnadc_MG, "V5008A")
-	)
-	cv_7426 <- lapply(
-		pop_estimada_7426,
-		function(obj) { head(cv(obj), n = 10) }  # 10 primeiros correspondem a "Sim"
-	)
-	names(cv_7426) <- names(pop_estimada_7426)
-
-O arquivo `exemplo_tab7426.R` funciona de forma autônoma e é um arquivo teste
-que trabalha separadamente com a tabela 7426. Ele cria um objeto com as
-estimativas populacionais para cada variável por estrato geográfico, e cria
-outro objeto com os respectivos coeficientes de variação
-
-	source("exemplo_tab7426.R")
-	# imprimir a pop. estimada que recebe aluguel por estrato geográfico
-	print(pop_estimada_7426$aluguel)
-	print(cv_7426$aluguel)
-
-O arquivo `gerar_resultados.R` está em construção e deverá automatizar a tarefa
-para todas as tabelas do tema "Rendimento de todas as fontes":
-
-	source("gerar_resultados.R")
+O diretório `testes` possui rascunhos que fazem testes com os resultados para
+4 UF's (Pará, Bahia, Minas Gerais e Goiás), comparando as estimativas com
+as tabelas disponíveis no SIDRA (opcinonalmente, utilizando o pacote
+[sidrar](https://cran.r-project.org/web/packages/sidrar/index.html)).
 
 ## Tabelas reproduzidas
 
