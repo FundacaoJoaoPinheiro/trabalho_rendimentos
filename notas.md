@@ -15,11 +15,14 @@ Mas devo considerar todos os moradores no denominador?
 
 Tabelas: 7526, 7564, 7533, 7534, 7527, 7530, 7435, 7543, 7544, 7431, 7432, 7433,
 7434, 7439, 7440, 7436, 7447, 7441, 7442, 7443, 7444, 7445, 7446, 7453,
-7534, 7538, 7539, 7542
+7534, 7538, 7539, 7542, 7426*, 7429
+
+* rendimento efetivamente recebido em todos os trabalhos é o único diferente.
 
 ## Resultados mais ou menos próximos
 
-Tabelas: 7529, 7427, 7431, 7432, 7433, 7434, 7449, 7431, 7432, 7433, 7434
+Tabelas: 7529, 7427, 7431, 7432, 7433, 7434, 7449, 7431, 7432, 7433,
+7434,
 
 ## Resultados diferentes
 Tabelas: 7458

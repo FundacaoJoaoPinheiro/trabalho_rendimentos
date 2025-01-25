@@ -32,12 +32,44 @@ sidra_7426 <- get_sidra(x = 7426, variable = 10486, period = "2023", geo = "Stat
 	header = TRUE, format = 2)
 sidra_7426 <- transform(sidra_7426, Valor = Valor * 1000)
 
+estimar_total <- function(var, desenho) {
+	svyby(
+		formula = as.formula(var),
+		by = ~UF,
+		design = desenho,
+		FUN = svytotal,
+		vartype = "cv",
+		keep.names = FALSE,
+		na.rm = TRUE
+	)
+}
+
 # Rendimentos Habitual e Efetivo (V, ?)
-svytotal(~is.na(VD4019) + is.na(VD4020), subset(desenho, V2009 >= 14))
-sidra_7426[c(7,3)]
+
+rend_trabalho <- svyby(
+	~(!is.na(VD4019)) + (!is.na(VD4020)),
+	~UF,
+	desenho,
+	svytotal,
+	vartype = "cv",
+	keep.names = FALSE,
+	na.rm = TRUE
+)
+
+View(rend_trabalho[c(1, 3, 7, 5, 9)])
+View(sidra_7426[c(7, 4, 3)])
 
 # Aposentadoria..., aluguel..., pensão... (V,V,V)
-svytotal(~is.na(V5004A2) + is.na(V5007A2) + is.na(V5006A2), desenho)
+
+pop_rendimentos <- estimar_total(~
+ 	(is.na(V5004A2) +   # aposentadoria
+	is.na(V5007A2) +    # aluguel
+	is.na(V5006A2)),    # pensão
+	desenho
+)
+
+View(sidra_7426[c(7, 4, 3)])
+View(pop_rendimentos)
 
 # Outros rendimentos (V)
 desenho$variables <- transform(
@@ -46,17 +78,27 @@ desenho$variables <- transform(
 		ifelse(
 			!is.na(V5001A2) | !is.na(V5002A2) | !is.na(V5003A2) |
 			!is.na(V5005A2) | !is.na(V5008A2),
-			"Sim", "Não"
+			1, NA
 		)
 	)
 )
 
-svytotal(~Outros.Rendimentos, desenho)
-sidra_7426[c(7,3)]
+estimar_total(~Outros.Rendimentos, desenho)
+sidra_7426[c(7, 4, 3)]
 
 # Todas as fontes e Outras fontes (V,V)
-svytotal(~is.na(VD4052) + is.na(VD4048), desenho)
-sidra_7426[c(7,3)]
+outras_fontes <- svyby(
+	~is.na(VD4052) + is.na(VD4048),
+	~UF,
+	desenho,
+	FUN = svytotal,
+	vartype = "cv",
+	keep.names = FALSE,
+	na.rm = TRUE
+)
+
+View(sidra_7426[c(7, 4, 3)])
+View(outras_fontes)[c(1, 2, 4)])
 
 # 7429 --------------------------------------
 sidra_7429 <- get_sidra(x = 7429, variable = 10497, period = "2023",
@@ -80,7 +122,7 @@ desenho$variables <- transform(
 	V2001.Incluidos = ave(
 		V2005.Incluidas,
 		ID_DOMICILIO,
-		FUN = function(x) sum(x, na.rm=T)
+		FUN = sum
 	)
 )
 
@@ -88,37 +130,16 @@ desenho$variables <- transform(
 # (obs: para o ano mais recente, CO1 = CO2 e CO1e = CO2e)
 desenho$variables <- transform(
 	desenho$variables,
-	VD4019.Real1 = ifelse(
-		is.na(VD4019) | V2009 <= 14,
-		0, VD4019 * CO1
-	),  
-	VD4020.Real1 = ifelse(
-		is.na(VD4020) | V2009 <= 14,
-		0, VD4020 * CO1
-	),  
-	 VD4048.Real1 = ifelse(
-	 	is.na(VD4048),
-	 	0, VD4048 * CO1e
- 	),
- 	 V5004A2.Real1 = ifelse(
-	  	is.na(V5004A2),
-	  	0, V5004A2 * CO1e
-  	),
-  	 V5007A2.Real1 = ifelse(
-	   	is.na(V5007A2),
-	   	0, V5007A2 * CO1e
-   	),
-  	 V5006A2.Real1 = ifelse(
-	   	is.na(V5006A2),
-	   	0, V5006A2 * CO1e
-   	),
-	 Outros.Rendimentos.Real1 = ifelse(
-	   	Outros.Rendimentos == "Não",
-	 	0,
+	VD4019.Real = ifelse(is.na(VD4019), NA, VD4019 * CO1),  
+	VD4048.Real = ifelse(is.na(VD4048), NA, VD4048 * CO1e),
+ 	V5004A2.Real = ifelse(is.na(V5004A2), NA, V5004A2 * CO1e),
+	Outros.Rendimentos.Real = ifelse(
+	   	Outros.Rendimentos == 1,
 	 	rowSums(
 	 		cbind(V5001A2, V5002A2, V5003A2, V5005A2, V5008A2) * CO1e,
 	 		na.rm = TRUE
- 		)
+ 		),
+	 	NA
    	)
 )
 
@@ -127,32 +148,44 @@ desenho$variables <- transform(
 # rendimento domiciliar a preços médios do último ano
 desenho$variables <- transform(
 	desenho$variables,
-	VD5007.Real1 = ave(
-		VD4019.Real1 + VD4048.Real1,
+	VD5007.Real = ave(
+		ifelse(is.na(VD4019), 0, VD4019.Real) +
+		ifelse(is.na(VD4048), 0, VD4048.Real),
 		ID_DOMICILIO,
 		FUN = sum
-	)
+	),
+	VD4019.Dom.Real = ave(VD4019.Real, ID_DOMICILIO, FUN = sum)
 )
 
-# rendimento domiciliar per capita a preços médios do último ano
+# rendimento domiciliar per capita a preços médios do ano
 desenho$variables <- transform(
 	desenho$variables,
-	VD5008.Real1 = ifelse(
-		is.na(V2005.Incluidas),
-		0, VD5007.Real1 / V2001.Incluidos
+	VD5008.Real = ifelse(
+		V2005.Incluidas == 1,
+		VD5007.Real / V2001.Incluidos,
+		NA
+	),
+	VD4019.DPC.Real = ifelse(
+		V2005.Incluidas == 1,
+		VD4019.Dom.Real / V2001.Incluidos,
+		NA
 	)
 )
 
 # Agora calcular as participações na renda domiciliar por tipo de rendimento
-svyratio(
-	numerator = ~
-		VD4019.Real1 + VD4048.Real1 + V5004A2.Real1 +
-		V5007A2.Real1 + V5006A2.Real1 + Outros.Rendimentos.Real1,
-	denominator = ~VD5008.Real1,
-	design = desenho
+rme_dom_percapita <- svyby(
+	~VD4019.Dom.Real,
+	by = ~UF,
+	denominator = ~VD5007.Real,
+	design = subset(desenho, V2005.Incluidas == 1),
+	FUN = svyratio,
+	vartype = "cv",
+	keep.names = FALSE,
+	na.rm = TRUE
 )
 
-unname(sidra_7429[c(7,3)])
+View(sidra_7429[c(7, 4, 3)])
+View(renda_participacao)
 
 # 7437 ----------------------------------------------
 sidra_7437 <- get_sidra(x = 7437, variable = 10750, period = "2023",
@@ -161,26 +194,26 @@ sidra_7437 <- get_sidra(x = 7437, variable = 10750, period = "2023",
 
 desenho$variables <- transform(
 	desenho$variables,
-	VD4052.Real1 =VD4019.Real1 + VD4048.Real1,
+	VD4052.Real =VD4019.Real + VD4048.Real,
 	VD4052.Real2 = ifelse(
 		is.na(VD4019) | is.na(VD4048),
 		NA, rowSums(cbind(VD4019 * CO2, VD4048 * CO2e))
 	)
 )
 
-svymean(~VD4052.Real1, subset(desenho, VD4052.Real1 >0))
-svymean(~VD4019.Real1, subset(desenho, VD4019.Real1 >0))
-svymean(~VD4020.Real1, subset(desenho, VD4020.Real1 >0))
-svymean(~VD4048.Real1, subset(desenho, VD4048.Real1 >0))
-svymean(~V5004A2.Real1, subset(desenho, V5004A2.Real1 >0))
-svymean(~V5007A2.Real1, subset(desenho, V5007A2.Real1 >0))
-svymean(~V5006A2.Real1, subset(desenho, V5006A2.Real1 >0))
+svymean(~VD4052.Real, subset(desenho, VD4052.Real >0))
+svymean(~VD4019.Real, subset(desenho, VD4019.Real >0))
+svymean(~VD4020.Real, subset(desenho, VD4020.Real >0))
+svymean(~VD4048.Real, subset(desenho, VD4048.Real >0))
+svymean(~V5004A2.Real, subset(desenho, V5004A2.Real >0))
+svymean(~V5007A2.Real, subset(desenho, V5007A2.Real >0))
+svymean(~V5006A2.Real, subset(desenho, V5006A2.Real >0))
 svymean(~
-	Outros.Rendimentos.Real1,
-	subset(desenho, Outros.Rendimentos.Real1 >0)
+	Outros.Rendimentos.Real,
+	subset(desenho, Outros.Rendimentos.Real >0)
 )
 
-unname(sidra_7437[c(7,3)])
+unname(sidra_7437[c(7, 4, 3)])
 
 tipo_rendimento <- c(
 	Todas.as.Fontes      = "VD4052",
@@ -194,7 +227,7 @@ tipo_rendimento <- c(
 )
 
 RMe_por_tipo <- lapply(
-	paste0(tipo_rendimento, ".Real1"),
+	paste0(tipo_rendimento, ".Real"),
 	function(var) {
 		svyby(
 			as.formula(paste0("~", var)),

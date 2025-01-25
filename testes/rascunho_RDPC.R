@@ -81,7 +81,7 @@ desenho$variables <- transform(
 )
 
 # 7526 - pequenas diferenças nos últimos dois quantis_2022
-sidra_7526 <- get_sidra(
+jidra_7526 <- get_sidra(
 	x = 7526, variable = 10838, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
@@ -106,7 +106,7 @@ reformatar_sidra_uf <- function(tab) {
 }
 
 quantis_2022 <- svyby(
-	~VD5009.Real2022,
+	~VD5008.Real2022,
 	~UF,
 	desenho,
 	FUN = svyquantile,
@@ -114,6 +114,23 @@ quantis_2022 <- svyby(
 	vartype = "cv",
 	keep.names = FALSE,
 	na.rm = TRUE
+)
+
+teste <- quantis_2022
+colnames(teste) <- c(
+	"UF",
+	paste0("P", c(5, seq(10, 90, by = 10), 95, 99)),
+	paste0("cv.P", c(5, seq(10, 90, by = 10), 95, 99))
+)
+
+teste1 <- reshape(
+	teste,
+	idvar = "UF",
+	varying = list(names(teste)[2:13], names(teste)[14:25]),
+	v.names = c("Renda.DPC", "CV"),
+	timevar = "Classes.Simples",
+	times   = paste0("P", c(5, seq(10, 90, by = 10), 95, 99)),
+	direction = "long"
 )
 
 View(quantis_2022)
