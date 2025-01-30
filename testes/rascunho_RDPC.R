@@ -7,16 +7,11 @@ lapply(pacotes, library, character.only = TRUE)
 options(scipen = 999)
 source("testes/utilitarios.R")
 
-variaveis <- c("V2001", "V2005", "VD4019", "VD4048", "V5001A", "V5002A", "V5003A")
-
-pnadc_ano = 2023
-visita = 1
-pnadc_dir = "Microdados"
-
+# variaveis: V2001, V2005, VD4019, VD4048, V5001A, V5002A, V5003A.
 if (file.exists("desenho_RDPC.RDS")) {
 	desenho <- readRDS("desenho_RDPC.RDS")
 } else {
-	desenho <- gerar_DA(variaveis)
+	desenho <- gerar_desenho(tabelas_RDPC1)
 }
 	
 # 2) Rendimento Domiciliar Per Capita a preços médios do último/próprio ano
@@ -52,89 +47,42 @@ desenho$variables <- transform(
 desenho$variables <- transform(
 	desenho$variables,
 	VD4019.Real = ifelse(is.na(VD4019), NA, VD4019 * CO1),
-	VD4048.Real = ifelse(is.na(VD4048), NA, VD4048 * CO1e),
-	VD4019.Real2022 = ifelse(is.na(VD4019), NA, VD4019 * CO2),
-	VD4048.Real2022 = ifelse(is.na(VD4048), NA, VD4048 * CO2e)
+	VD4048.Real = ifelse(is.na(VD4048), NA, VD4048 * CO1e)
 )
 
 # rendimento de todas as fontes
 desenho$variables <- transform(
 	desenho$variables,
-	VD4052.Real2022 =
-		ifelse(is.na(VD4019), 0, VD4019.Real2022) +
-		ifelse(is.na(VD4048), 0, VD4048.Real2022)
+	VD4052.Real =
+		ifelse(is.na(VD4019), 0, VD4019.Real) +
+		ifelse(is.na(VD4048), 0, VD4048.Real)
 )
 
 # rendimento domiciliar a preços médios do último ano
 desenho$variables <- transform(
 	desenho$variables,
-	VD5007.Real2022 = ave(VD4052.Real2022, ID_DOMICILIO, FUN = sum)
+	VD5007.Real = ave(VD4052.Real, ID_DOMICILIO, FUN = sum)
 )
 
 # rendimento domiciliar per capita a preços médios do último ano
 desenho$variables <- transform(
 	desenho$variables,
-	VD5008.Real2022 = ifelse(
+	VD5008.Real = ifelse(
 		is.na(V2005.Rendimento),
-		NA, VD5007.Real2022 / V2001.Rendimento
+		NA, VD5007.Real / V2001.Rendimento
 	)
 )
 
-# 7526 - pequenas diferenças nos últimos dois quantis_2022
-jidra_7526 <- get_sidra(
+# 7526 - pequenas diferenças nos últimos dois limites_sup
+sidra_7526 <- get_sidra(
 	x = 7526, variable = 10838, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
 
-reformatar_sidra_classe <- function(tab) {
-	reshape(
-		tab[c(4,7,3)],
-		timevar = names(tab)[7],
-		idvar = names(tab)[4],
-		direction = "wide"
-	)
-}
+limites_sup <- estimar_quantis(~VD5008.Real, desenho)
 
-reformatar_sidra_uf <- function(tab) {
-	reshape(
-		tab[c(4,7,3)],
-		timevar = names(tab)[4],
-		idvar = names(tab)[7],
-		direction = "wide"
-	)
-}
-
-quantis_2022 <- svyby(
-	~VD5008.Real2022,
-	~UF,
-	desenho,
-	FUN = svyquantile,
-	quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
-	vartype = "cv",
-	keep.names = FALSE,
-	na.rm = TRUE
-)
-
-teste <- quantis_2022
-colnames(teste) <- c(
-	"UF",
-	paste0("P", c(5, seq(10, 90, by = 10), 95, 99)),
-	paste0("cv.P", c(5, seq(10, 90, by = 10), 95, 99))
-)
-
-teste1 <- reshape(
-	teste,
-	idvar = "UF",
-	varying = list(names(teste)[2:13], names(teste)[14:25]),
-	v.names = c("Renda.DPC", "CV"),
-	timevar = "Classes.Simples",
-	times   = paste0("P", c(5, seq(10, 90, by = 10), 95, 99)),
-	direction = "long"
-)
-
-View(quantis_2022)
-View(sidra_7526)
+write.csv(limites_sup, "tab_7526.csv")
 
 # 7529 - valores bem parecidos, diferença maior em P5 - P10
 sidra_7529 <- get_sidra(
@@ -144,52 +92,15 @@ sidra_7529 <- get_sidra(
 )
 sidra_7529 <- transform(sidra_7529, Valor = Valor * 1000)
 
-# classes simples de percentual (CSP)
-rotulos_classe = c(
-	"Até P5",
-	"Maior que P5 até P10",
-	"Maior que P10 até P20",
-	"Maior que P20 até P30",
-	"Maior que P30 até P40",
-	"Maior que P40 até P50",
-	"Maior que P50 até P60",
-	"Maior que P60 até P70",
-	"Maior que P70 até P80",
-	"Maior que P80 até P90",
-	"Maior que P90 até P95",
-	"Maior que P95 até P99",
-	"Maior que P99"
-)
-
-rendimento_UF2022 <- split(
-	desenho$variables$VD5008.Real2022,
-	desenho$variables$UF
-)
-
-quantis_UF2022 <-  split(quantis_2022[2:13], quantis_2022[[1]])
-
-classes_simples2022 <- Map(
-	function(renda, breaks) {
-		cut(
-			renda,
-			breaks = c(-Inf, as.numeric(breaks), Inf),
-			labels = rotulos_classe,
-			right = FALSE
-		)
-	},
-	renda = rendimento_UF2022,
-	breaks = quantis_UF2022
-)
-
 # adicionar coluna com as classes simples por percentual (CSP)
 desenho$variables <- transform(
 	desenho$variables,
-	Classes.Simples2022 = unsplit(classes_simples2022, UF)
+	Faixas.Simples = add_faixas_simples(VD5008.Real, UF, limites_sup)
 )
 
 pop_simples2022 <- svyby(
 	~V2005.Rendimento,
-	~Classes.Simples2022 + UF,
+	~Faixas.Simples + UF,
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
@@ -197,8 +108,7 @@ pop_simples2022 <- svyby(
 	na.rm = TRUE
 )
 pop_simples2022 <- pop_simples2022[c(2,1,3)]
-colnames(pop_simples2022) <- c("UF", "Classes.Simples2022", "Valor")
-rownames(pop_simples2022) <- NULL
+colnames(pop_simples2022) <- c("UF", "Faixas.Simples", "Valor")
 
 View(sidra_7529[c(4,7,3)])
 View(pop_simples2022)
@@ -210,9 +120,6 @@ sidra_7564 <- get_sidra(
 	header = TRUE, format = 2
 )
 sidra_7564 <- transform(sidra_7564, Valor = Valor * 1000)
-
-# classes acumuladas de percentual (CASP)
-rotulos_acumuladas = c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
 pop_simples_UF2022 <- split(pop_simples2022$Valor, pop_simples2022$UF)
 
@@ -237,9 +144,9 @@ sidra_7427 <- get_sidra(
 )
 sidra_7427 <- transform(sidra_7427, Valor = Valor * 10^6)
 
-massa_rendimento2022 <- svyby(
-	~VD5008.Real2022,
-	~Classes.Simples2022 + UF,
+massa_rendimento <- svyby(
+	~VD5008.Real,
+	~Faixas.Simples + UF,
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
@@ -247,7 +154,15 @@ massa_rendimento2022 <- svyby(
 	na.rm = TRUE
 )
 
-View(massa_rendimento2022)
+massa_rendimento <- data.frame(
+	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Pará = c(massa_rendimento[1:13, 3], massa_rendimento[1:13, 4]),
+	Bahia = c(massa_rendimento[1:13, 3], massa_rendimento[1:13, 4]),
+	Minas.Gerais = c(massa_rendimento[27:39, 3], massa_rendimento[27:39, 4]),
+	Goiás = c(massa_rendimento[40:52, 3], massa_rendimento[40:52, 4])
+)
+
+View(massa_rendimento)
 View(sidra_7427[c(4,7,3)])
 
 # 7533 - valores bem parecidos, maiores diferenças em P95 e P99
@@ -257,17 +172,26 @@ sidra_7533 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-rme_simples2022 <- svyby(
-	~VD5008.Real2022,
-	~Classes.Simples2022 + UF,
+rme_simples <- svyby(
+	~VD5008.Real,
+	~Faixas.Simples + UF,
 	desenho,
 	FUN = svymean,
-	keep.names = FALSE,	
+	keep.names = FALSE,
+	vartype = "cv",
 	na.rm = TRUE
 )
 
+rme_simples <- data.frame(
+	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Pará = c(rme_simples[1:13, 3], rme_simples[1:13, 4]),
+	Bahia = c(rme_simples[1:13, 3], rme_simples[1:13, 4]),
+	Minas.Gerais = c(rme_simples[27:39, 3], rme_simples[27:39, 4]),
+	Goiás = c(rme_simples[40:52, 3], rme_simples[40:52, 4])
+)
+
 View(sidra_7533[c(4,7,3)])
-View(rme_simples2022)
+View(rme_simples)
 
 # 7534 - valores bem parecidos
 sidra_7534 <- get_sidra(
@@ -278,20 +202,20 @@ sidra_7534 <- get_sidra(
 sidra_7534 <- reformatar_sidra_uf(sidra_7534)
 
 rme_simples_UF2022 <- split(
-	rme_simples2022$VD5008.Real2022,
-	rme_simples2022$UF
+	rme_simples$VD5008.Real,
+	rme_simples$UF
 )
 
-rme_acumul2022 <- Map(
+rme_acumul <- Map(
 	function(renda, pop) {
 		cumsum(renda * pop) / cumsum(pop)
 	},
-	renda = rme_simples_UF2022,
+	renda = as.list(rme_simples),
 	pop   = pop_simples_UF2022
 )
-rme_acumul2022$Classes.Acumulada <- rotulos_acumuladas
+rme_acumul$Classes.Acumulada <- rotulos_acumuladas
 
-View(rme_acumul2022[c(5,1:4)])
+View(rme_acumul[c(5,1:4)])
 View(sidra_7534)
 
 # 7458 - resultados bem distintos, principalmente para o Pará...
@@ -302,7 +226,7 @@ sidra_7458 <- get_sidra(
 )
 
 rme_progsocial2022 <- svybys(
-	~VD5008.Real2022,
+	~VD5008.Real,
 	by = ~interaction(UF, V5001A) +
           interaction(UF, V5002A) +
           interaction(UF, V5003A),
@@ -353,19 +277,20 @@ sidra_7527 <- get_sidra(
 )
 
 # Como 2023 é o ano mais recente, não tem diferença entre as variáveis reais
-massa_rendimento <- massa_rendimento2022
 
-massa_rendimento_UF = split(
-	massa_rendimento$VD5008.Real,
-	massa_rendimento$UF
-)
+massa_rendimento_UF = as.list(massa_rendimento[1:13, -1])
 
 distribuicao_UF <- lapply(massa_rendimento_UF, function(x) x * 100/ sum(x))
+distribuicao_UF$Faixas.Simples = faixas_simples
+
+distribuicao <- distribuicao_UF[c(5, 1:4)]
 
 distribuicao <- data.frame(
-	UF = rep(unidades_federativas, each = 13),
-	Classes.Simples = rep(rotulos_classe, times = 4),
-	Distribuicao.Simples.RDPC1 = unlist(distribuicao_UF)
+	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Pará = c(distribuicao[1:13, 3], distribuicao[1:13, 4]),
+	Bahia = c(distribuicao[1:13, 3], distribuicao[1:13, 4]),
+	Minas.Gerais = c(distribuicao[27:39, 3], distribuicao[27:39, 4]),
+	Goiás = c(distribuicao[40:52, 3], distribuicao[40:52, 4])
 )
 
 View(sidra_7527[c(4,7,3)])
@@ -382,7 +307,7 @@ distribuicao_acumulada_UF <- lapply(distribuicao_UF, cumsum)
 
 distribuicao_acumulada <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
-	Classes.Simples = rep(rotulos_classe, times = 4),
+	Faixas.Simples = rep(faixas_simples, times = 4),
 	Distribuicao.Simples.RDPC1 = unlist(distribuicao_acumulada_UF)
 )
 

@@ -8,13 +8,13 @@ lapply(pacotes, library, character.only = TRUE
 source("testes/utilitarios.R")
 options(scipen = 999)
 
-variaveis <- c("V2009", "VD4002", "VD4019", "VD4020", "VD4048", "V1023",
-"V2010", "VD3004", "V2007", "V2005")
+# variaveis <- c("V2009", "VD4002", "VD4019", "VD4020", "VD4048", "V1023",
+# "V2010", "VD3004", "V2007", "V2005")
 
 if (file.exists("desenho_pop.RDS")) {
 	desenho <- readRDS("desenho_pop.RDS")
 } else {
-	desenho <- gerar_DA(variaveis)
+	desenho <- gerar_desenho(tabelas_pop)
 }
 
 # Pessoas ocupadas por categorias --------------------------------
@@ -28,9 +28,7 @@ all(
 desenho$variables <- transform(
 	desenho$variables,
 	Ocupadas.com.Rendimento = ifelse(
-		V2009 >= 14 &
-		VD4002 == "Pessoas ocupadas" &
-		(!is.na(VD4019) | !is.na(VD4020)),
+		V2009 >= 14 & VD4002 == "Pessoas ocupadas" & !is.na(VD4019),
 		1, NA
 	)
 )
@@ -49,11 +47,17 @@ pop_cor <- svyby(
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
 
+tab_7431 <- reformatar_cor(pop_cor)
+
 View(pop_cor)
 View(sidra_7431[c(4,7,3)])
+
+write.csv(tab_7431, "tab_7431.csv")
 
 # 7432 --> grupos de idade;
 sidra_7432 <- get_sidra(
@@ -88,8 +92,20 @@ pop_idade <- svyby(
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
+
+pop_idade <- data.frame(
+	Grupos.Idade = grupos_idade,
+	Pará = pop_idade[1:8, 3],
+	Bahia = pop_idade[9:16, 3],
+	Minas.Gerais = pop_idade[17:24, 3],
+	Goiás = pop_idade[25:32, 3]
+)
+
+write.csv(pop_idade, "tab_7432.csv")
 
 View(sidra_7432[c(4,7,3)])
 View(pop_idade)
@@ -108,8 +124,20 @@ pop_instrucao <- svyby(
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
+
+pop_instrucao <- data.frame(
+	Nível.de.Instrução = levels(desenho$variables$VD3004),
+	Pará = pop_instrucao[1:7, 3],
+	Bahia = pop_instrucao[8:14, 3],
+	Minas.Gerais = pop_instrucao[15:21, 3],
+	Goiás = pop_instrucao[22:28, 3]
+)
+
+write.csv(pop_instrucao, "tab_7433.csv")
 
 View(sidra_7433[c(4,7,3)])
 View(pop_instrucao)
@@ -128,11 +156,18 @@ pop_sexo <- svyby(
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
 
 print(sidra_7434[c(4,7,3)])
-unname(pop_sexo)
+unnames(pop_sexo)
+
+tab_7434 <- reformatar_wide(pop_sexo, "V2007")
+colnames(tab_7434) <- c("UF", "Homens", "cv.Homens", "Mulheres", "cv.Mulheres")
+
+write.csv(pop_sexo, "tab_7434.csv")
 
 # 7439 --> V2005, responsáveis;
 sidra_7439 <- get_sidra(
@@ -151,11 +186,16 @@ pop_responsaveis <- svyby(
 	),
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
+colnames(pop_responsaveis) <- c("UF", "Pessoas", "cv")
 
 print(sidra_7439[c(4,3)])
-unname(pop_responsaveis)
+pop_responsaveis
+
+write.csv(pop_responsaveis, "tab_7439.csv")
 
 # 7440 --> V1023, área;
 sidra_7440 <- get_sidra(
@@ -171,11 +211,23 @@ pop_area <- svyby(
 	desenho,
 	FUN = svytotal,
 	vartype = "cv",
+	keep.names = FALSE,
+	drop.empty.groups = FALSE,
 	na.rm = TRUE
 )
 
 View(sidra_7440[c(4,7,3)])
 View(pop_area)
+
+tab_7437 <- reformatar_pop2(pop_area)
+colnames(tab_7437) <- c(
+	"UF",
+	"Capital",
+	"Regiao.Metropolitana",
+	"RIDE",
+	"Resto.da.UF"
+)
+write.csv(tab_7437, "tab_7437.csv")
 
 # 7436 --> populacao residente
 sidra_7436 <- get_sidra(
@@ -189,3 +241,11 @@ pop_total <- svytotal(~UF, desenho)
 
 print(sidra_7436[c(4,3)])
 print(pop_total)
+
+tab_7436 <- data.frame(
+	UF = unidades_federativas,
+	Populacao.Residente = pop_total[[1]],
+	cv = cv(pop_total)
+)
+colnames(tab_7436) <- c("UF", "Populacao.Residente", "cv")
+write.csv(tab_7436, "tab_7436.csv")
