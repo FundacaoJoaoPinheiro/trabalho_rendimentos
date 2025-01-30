@@ -370,7 +370,7 @@ add_faixas_simples <- function(renda, geo, limites) {
 	return(resultado)
 }
 
-estimar_totais <- function(formula, by=~UF, desenho) {
+estimar_totais <- function(desenho, formula, by=~UF) {
 	by = update.formula(by, ~ . + UF)
 	svyby(
 		formula = as.formula(formula),
@@ -383,3 +383,4 @@ estimar_totais <- function(formula, by=~UF, desenho) {
 		na.rm = TRUE
 	)
 }
+

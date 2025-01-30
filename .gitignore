@@ -2,3 +2,4 @@ Microdados/*
 *.Rdata
 *.RDS
 *.csv
+.Rproj.user

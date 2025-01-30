@@ -5,7 +5,8 @@ pacotes <- c("sidrar", "PNADcIBGE", "survey")
 lapply(pacotes, library, character.only = TRUE)
 source("testes/utilitarios.R")
 
-options(scipen = 999)
+# evitar notação científica e exibir até duas casas decimais
+options(scipen = 999, digits = 3)
 
 variaveis <- c(
 	"V5001A2", "V5002A2", "V5003A2",                          # outras fontes
@@ -21,84 +22,87 @@ pnadc_dir = "Microdados"
 if (file.exists("desenho_tipo_rend.RDS")) {
 	desenho <- readRDS("desenho_tipo_rend.RDS")
 } else {
-	desenho <- gerar_DA(variaveis)
+	desenho <- gerar_desenho(tabelas_tipo_rend)
 }
 	
 
-# 7426 ------------------------------------------------
+# 7426 - População residente com rendimento, por tipo de rendimento
 
+# consultar informações sobre a tabela
+info_sidra(7426)
+
+# importar tabela SIDRA para as PA, BA, MG e GO
 sidra_7426 <- get_sidra(x = 7426, variable = 10486, period = "2023", geo = "State",
 	geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2)
-sidra_7426 <- transform(sidra_7426, Valor = Valor * 1000)
-
-estimar_total <- function(var, desenho) {
-	svyby(
-		formula = as.formula(var),
-		by = ~UF,
-		design = desenho,
-		FUN = svytotal,
-		vartype = "cv",
-		keep.names = FALSE,
-		na.rm = TRUE
-	)
-}
 
 # Rendimentos Habitual e Efetivo (V, ?)
 
-rend_trabalho <- svyby(
-	~(!is.na(VD4019)) + (!is.na(VD4020)),
-	~UF,
-	desenho,
-	svytotal,
-	vartype = "cv",
-	keep.names = FALSE,
-	na.rm = TRUE
+rend_trabalho <- estimar_totais(
+	formula = ~(!is.na(VD4019)) + (!is.na(VD4020)),
+	desenho = desenho
 )
 
-View(rend_trabalho[c(1, 3, 7, 5, 9)])
-View(sidra_7426[c(7, 4, 3)])
-
-# Aposentadoria..., aluguel..., pensão... (V,V,V)
-
-pop_rendimentos <- estimar_total(~
- 	(is.na(V5004A2) +   # aposentadoria
-	is.na(V5007A2) +    # aluguel
-	is.na(V5006A2)),    # pensão
-	desenho
+colnames(rend_trabalho[c(1, 3, 5, 7, 9)]) <- c(
+	"UF", "Habitual", "Efetivo", "cv.Habitual", "cv.Efetivo"
 )
 
-View(sidra_7426[c(7, 4, 3)])
-View(pop_rendimentos)
+rend_trabalho <- rend_trabalho[c(1, 3, 5, 7, 9)]
 
-# Outros rendimentos (V)
+View(rend_trabalho)
+View(sidra_7426[c(7, 4, 3)])
+
+# criar coluna
 desenho$variables <- transform(
 	desenho$variables,
-	Outros.Rendimentos = factor(
-		ifelse(
-			!is.na(V5001A2) | !is.na(V5002A2) | !is.na(V5003A2) |
-			!is.na(V5005A2) | !is.na(V5008A2),
-			1, NA
-		)
+	Outros.Rendimentos = ifelse(
+		!is.na(V5001A2) | !is.na(V5002A2) | !is.na(V5003A2) |
+		!is.na(V5005A2) | !is.na(V5008A2),
+		1, NA
 	)
 )
 
-estimar_total(~Outros.Rendimentos, desenho)
-sidra_7426[c(7, 4, 3)]
-
-# Todas as fontes e Outras fontes (V,V)
-outras_fontes <- svyby(
-	~is.na(VD4052) + is.na(VD4048),
-	~UF,
-	desenho,
-	FUN = svytotal,
-	vartype = "cv",
-	keep.names = FALSE,
-	na.rm = TRUE
+pop_rendimentos <- estimar_totais(
+	formula = ~
+		(is.na(VD4052))  +     # todas as fontes
+		(is.na(VD4019))  +     # trabalho - habitual
+		(is.na(VD4020))  +     # trabalho - efetiva
+		(is.na(VD4048))  +     # outras fontes
+	 	(is.na(V5004A2)) +     # aposentadoria e pensão
+		(is.na(V5007A2)) +     # aluguel e arrendamento
+		(is.na(V5006A2)) +     # pensão alimentícia, doação e mesada
+		(is.na(Outros.Rendimentos)),  # outros rendimentos
+	desenho = desenho
 )
 
+# descartar colunas em que os testes is.na() foram FALSE e renomear as demais
+                                     # FALSE        # cv.FALSE
+pop_rendimentos <- pop_rendimentos[-c(1:7 * 2, seq(17, 29, by = 2))]
+colnames(pop_rendimentos) <- c(
+	"UF",
+	"Todas.as.Fontes",
+	"Trabalho.Habitual",
+	"Trabalho.Efetiva",
+	"Outras.Fontes",
+	"Aposentadoria/Pensao",
+	"Aluguel/Arrendamento",
+	"Pensao.alimenticia",
+	"Outros.Rendimentos",
+	"cv.Todas.as.Fontes",
+	"cv.Trabalho.Habitual",
+	"cv.Trabalho.Efetiva",
+	"cv.Outras.Fontes",
+	"cv.Aposentadoria/Pensao",
+	"cv.Aluguel/Arrendamento",
+	"cv.Pensao.alimenticia",
+	"cv.Outros.Rendimentos"
+)
+
+# comparar estimativas com a tabela do SIDRA
 View(sidra_7426[c(7, 4, 3)])
-View(outras_fontes)[c(1, 2, 4)])
+View(pop_rendimentos)
+
+write.csv(
 
 # 7429 --------------------------------------
 sidra_7429 <- get_sidra(x = 7429, variable = 10497, period = "2023",
