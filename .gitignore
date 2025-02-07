@@ -1,4 +1,7 @@
 Microdados/*
+tabelas/*
+*.Rproj
+*.Rhistory
 *.Rdata
 *.RDS
 *.csv
