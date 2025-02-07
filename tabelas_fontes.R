@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------
 
 # Preparar ambiente
-pacotes <- c("sidrar", "PNADcIBGE", "survey")
+pacotes <- c("PNADcIBGE", "survey")
 install.packages(setdiff(pacotes, rownames(installed.packages())))
 lapply(pacotes, library, character.only = TRUE)
 source("utilitarios.R")     # objetos e funções utilizados abaixo
@@ -169,7 +169,7 @@ colnames(rme_fontes) <- c(
 )
 
 tab_7437 <- rme_fontes[c(1, 2:9)]
-cv_7427  <- rme_fontes[c(1, 10:17)]
+cv_7437  <- rme_fontes[c(1, 10:17)]
 
 write.csv(tab_7437, "tabelas/tab_7437.csv")
 write.csv(cv_7437, "tabelas/cv_7437.csv")

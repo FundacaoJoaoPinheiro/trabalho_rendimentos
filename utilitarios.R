@@ -17,32 +17,42 @@ dicionario <- file.path(pnadc_dir,
 
 # Tabelas agrupadas por características em comum
 
+# não precisam de deflatores
+sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
+	"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
+	"7456", "7457")
+
+# a distribuição da massa de rendimento
 tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
 
+# categorias por fontes de rendimento (trabalho, outras fontes, etc)
 tabelas_fontes <- c("7426", "7429", "7437")
 
+# rendimento domicilar per capita a preços prório/último do ano
 tabelas_RDPC1 <- c("7428", "7438", "7521", "7527",       # prório ano
                    "7530", "7531", "7532", "7561")
 tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
                    "7533", "7534", "7564")
 
+# rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
 tabelas_RMe1 <- c("7453", "7453", "7535", "7538", "7545", "7548")    # prório ano
 tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
                   "7539", "7542", "7549", "7552")
 
+# população ocupada por categoria (sexo, cor/raça, instrução, etc)
 tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
                      "7439", "7440", "7537", "7541", "7546",
                      "7547", "7559", "7560", "7562", "7563") 
 
-tabelas_progsocial <- c("7447", "7448", "7449")
+# população com domicílios em que alguém recebe benefícios
+tabelas_progsociais <- c("7447", "7448", "7449", "7450",
+                         "7451", "7452", "7454", "7455",
+                         "7456", "7457")
 
-sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
-	"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
-	"7456", "7457")
+# Definindo outros objetos úteis, utilizados principalmente como "rótulos"
+# para colunas das tabelas
 
 # Objetos utilizados como rótulos na criação de colunas
-
-areas_geograficas <- c("Capital", "Resto.da.RM", "Resto.da.RIDE", "Resto.da.UF")
 
 estratos_geo <- c(
     "Belo Horizonte (MG)",     # 3110,
@@ -56,6 +66,8 @@ estratos_geo <- c(
 	"Vale do Rio Doce (MG)",   # 3155,
 	"Central de Minas Gerais " # 3156
 )
+
+areas_geograficas <- c("Capital", "Resto.da.RM", "Resto.da.RIDE", "Resto.da.UF")
 
 grupos_idade = c(
 	"14 a 17 anos",
@@ -88,10 +100,10 @@ faixas_simples <- c(
 
 faixas_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
-# Lista de variáveis por tabela
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
                "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+               "VD5008",
                "VD4019",  "VD4020",  "VD4048",  "VD4052",
                "V2001",   "V2005"),
 	`7427` = c("V2005", "VD4019", "VD4048"),
@@ -104,7 +116,7 @@ variaveis <- list(
 	`7431` = c("V2009", "VD4002", "VD4052", "V2010"),
 	`7432` = c("V2009", "VD4002", "VD4052"),
 	`7433` = c("V2009", "VD4002", "VD4052", "VD3004"),
-	`7434` = c("V2009", "VD4002", "VD4052", "2007"),
+	`7434` = c("V2009", "VD4002", "VD4052", "V2007"),
 	`7435` = c("V2005", "VD4019", "VD4048"),
 	`7436` = c(),
 	`7437` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
@@ -122,7 +134,10 @@ variaveis <- list(
 	`7446` = c("V2005", "V2005", "VD4019", "VD4020"),
 	`7447` = c("VD3004", "V5002A"),
 	`7448` = c("VD3004", "V5002A"),
-	`7449` = c("V5002A"),
+	`7449` = c("V2005",  "V5001A", "V5002A",  "V5003A",
+               "VD3004", "S01007", "S01012A", "S01013",
+               "S01014", "S01023", "S01024",  "S01025",
+               "S01028"),
 	`7450` = c("V5002A"),
 	`7451` = c("V5001A"),
 	`7452` = c("V5001A"),
@@ -177,10 +192,14 @@ variaveis <- list(
 # `download`: um argumento lógico que define se a importação será online
 gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 
-	# definir argumentos usados na leitura dos microdados
+	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
+
+	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- as.character(tabelas)
 	variaveis <- unique(unlist(variaveis[tabelas]))
+	
+	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
 	
 	# ler os dados
@@ -188,8 +207,8 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 		dados <- get_pnadc(
 			year = pnadc_ano,
 			interview = visita,
-			design = FALSE,                       # ver abaixo pnadc_design()
-			vars = c(variaveis, "UF", "V2009"),   # sempre importar UF e Idade
+			design = FALSE,                # ver abaixo pnadc_design()
+			vars = c(variaveis, "UF"),     # sempre importar UF
 			deflator = requer_deflator
 		)
 	} else {
@@ -197,7 +216,7 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 			data_pnadc = read_pnadc(
 				microdata = microdados,
 				input = input,
-				vars = c(variaveis, "UF", "V2009")  # sempre importar UF e Idade
+				vars = c(variaveis, "UF")  # sempre importar UF e Idade
 			),
 			dictionary.file = dicionario
 		)
@@ -217,6 +236,8 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 	return(dados)
 }
 
+
+# estimar totais por Estrato.Geo
 estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
 	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
@@ -231,6 +252,22 @@ estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
 	)
 }
 
+# estimar médias por Estrato.Geo
+estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
+	por = update.formula(por, ~ . + Estrato.Geo)
+	svyby(
+		formula = as.formula(formula),
+		by = as.formula(por),
+		design = desenho,
+		FUN = svymean,
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
+	)
+}
+
+# estimar quantis das classes percentuais simples e Estrato.Geo
 estimar_quantis <- function(desenho, renda) {
 	svyby(
 		formula = as.formula(renda),
@@ -245,32 +282,38 @@ estimar_quantis <- function(desenho, renda) {
 	)
 }
 
+
+# reformatar tabelas, criando uma coluna para cada categoria da variável
 reshape_wide <- function(df, timevar.pos = 1) {
+	# usar reshape para passar para o formato wide
 	resultado <- reshape(
 		df, direction = "wide",
-		idvar =  "UF",
+		idvar =  "Estrato.Geo",
 		timevar = colnames(df)[timevar.pos]
 	)
-	colnames(resultado) <- c("UF", levels(df[[timevar.pos]]))
+	# adicionar os nomes das colunas e excluir nomes de linhas
+	colnames(resultado) <- c("Estrato.Geo", levels(df[[timevar.pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
 }
 
+# `faixas` : coluna com as faixas simples
+# `limites`: lista com os limites superiores por Estrato.Geo
 add_faixas_simples <- function(renda, geo, limites) {
 	renda_geo <- split(renda, geo)
-	limites_geo <- limites[-1]
+	quantis_geo <- limites[-1]
 
 	faixas_geo <- Map(
 		function(valores, quantis) {
 			cut(
 				valores,
-				breaks = c(-Inf, quantis[1:12], Inf),
+				breaks = c(-Inf, quantis[1:12], Inf),   # garantir 12 limites
 				labels = faixas_simples,
 				right = FALSE
 			)
 		},
 		renda_geo,
-		limites_geo
+		quantis_geo
 	)
 	
 	resultado <- unsplit(faixas_geo, geo)
@@ -284,4 +327,56 @@ add_grupos_idade <- function(idade) {
 		labels = grupos_idade,
 		right = TRUE
 	)
+}
+
+# adiciona rendimento domiciliar per capita
+add_rdpc <- function(df, vars) {
+	# criar colunas auxiliares, indicando se o morador entra no cálculo
+	# da renda domiciliar e o número de moradores que está incluso no cálculo
+	df$V2005.Rendimento <- ifelse(
+		df$V2005 == "Pensionista" |
+		df$V2005 == "Empregado(a) doméstico(a)" |
+		df$V2005 == "Parente do(a) empregado(a) doméstico(a)",
+		NA, 1
+	)
+	df$V2001.Rendimento <- ave(
+		df$V2005.Rendimento,
+		df$ID_DOMICILIO,
+		FUN = function(x) sum(x, na.rm=T)
+	)
+	# loop para criar as colunas
+	for (v in vars) {
+		# renda domiciliar
+		renda_dom <- ave(
+			df[[v]],
+			df$ID_DOMICILIO,
+			FUN = function(x) sum(x, na.rm = TRUE)
+		)
+		# adicionar ".DPC" como sufixo no nome da coluna
+		col_name <- paste0(v, ".DPC")
+		# criar coluna com a renda domiciliar per capita
+		df[[col_name]] <- ifelse(
+			df$V2005.Rendimento == 1,
+			renda_dom / df$V2001.Rendimento,
+			NA
+		)
+	}
+	return(df)
+}
+
+# adicionar variáveis deflacionadas
+deflacionar <- function(df, vars, ano.base = 1) {
+	# criar loop entre as variáveis de rendimento
+	for (v in vars) {
+		# deflatores diferentes para rendimentos habituais/efetivos
+		if (v == "VD4019") {
+			deflator <- paste0("CO", ano.base)
+		} else {
+			deflator <- paste0("CO", ano.base, "e")
+		}
+		# adicionar variável deflacionada ao dataframe
+		col_name <- paste0(v, ".Real")
+		df[[col_name]] <- df[[v]] * df[[deflator]]
+	}
+	return(df)
 }

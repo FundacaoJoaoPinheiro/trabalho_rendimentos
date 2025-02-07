@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------
 
 # Preparar ambiente
-pacotes <- c("sidrar", "PNADcIBGE", "survey")
+pacotes <- c("PNADcIBGE", "survey")
 install.packages(setdiff(pacotes, rownames(installed.packages())))
 lapply(pacotes, library, character.only = TRUE)
 source("utilitarios.R")     # objetos e funções utilizados abaixo
@@ -38,6 +38,9 @@ ocupada_cor <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2010)
 tab_7431 <- reshape_wide(ocupada_cor[-4])
 cv_7431 <- reshape_wide(ocupada_cor[-3])
 
+write.csv(tab_7431, "tabelas/tab_7431.csv")
+write.csv(cv_7431, "tabelas/cv_7431.csv")
+
 # Tabela 7432 - população ocupada por grupos de idade
 
 ocupada_idade <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~Grupos.de.Idade)
@@ -50,11 +53,17 @@ ocupada_instrucao <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~VD3004)
 tab_7433 <- reshape_wide(ocupada_instrucao[-4])
 cv_7433 <- reshape_wide(ocupada_instrucao[-3])
 
+write.csv(tab_7433, "tabelas/tab_7433.csv")
+write.csv(cv_7433, "tabelas/cv_7433.csv")
+
 # Tabela 7434 - população ocupada por V2007, sexo;
 
 ocupada_sexo <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2007)
 tab_7434 <- reshape_wide(ocupada_sexo[-4])
 cv_7434 <- reshape_wide(ocupada_sexo[-3])
+
+write.csv(tab_7434, "tabelas/tab_7434.csv")
+write.csv(cv_7434, "tabelas/cv_7434.csv")
 
 # Tabela 7439 - população ocupada por V2005, responsáveis;
 
@@ -62,8 +71,12 @@ ocupada_responsavel <- estimar_totais(
 	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	~Ocupada.com.Rendimento
 )
-tab_7439 <- reshape_wide(ocupada_responsavel[-4])
-cv_7439 <- reshape_wide(ocupada_responsavel[-3])
+
+tab_7439 <- ocupada_responsavel[1:2]
+cv_7439 <- ocupada_responsavel[-2]
+
+write.csv(tab_7439, "tabelas/tab_7439.csv")
+write.csv(cv_7439, "tabelas/cv_7439.csv")
 
 # Tabela 7440 - população ocupada por V1023, área;
 
@@ -72,11 +85,16 @@ levels(ocupada_area$V1023) <- areas_geograficas
 tab_7440 <- reshape_wide(ocupada_area[-4])
 cv_7440 <- reshape_wide(ocupada_area[-3])
 
+write.csv(tab_7440, "tabelas/tab_7440.csv")
+write.csv(cv_7440, "tabelas/cv_7440.csv")
+
 # Tabela 7436 - população ocupada por populacao residente
 
-ocupada_total <- svytotal(~UF, desenho)
+ocupada_total <- svytotal(~Estrato.Geo, desenho)
 tab_7436 <- data.frame(
-	UF = unidades_federativas,
+	Estrato.Geo <- estratos_geo,
 	Populacao.Residente = ocupada_total[[1]],
 	cv = cv(ocupada_total)
 )
+
+write.csv(tab_7436, "tabelas/tab_7436.csv")

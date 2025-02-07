@@ -231,7 +231,7 @@ View(rme_fontes[1:9])
 
 # dividir a tabela em duas
 tab_7437 <- rme_fontes[c(1, 2:9)]
-cv_7427  <- rme_fontes[c(1, 10:17)]
+cv_7437  <- rme_fontes[c(1, 10:17)]
 
 # salvar tabelas no formato csv
 write.csv(tab_7437, "tabelas/tab_7437.csv")

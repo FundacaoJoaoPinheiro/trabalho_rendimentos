@@ -51,7 +51,9 @@ tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
                      "7547", "7559", "7560", "7562", "7563") 
 
 # população com domicílios em que alguém recebe benefícios
-tabelas_progsociais <- c("7447", "7448", "7449")
+tabelas_progsociais <- c("7447", "7448", "7449", "7450",
+                         "7451", "7452", "7454", "7455",
+                         "7456", "7457")
 
 # Definindo outros objetos úteis, utilizados principalmente como "rótulos"
 # para colunas das tabelas
@@ -128,7 +130,10 @@ variaveis <- list(
 	`7446` = c("V2005", "V2005", "VD4019", "VD4020"),
 	`7447` = c("VD3004", "V5002A"),
 	`7448` = c("VD3004", "V5002A"),
-	`7449` = c("V5002A"),
+	`7449` = c("V2005",  "V5001A", "V5002A",  "V5003A",
+               "VD3004", "S01007", "S01012A", "S01013",
+               "S01014", "S01023", "S01024",  "S01025",
+               "S01028"),
 	`7450` = c("V5002A"),
 	`7451` = c("V5001A"),
 	`7452` = c("V5001A"),

@@ -6,9 +6,10 @@
 options(scipen = 999, digits = 4)
 
 # carregar e instalar pacotes
-pacotes <- c("sidrar", "PNADcIBGE", "survey", "microbenchmark")
+pacotes <- c("sidrar", "PNADcIBGE", "survey")
+install.packages(setdiff(pacotes, rownames(installed.packages())))
 lapply(pacotes, library, character.only = TRUE)
-source("testes/utilitarios.R")
+source("utilitarios.R")     # carregar funções e objetos que serão utilizados
 
 # variaveis: V2005, V5001A, V5002A, V5003A, VD3004, S01007,
 # S01012A, S01013, S01014, S01023, S01024, S01025, S01028
@@ -16,7 +17,7 @@ source("testes/utilitarios.R")
 if (file.exists("desenho_progsociais.RDS")) {
 	desenho <- readRDS("desenho_progsociais.RDS")
 } else {
-	desenho <- gerar_desenho(tabelas_progsocial)
+	desenho <- gerar_desenho(tabelas_progsociais)
 }
 
 # Pessoas que recebem benefício por caracterísitcas domiciliares
@@ -27,7 +28,7 @@ if (file.exists("desenho_progsociais.RDS")) {
 # obter informações sobre a tabela
 info_sidra(7447)
 
-# importar tabela para as PA, BA, MG e GO
+# importar tabela para as PA, BA, MG e G
 sidra_7447 <- get_sidra(
 	x = 7447, variable = 10784, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
@@ -56,23 +57,22 @@ desenho$variables <- transform(
 # estimar total de pessoas de 10 anos ou mais cujo domicílio possui ao
 # menos um morador que recebe Bolsa Família, por nível de instrução e UF
 pop_bolsafamilia <- estimar_totais(
-	~Domicilio.Bolsa.Familia,
-	~VD3004,
-	subset(desenho, V2009 >= 10)
+	desenho = subset(desenho, V2009 >= 10),
+	formula = ~Domicilio.Bolsa.Familia,
+	por = ~VD3004
 )
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7447[c(4,7,3)])
-View(pop_bolsafamilia)
+View(pop_bolsafamilia[c(1, 2, 4, 6)])
 
 # formatar tabela para melhor visualização
-# 7 níveis de instrução e 4 UF's (que serão 10 estratos geográficos)
-# criar então 7 colunas para cada nível
-# os índices 1, 4 e 6 são das colunas VD3004, valores "Sim" e cv's "Sim"
-tab_7447 <- reformatar3(pop_bolsafamilia[c(1, 2, 4, 6)]
+tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7447, "tab_7447.csv")
+write.csv(cv_7447, "cv_7447.csv")
 
 # 7448(Não) --> 7447(Sim)
 
@@ -88,11 +88,82 @@ sidra_7448 <- get_sidra(
 names(sidra_7448)
 
 # formatar tabela para melhor visualização
-# os índices 1, 3 e 5 são das colunas VD3004, valores "Não" e cv's "Não"
-tab_7448 <- reformatar3(pop_bolsafamilia[c(1, 2, 3, 5)])
+tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7448, "tab_7448.csv")
+write.csv(cv_7448, "cv_7448.csv")
+
+# 7454 --> 7447; V5001A
+
+# obter informações sobre a tabela
+info_sidra(7454)
+
+# importar tabela para as PA, BA, MG e G
+sidra_7454 <- get_sidra(
+	x = 7454, variable = 10808, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
+)
+names(sidra_7454)
+
+# vetor com os ids dos domicílios em que ao menos um morador recebe BPC
+ids_bpc <- tapply(
+	desenho$variables$V5001A == "Sim", 
+	desenho$variables$ID_DOMICILIO, 
+	FUN = any
+)
+
+# criar coluna que indica se ao menos um morador do domicílio recebe BPC
+desenho$variables <- transform(
+	desenho$variables,
+	Domicilio.BPC = factor(
+		ifelse(
+			ID_DOMICILIO %in% names(ids_bpc[ids_bpc]),
+			"Sim", "Não"
+		)
+	)
+)
+
+# estimar total de pessoas de 10 anos ou mais cujo domicílio possui ao
+# menos um morador que recebe BPC, por nível de instrução e UF
+pop_bpc <- estimar_totais(
+	desenho = subset(desenho, V2009 >= 10),
+	formula = ~Domicilio.BPC,
+	por = ~VD3004
+)
+
+# visualizar tabela sidra e nossa estimativa a título de comparação
+View(sidra_7454[c(4,7,3)])
+view(pop_bolsafamilia[c(1, 2, 4, 5)])bpc
+
+# formatar tabela para melhor visualização
+tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+
+# salvar arquivo csv com a tabela
+write.csv(tab_7454, "tab_7454.csv")
+write.csv(cv_7454, "cv_7454.csv")
+
+# 7455 (Não) -> 7454 (Sim)
+info_sidra(7455)
+
+sidra_7455 <- get_sidra(
+	x = 7455, variable = 10812, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
+)
+names(sidra_7455)
+
+# formatar tabela para melhor visualização
+tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+
+# salvar arquivo csv com a tabela
+write.csv(tab_7455, "tab_7455.csv")
+write.csv(cv_7455, "cv_7455.csv")
+
 
 # 7449 --> V5002A, S01007, S01012A, S01013, S01014, S01023, S01024, S01025, S01028
 # domicílios em que ao menos um morador recebeu Bolsa Família, por acesso
@@ -111,7 +182,12 @@ names(sidra_7449)
 
 # estimar domicílios em que ao menos um morador recebe Bolsa Familia
 # por tipo de acesso ou posse de bens e serviços
-pop_acesso <- estimar_totais(
+bolsafam_acesso <- estimar_totais(
+	desenho = subset(
+		desenho,
+		# há apenas um responsável por domicílio, assim evitamos dupla contagem
+		V2005 == "Pessoa responsável pelo domicílio"
+	),
 	formula = ~
 		# abastecimento de água
 		(S01007  == "Rede geral de distribuição") +
@@ -134,20 +210,14 @@ pop_acesso <- estimar_totais(
          S01025  == "Sim, de tela fina e de tubo") +
 		# microcomputador
 		(S01028  == "Sim"),
-	desenho = subset(
-		desenho,
-		Domicilio.Bolsa.Familia == "Sim" &
-		# há apenas um responsável por domicílio, assim evitamos dupla contagem
-		V2005 == "Pessoa responsável pelo domicílio"
-	)
+	por = ~Domicilio.Bolsa.Familia
 )
 
 # remover colunas em que os testes das variáveis suplementares foi FALSE
-pop_acesso <- pop_acesso[-seq(3, 34, by = 2)]
+bolsafam_acesso <- bolsafam_acesso[-seq(3, 34, by = 2)]
 
-# as colunas "Sim" e "Não" estão intercaladas
-# renomear as colunas "Sim"
-colnames(pop_acesso)[2:9 * 2] <- c(
+# renomear as colunas de bens e serviços
+rotulos_benservicos <- c(
 	"Abastecimento.de.Agua",
 	"Esgotamento.Sanitario",
 	"Coleta.de.lixo",
@@ -155,24 +225,31 @@ colnames(pop_acesso)[2:9 * 2] <- c(
 	"Geladeira",
 	"Maquina.de.lavar",
 	"Televisao",
-	"Microcomputador"
+	"Microcomputador",
+	"cv.Abastecimento.de.Agua",
+	"cv.Esgotamento.Sanitario",
+	"cv.Coleta.de.lixo",
+	"cv.Iluminacao.Eletrica",
+	"cv.Geladeira",
+	"cv.Maquina.de.lavar",
+	"cv.Televisao",
+	"cv.Microcomputador"
 )
 
-# renomear as colunas "Não"
-colnames(pop_acesso)[seq(3,17, by =2)] <- c(
-	"Sem.Abastecimento.de.Agua",
-	"Sem.Esgotamento.Sanitario",
-	"Sem.Coleta.de.lixo",
-	"Sem.Iluminacao.Eletrica",
-	"Sem.Geladeira",
-	"Sem.Maquina.de.lavar",
-	"Sem.Televisao",
-	"Sem.Microcomputador"
-)
+colnames(bolsafam_acesso)[3:18] <- rotulos_benservicos
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7449[c(4,7,3)])
-View(pop_acesso[1:4 * 2, 1:9 * 2])   # filtrar para ficar fácil de comparar
+# filtrar linhas em que algum morador recebe BOlsa Família
+View(bolsafam_acesso[1:4 * 2, -1])
+
+# dividir tabela com os totais e os cv's
+tab_7449 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
+cv_7449 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
+
+# salvar arquivos CSV
+write.csv(tab_7449, "tabelas/tab_7449.csv")
+write.csv(cv_7449, "tabelas/cv_7449.csv")
 
 # 7450 --> 7449
 info_sidra(7450)
@@ -185,25 +262,83 @@ sidra_7450 <- get_sidra(
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7450[c(4,7,3)])
+# filtrar linhas em que nenhum morador recebe BOlsa Família
+View(bolsafam_acesso[seq(1, 7, by = 2), -1])
+
+# dividir tabela com os totais e os cv's
+tab_7450 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7450 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
+
+# salvar arquivos CSV
+write.csv(tab_7450, "tabelas/tab_7450.csv")
+write.csv(cv_7450, "tabelas/cv_7450.csv")
 
 # 7451 --> 7449; V5001A
 info_sidra(7451)
 
 sidra_7451 <- get_sidra(
-	x = 7451, variable = 10784, period = "2023",
+	x = 7451, variable = 10798, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
 names(sidra_7431)
 
+# estimar domicílios em que ao menos um morador recebe BPC
+# por tipo de acesso ou posse de bens e serviços
+bpc_acesso <- estimar_totais(
+	desenho = subset(
+		desenho,
+		# há apenas um responsável por domicílio, assim evitamos dupla contagem
+		V2005 == "Pessoa responsável pelo domicílio"
+	),
+	formula = ~
+		# abastecimento de água
+		(S01007  == "Rede geral de distribuição") +
+		# esgoto
+		(S01012A == "Rede geral, rede pluvial" |
+         S01012A == "Fossa séptica ligada à rede") +
+		# destino do lixo
+		(S01013  == "Coletado diretamente por serviço de limpeza" |
+         S01013  == "Coletado em caçamba de serviço de limpeza") +
+		# iluminação elétrica
+		(S01014  == "Utiliza ao menos uma fonte de energia eletrica") +
+		# geladeira
+		(S01023  == "Sim, de 1 porta" |
+         S01023  == "Sim, de 2 (ou mais) portas") +
+		# máquina de lavar
+		(S01024  == "Sim") +
+		# televisão
+		(S01025  == "Sim, somente de tela fina (LED, LCD ou plasma)" |
+         S01025  == "Sim, somente de tubo" |
+         S01025  == "Sim, de tela fina e de tubo") +
+		# microcomputador
+		(S01028  == "Sim"),
+	por = ~Domicilio.BPC
+)
+
+# remover colunas em que os testes das variáveis suplementares foi FALSE
+bpc_acesso <- bpc_acesso[-seq(3, 34, by = 2)]
+
+# renomear as colunas de bens e serviços
+colnames(bpc_acesso)[3:18] <- rotulos_benservicos
+
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7451[c(4,7,3)])
+View(bpc_acesso[1:4 * 2, -1])
 
-# 7452 --> 7451; V5001A
+# dividir tabela com os totais e os cv's
+tab_7451 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
+cv_7451 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
+
+# salvar arquivos CSV
+write.csv(tab_7451, "tabelas/tab_7451.csv")
+write.csv(cv_7451, "tabelas/cv_7451.csv")
+
+# 7452 --> 7450; V5001A
 info_sidra(7452)
 
 sidra_7452 <- get_sidra(
-	x = 7452, variable = 10784, period = "2023",
+	x = 7452, variable = 10802, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
@@ -211,33 +346,17 @@ names(sidra_7431)
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7452[c(4,7,3)])
+View(bpc_acesso[seq(1, 7, by = 2), -1])
 
-# 7454 --> 7447; V5001A
-info_sidra(7454)
+# dividir tabela com os totais e os cv's
+tab_7452 <- bpc_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7452 <-  bpc_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
-sidra_7454 <- get_sidra(
-	x = 7454, variable = 10784, period = "2023",
-	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
-	header = TRUE, format = 2
-)
-names(sidra_7431)
+# salvar arquivos CSV
+write.csv(tab_7452, "tabelas/tab_7452.csv")
+write.csv(cv_7452, "tabelas/cv_7452.csv")
 
-Vieww(sidra_7454[c(4,7,3)])
-
-# 7455 --> V5001A, V5002A, V5003A
-info_sidra(7455)
-
-sidra_7455 <- get_sidra(
-	x = 7455, variable = 10784, period = "2023",
-	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
-	header = TRUE, format = 2
-)
-names(sidra_7431)
-
-# visualizar tabela sidra e nossa estimativa a título de comparação
-View(sidra_7455[c(4,7,3)])
-
-# 7456 --> V5001A, V5002A, V5003A
+# 7456 - média de moradores por domicílio por recbimento e tipo de programa
 info_sidra(7456)
 
 sidra_7456 <- get_sidra(
@@ -247,10 +366,42 @@ sidra_7456 <- get_sidra(
 )
 names(sidra_7431)
 
+# vetor com os ids dos domicílios em que ao menos um morador recebe outros programas
+ids_outrosprogramas <- tapply(
+	desenho$variables$V5003A == "Sim", 
+	desenho$variables$ID_DOMICILIO, 
+	FUN = any
+)
+
+# criar coluna que indica se ao menos um morador do domicílio recebe Bolsa Família
+desenho$variables <- transform(
+	desenho$variables,
+	Domicilio.Outros.Programas = factor(
+		ifelse(
+			ID_DOMICILIO %in% names(ids_outrosprogramas[ids_outrosprogramas]),
+			"Sim", "Não"
+		)
+	)
+)
+
+media_moradores_progs <- svyby(
+	design = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
+	formula = ~V2001,
+	by = ~
+		interaction(UF, Domicilio.Bolsa.Familia) +
+		interaction(UF, Domicilio.BPC) +
+		interaction(UF, Domicilio.Outros.Programas),
+	FUN = svymean,
+	keep.names = F,
+	vartype = "cv"
+)
+
+teste <- do.call(rbind, media_moradores_progs)
+
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7456[c(4,7,3)])
 
-# 7457 --> V5001A, V5002A, V5003A
+# 7457 - total de domicílios, por recebimento e tipo de programa
 info_sidra(7457)
 
 sidra_7457 <- get_sidra(
