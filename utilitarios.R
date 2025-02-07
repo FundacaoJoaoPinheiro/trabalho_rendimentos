@@ -1,53 +1,48 @@
-#=========== EM ELABORAÇÃO. NÃO UTILIZAR =================#
-
-# Reproduz tabelas SIDRA da PNADC/A, 5a visita, filtrando dados
-# para os dez estratosg geográficos de Minas Gerais.
-# Tema das tabelas: Rendimento de todas as fontes.
-#
 # Funções e Objetos para serem utilizados interativamente ou de forma
-# automatizada pelo script principal
+# automatizada pelos demais scripts.
 #
 # João Paulo Gonzaga Garcia: joaopauloggarcia@gmail.com
 #----------------------------------------------------------
 # OBJETOS
 
-pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
+# Objetos utilizados na leitura dos dados da PNADc
 pnadc_ano <- 2023
 
+pnadc_dir <- "Microdados"
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
 input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
 deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")
 dicionario <- file.path(pnadc_dir,
 	"dicionario_PNADC_microdados_2023_visita1_20241220.xls")
 
-# não precisam de deflatores
-sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
-	"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
-	"7456", "7457")
+# Tabelas agrupadas por características em comum
 
-# a distribuição da massa de rendimento
 tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
 
-# categorias por tipo de rendimento (trabalho, outras fontes, etc)
-tabelas_tipo_rend <- c("7426", "7429", "7437")
+tabelas_fontes <- c("7426", "7429", "7437")
 
-# rendimento domicilar per capita a preços prório/último do ano
 tabelas_RDPC1 <- c("7428", "7438", "7521", "7527",       # prório ano
                    "7530", "7531", "7532", "7561")
 tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
                    "7533", "7534", "7564")
 
-# rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
 tabelas_RMe1 <- c("7453", "7453", "7535", "7538", "7545", "7548")    # prório ano
 tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
                   "7539", "7542", "7549", "7552")
 
-# população ocupada por categoria (sexo, cor/raça, instrução, etc)
-tabelas_pop <- c("7431", "7432", "7433", "7434", "7436", "7439", "7440", "7537",
-	"7541", "7546", "7547", "7559", "7560", "7562", "7563") 
+tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
+                     "7439", "7440", "7537", "7541", "7546",
+                     "7547", "7559", "7560", "7562", "7563") 
 
-# população com domicílios em que alguém recebe benefícios
 tabelas_progsocial <- c("7447", "7448", "7449")
+
+sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
+	"7440", "7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
+	"7456", "7457")
+
+# Objetos utilizados como rótulos na criação de colunas
+
+areas_geograficas <- c("Capital", "Resto.da.RM", "Resto.da.RIDE", "Resto.da.UF")
 
 estratos_geo <- c(
     "Belo Horizonte (MG)",     # 3110,
@@ -62,8 +57,20 @@ estratos_geo <- c(
 	"Central de Minas Gerais " # 3156
 )
 
-# classes simples de percentual (CSP)
-rotulos_csp <- c(
+grupos_idade = c(
+	"14 a 17 anos",
+	"18 e 19 anos",
+	"20 a 24 anos",
+	"25 a 29 anos",
+	"30 a 39 anos",
+	"40 a 49 anos",
+	"50 a 59 anos",
+	"60 anos ou mais"
+)
+
+classes_simples <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
+
+faixas_simples <- c(
 	"Até P5",
 	"Maior que P5 até P10",
 	"Maior que P10 até P20",
@@ -79,9 +86,9 @@ rotulos_csp <- c(
 	"Maior que P99"
 )
 
-# classes acumuladas de percentual (CAP)
-rotulos_cap <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
+faixas_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
+# Lista de variáveis por tabela
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
                "V5005A2", "V5006A2", "V5007A2", "V5008A2",
@@ -165,38 +172,27 @@ variaveis <- list(
 #----------------------------------------------------------
 # FUNÇÕES
 
-# Gerar desenho amostral para MG, adicionando estratosg geográficos.
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
-# `year`    : ano da pesquisa (numérico)
+# `ano`     : ano da pesquisa (numérico)
 # `download`: um argumento lógico que define se a importação será online
-gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
+gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 
-	# definir variáveis com base nas tabelas passadas como argumentos
-	if (is.null(tabelas)) {
-		tabelas <- names(variaveis)  # se `NULL`, selecionar todas as tabelas
-	} else {
-		tabelas <- as.character(tabelas)
-	}
+	# definir argumentos usados na leitura dos microdados
+	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
+	tabelas <- as.character(tabelas)
 	variaveis <- unique(unlist(variaveis[tabelas]))
-
-	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
-	visita <- ifelse(year == 2020 | year == 2021, 5, 1)
-
-	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
 	
 	# ler os dados
-	# baixar apenas se download=TRUE
 	if (download) {
 		dados <- get_pnadc(
 			year = pnadc_ano,
 			interview = visita,
-			design = FALSE,               # será feito pela função pnadc_design
-			vars = c(variaveis, "UF", "V2009"),    # sempre importar UF e Idade
+			design = FALSE,                       # ver abaixo pnadc_design()
+			vars = c(variaveis, "UF", "V2009"),   # sempre importar UF e Idade
 			deflator = requer_deflator
 		)
 	} else {
-		# ler os arquivos e gerar o desenho amostral
 		dados <- pnadc_labeller(
 			data_pnadc = read_pnadc(
 				microdata = microdados,
@@ -209,10 +205,10 @@ gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
 			dados <- pnadc_deflator(dados, deflator.file = deflator)
 		}
 	}
+
+	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
 	dados <- pnadc_design(subset(dados, UF == "Minas Gerais"))
 	dados$variables$UF <- droplevels(dados$variables$UF)
-
-	# adicionar coluna com os códigos dos Estratos Geográficos
 	dados$variables <- transform(
 		dados$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
@@ -221,54 +217,71 @@ gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
 	return(dados)
 }
 
-estimar_quantis <- function(var, desenho, subv) {
+estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
+	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
-		formula = as.formula(var),
-		by = as.formula(subv),
-		design = desenho,
-		FUN = svyquantile,
-		quantiles = c(3.05, seq(0.10, 0.90, by = 2.10), 0.95, 0.99),
-		vartype = "cv",
-		keep.names = FALSE
-		na.rm = TRUE
-	)
-}
-
-estimar_totais <- function(var, desenho, subv) {
-	svyby(
-		formula = as.formula(var),
-		by = as.formula(subv),
+		formula = as.formula(formula),
+		by = as.formula(por),
 		design = desenho,
 		FUN = svytotal,
 		vartype = "cv",
-		keep.names = FALSE
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
-)
+}
 
-add_classes_simples <- function(var, quantis, subv) {
-	# subdividir a variável em uma lista por `subv` (ex: Estratos, UF, etc)
-	var_sub <- split(
-		var,
-		subv
+estimar_quantis <- function(desenho, renda) {
+	svyby(
+		formula = as.formula(renda),
+		by = ~Estrato.Geo,
+		design = desenho,
+		FUN = svyquantile,
+		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
 	)
-	quantis_subv <- split(quantis, quantis[[as.character(subv)]])
-	# criar lista com classes simples por `subv`
-	classes_subv <- Map(
-		function(var, breaks) {
+}
+
+reshape_wide <- function(df, timevar.pos = 1) {
+	resultado <- reshape(
+		df, direction = "wide",
+		idvar =  "UF",
+		timevar = colnames(df)[timevar.pos]
+	)
+	colnames(resultado) <- c("UF", levels(df[[timevar.pos]]))
+	rownames(resultado) <- NULL
+	return(resultado)
+}
+
+add_faixas_simples <- function(renda, geo, limites) {
+	renda_geo <- split(renda, geo)
+	limites_geo <- limites[-1]
+
+	faixas_geo <- Map(
+		function(valores, quantis) {
 			cut(
-				var,
-				breaks = c(-Inf, as.numeric(breaks), Inf),
-				labels = rotulos_csp,
+				valores,
+				breaks = c(-Inf, quantis[1:12], Inf),
+				labels = faixas_simples,
 				right = FALSE
 			)
 		},
-		var_sub,
-		quantis_subv
+		renda_geo,
+		limites_geo
 	)
-	# reunir a lista de forma adequada à coluna de estratosg da amostra
-	classes <- unsplit(classes_subv, subv)
-
-	return(classes)
+	
+	resultado <- unsplit(faixas_geo, geo)
+	return(resultado)
 }
 
+add_grupos_idade <- function(idade) {
+	cut(
+		idade,
+		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
+		labels = grupos_idade,
+		right = TRUE
+	)
+}

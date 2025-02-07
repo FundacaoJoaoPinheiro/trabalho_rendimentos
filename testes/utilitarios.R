@@ -1,27 +1,27 @@
 ############### RASCUNHO ##################
 # comparar valores estimados para MG na sessão do R com aqueles disponíveis 
 # nas tabelas da plataforma SIDRA
-#=========== EM ELABORAÇÃO. NÃO UTILIZAR =================#
 
-# Reproduz tabelas SIDRA da PNADC/A, 5a visita, filtrando dados
-# para os dez estratosg geográficos de Minas Gerais.
-# Tema das tabelas: Rendimento de todas as fontes.
-#
 # Funções e Objetos para serem utilizados interativamente ou de forma
-# automatizada pelo script principal
-#
-# João Paulo Gonzaga Garcia: joaopauloggarcia@gmail.com
-#----------------------------------------------------------
+# automatizada.
+###########################################
+
 # OBJETOS
 
-pnadc_dir <- "Microdados"  # pasta com os arquivos da PNADC
+# Definindo caminho de arquivos e outros argumentos que serão usados
+# para a leitura dos dados
+
 pnadc_ano <- 2023
 
+# diretório com os arquivos de microdados e os respectivos arquivos
+pnadc_dir <- "../Microdados"
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
 input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
 deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")
 dicionario <- file.path(pnadc_dir,
 	"dicionario_PNADC_microdados_2023_visita1_20241220.xls")
+
+# Definindo grupos de tabelas por características comuns
 
 # não precisam de deflatores
 sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
@@ -31,8 +31,8 @@ sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
 # a distribuição da massa de rendimento
 tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
 
-# categorias por tipo de rendimento (trabalho, outras fontes, etc)
-tabelas_tipo_rend <- c("7426", "7429", "7437")
+# categorias por fontes de rendimento (trabalho, outras fontes, etc)
+tabelas_fontes <- c("7426", "7429", "7437")
 
 # rendimento domicilar per capita a preços prório/último do ano
 tabelas_RDPC1 <- c("7428", "7438", "7521", "7527",       # prório ano
@@ -46,15 +46,20 @@ tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último a
                   "7539", "7542", "7549", "7552")
 
 # população ocupada por categoria (sexo, cor/raça, instrução, etc)
-tabelas_pop <- c("7431", "7432", "7433", "7434", "7436", "7439", "7440", "7537",
-	"7541", "7546", "7547", "7559", "7560", "7562", "7563") 
+tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
+                     "7439", "7440", "7537", "7541", "7546",
+                     "7547", "7559", "7560", "7562", "7563") 
 
 # população com domicílios em que alguém recebe benefícios
-tabelas_progsocial <- c("7447", "7448", "7449")
+tabelas_progsociais <- c("7447", "7448", "7449")
+
+# Definindo outros objetos úteis, utilizados principalmente como "rótulos"
+# para colunas das tabelas
 
 unidades_federativas <- c("Pará", "Bahia", "Minas Gerais", "Goiás")
 
-# grupos de idade
+areas_geograficas <- c("Capital", "Resto.da.RM", "Resto.da.RIDE", "Resto.da.UF")
+
 grupos_idade = c(
 	"14 a 17 anos",
 	"18 e 19 anos",
@@ -69,7 +74,6 @@ grupos_idade = c(
 # classes simples dde percentual (CSP)
 classes_simples <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
 
-# faixas simples de percentual (FSP)
 faixas_simples <- c(
 	"Até P5",
 	"Maior que P5 até P10",
@@ -86,12 +90,14 @@ faixas_simples <- c(
 	"Maior que P99"
 )
 
-# faixas acumuladas de percentual (FAP)
 faixas_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
+
+# Definindo lista com as variáveis requeridas por cada tabela
 
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
                "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+               "VD5008",
                "VD4019",  "VD4020",  "VD4048",  "VD4052",
                "V2001",   "V2005"),
 	`7427` = c("V2005", "VD4019", "VD4048"),
@@ -172,27 +178,27 @@ variaveis <- list(
 #----------------------------------------------------------
 # FUNÇÕES
 
-# Gerar desenho amostral para MG, adicionando estratosg geográficos.
+# Gerar desenho amostral para PA, MG, BA e GO
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `year`    : ano da pesquisa (numérico)
 # `download`: um argumento lógico que define se a importação será online
-gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
+gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
+
+	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
+	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- as.character(tabelas)
 	variaveis <- unique(unlist(variaveis[tabelas]))
 
-	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
-	visita <- ifelse(year == 2020 | year == 2021, 5, 1)
-
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
 	
-	# ler os dados
+	# Ler os dados
 	# baixar apenas se download=TRUE
 	if (download) {
 		dados <- get_pnadc(
-			year = pnadc_ano,
+			year = ano,
 			interview = visita,
 			design = FALSE,               # será feito pela função pnadc_design
 			vars = c(variaveis, "UF", "V2009"),    # sempre importar UF e Idade
@@ -210,17 +216,50 @@ gerar_desenho <- function(tabelas, year = pnadc_ano, download = FALSE) {
 			),
 			dictionary.file = dicionario
 		)
+		# adicionar deflatores quando necessário
 		if (requer_deflator) {
 			dados <- pnadc_deflator(dados, deflator.file = deflator)
 		}
 	}
+	# filtrar dados para PA, BA, MG e GO
 	dados <- pnadc_design(subset(dados, UF %in% unidades_federativas))
 	dados$variables$UF <- droplevels(dados$variables$UF)
 
 	return(dados)
 }
 
-estimar_quantis <- function(renda, desenho) {
+# estimar totais por UF
+estimar_totais <- function(desenho, formula, por = ~UF) {
+	por = update.formula(por, ~ . + UF)
+	svyby(
+		formula = as.formula(formula),
+		by = as.formula(por),
+		design = desenho,
+		FUN = svytotal,
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
+	)
+}
+
+# estimar médias por UF
+estimar_medias <- function(desenho, formula, por = ~UF) {
+	por = update.formula(por, ~ . + UF)
+	svyby(
+		formula = as.formula(formula),
+		by = as.formula(por),
+		design = desenho,
+		FUN = svymean,
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
+	)
+}
+
+# estimar quantis das classes percentuais simples e UF
+estimar_quantis <- function(desenho, renda) {
 	svyby(
 		formula = as.formula(renda),
 		by = ~UF,
@@ -234,118 +273,20 @@ estimar_quantis <- function(renda, desenho) {
 	)
 }
 
-reformatar1 <- function(df, tipo = "csp") {
-
-	add_cv <- function(rotulo) {
-		c(rotulo, paste0("cv.", rotulo))
-	}
-	rotulos <- switch(tipo,
-		csp = list("Classes.Simples" = add_cv(classes_simples)),
-		fsp = list("Faixas.Simples"  = add_cv(faixas_simples)),
-		fap = list("Faixas.Acumuladas" = add_cv(faixas_acumuladas)),
-		stop("Tipos válidos: csp, fsp, fap")
-	)
-
-	lista <- c(
-		rotulos,
-		lapply(split(df[-1], df[1]), as.numeric)
-	)
-	return(lista)
-}
-
-reformatar2 <- function(df) {
-
-	add_cv <- function(rotulo) {
-		c(rotulo, paste0("cv.", rotulo))
-	}
-	rotulos <- switch(tipo,
-		csp = list("Classes.Simples" = add_cv(classes_simples)),
-		fsp = list("Faixas.Simples"  = add_cv(faixas_simples)),
-		fap = list("Faixas.Acumuladas" = add_cv(faixas_acumuladas)),
-		stop("Tipos válidos: csp, fsp, fap")
-	)
-	
-	resultado <- data.frame(
-		rotulos,
-		"Pará"  = as.numeric(df[1, ]),
-		"Bahia" = as.numeric(df[2, ]),
-		"Minas.Gerais" = as.numeric(df[3, ]),
-		"Goiás" = as.numeric(df[4, ])
-	)
-	return(resultado)
-}
 
 # reformatar tabelas, criando uma coluna para cada categoria da variável
-reformatar3 <- function(df) {
-
-	# criar rotulos com as cv's para a coluna UF
-	rotulos <- c(
-		unidades_federativas,
-		paste0("cv.", unidades_federativas)
+reshape_wide <- function(df, timevar.pos = 1) {
+	# usar reshape para passar para o formato wide
+	resultado <- reshape(
+		df, direction = "wide",
+		idvar =  "UF",
+		timevar = colnames(df)[timevar.pos]
 	)
-
-	# 1o argumento são todas as colunas menos as categorias e a UF, 2o são as UF's
-	valores_por_uf <- split(df[c(-1,-2)], df[2])
-	# criar lista com os valores e os cv's por UF, uma pra cada item da lista
-	resultado <- as.data.frame(t(do.call(cbind, valores_por_uf)))
-	# valores e cv's estão intercalados; ajustar linhas para deixar cv's no fim
-	resultado <- resultado[c(1,3,5,7,2,4,6,8), ]
-	# adicionar coluna com as UF's
-	resultado <- cbind(rotulos, resultado)
-
-	# excluir nomes de linhas e adicionar os nomes das colunas com as categorias
+	# adicionar os nomes das colunas e excluir nomes de linhas
+	colnames(resultado) <- c("UF", levels(df[[timevar.pos]]))
 	rownames(resultado) <- NULL
-	colnames(resultado) <- c("UF", levels(df[[1]]))
 	return(resultado)
 }
-
-reformatar_cor <- function(df) {
-	total <- aggregate(df[3], df[2], sum)[, 2]
-	cv_total <- aggregate(df[4], df[2], sum)[, 2]
-
-	df <- data.frame(
-		UF = unidades_federativas,
-		Total  = total,
-		Branca = df[df$V2010 == "Branca", 3],
-		Preta  = df[df$V2010 == "Preta", 3],
-		Parda  = df[df$V2010 == "Parda", 3],
-		cv.Total  = cv_total,
-		cv.Branca = df[df$V2010 == "Branca", 4],
-		cv.Preta  = df[df$V2010 == "Preta", 4],
-		cv.Parda  = df[df$V2010 == "Parda", 4],
-	)
-
-	return(df)
-}
-
-reformatar_pop1 <- function(df, var) {
-	reshape(
-		df,
-		timevar = var,
-		idvar = "UF",
-		direction = "wide"
-	)
-}
-
-reformatar_pop2 <- function(df) {
-	rotulos <- unique(df[1])
-	n_rotulos <- nrow(rotulos)
-
-	result <- data.frame(
-		c(unidades_federativas, paste0("cv.", unidades_federativas))
-	)
-	for (i in seq_len(n_rotulos)) {
-		result[i + 1] <- c(
-			df[df[[1]] == rotulos[i, ], 3],  # estimativa
-			df[df[[1]] == rotulos[i, ], 4]   # cv
-		)
-	}
-
-	colnames(result) <- c("UF", rotulos)
-	return(result)
-}
-
-# add_totais
 
 # `faixas` : coluna com as faixas simples
 # `limites`: lista com os limites superiores por UF
@@ -370,17 +311,63 @@ add_faixas_simples <- function(renda, geo, limites) {
 	return(resultado)
 }
 
-estimar_totais <- function(desenho, formula, by=~UF) {
-	by = update.formula(by, ~ . + UF)
-	svyby(
-		formula = as.formula(formula),
-		by = as.formula(by),
-		design = desenho,
-		FUN = svytotal,
-		vartype = "cv",
-		keep.names = FALSE,
-		drop.empty.groups = FALSE,
-		na.rm = TRUE
+add_grupos_idade <- function(idade) {
+	cut(
+		idade,
+		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
+		labels = grupos_idade,
+		right = TRUE
 	)
 }
 
+# adiciona rendimento domiciliar per capita
+add_rdpc <- function(df, vars) {
+	# criar colunas auxiliares, indicando se o morador entra no cálculo
+	# da renda domiciliar e o número de moradores que está incluso no cálculo
+	df$V2005.Rendimento <- ifelse(
+		df$V2005 == "Pensionista" |
+		df$V2005 == "Empregado(a) doméstico(a)" |
+		df$V2005 == "Parente do(a) empregado(a) doméstico(a)",
+		NA, 1
+	)
+	df$V2001.Rendimento <- ave(
+		df$V2005.Rendimento,
+		df$ID_DOMICILIO,
+		FUN = function(x) sum(x, na.rm=T)
+	)
+	# loop para criar as colunas
+	for (v in vars) {
+		# renda domiciliar
+		renda_dom <- ave(
+			df[[v]],
+			df$ID_DOMICILIO,
+			FUN = function(x) sum(x, na.rm = TRUE)
+		)
+		# adicionar ".DPC" como sufixo no nome da coluna
+		col_name <- paste0(v, ".DPC")
+		# criar coluna com a renda domiciliar per capita
+		df[[col_name]] <- ifelse(
+			df$V2005.Rendimento == 1,
+			renda_dom / df$V2001.Rendimento,
+			NA
+		)
+	}
+	return(df)
+}
+
+# adicionar variáveis deflacionadas
+deflacionar <- function(df, vars, ano.base = 1) {
+	# criar loop entre as variáveis de rendimento
+	for (v in vars) {
+		# deflatores diferentes para rendimentos habituais/efetivos
+		if (v == "VD4019") {
+			deflator <- paste0("CO", ano.base)
+		} else {
+			deflator <- paste0("CO", ano.base, "e")
+		}
+		# adicionar variável deflacionada ao dataframe
+		col_name <- paste0(v, ".Real")
+		df[[col_name]] <- df[[v]] * df[[deflator]]
+	}
+	return(df)
+}
