@@ -132,7 +132,7 @@ variaveis <- list(
 	`7444` = c("V2007", "VD4019", "VD4020"),
 	`7445` = c("V1023", "VD4019", "VD4020"),
 	`7446` = c("V2005", "V2005", "VD4019", "VD4020"),
-	`7447` = c("VD3004", "V5002A"),
+	`7447` = c("V2009", "VD3004", "V5002A"),
 	`7448` = c("VD3004", "V5002A"),
 	`7449` = c("V2005",  "V5001A", "V5002A",  "V5003A",
                "VD3004", "S01007", "S01012A", "S01013",
@@ -227,7 +227,7 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 
 	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
 	dados <- pnadc_design(subset(dados, UF == "Minas Gerais"))
-	dados$variables$UF <- droplevels(dados$variables$UF)
+	dados$variables$Estrato.Geo <- droplevels(dados$variables$UF)
 	dados$variables <- transform(
 		dados$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
@@ -282,6 +282,28 @@ estimar_quantis <- function(desenho, renda) {
 	)
 }
 
+estimar_interaction <- function(desenho, formula, FUN, progs) {
+
+	# preparar fórmula com a interação Estrato x Programas
+	interacao <- reformulate(
+		sapply(
+			progs,
+			function(p) paste0("interaction(Estrato.Geo, ", p, ")")
+		),
+		response = NULL
+	)
+
+	svybys(
+		design = desenho,
+		formula = formula,
+		bys = interacao,
+		FUN = FUN,
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
+	)
+}
 
 # reformatar tabelas, criando uma coluna para cada categoria da variável
 reshape_wide <- function(df, timevar.pos = 1) {
@@ -295,6 +317,40 @@ reshape_wide <- function(df, timevar.pos = 1) {
 	colnames(resultado) <- c("Estrato.Geo", levels(df[[timevar.pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
+}
+
+# dividir colunas de interação criadas por svybys()  ex: dividir
+# "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
+# lista gerada usando reshape_wide(), funcção criada acima.
+agrupar_progs <- function(lista) {
+
+	# função que será aplicada a cada item da lista gerada por svyby()
+	dividir_interacao <- function(df) {
+
+		# adicionar as duas colunas que formam a interação
+		df$Estrato.Geo <- rep(estratos_geo, times = 2)
+		df$Categoria <- factor(
+			rep(c("Sim", "Não"), each = 10),
+			levels = c("Sim", "Não")
+		)
+
+		# remover a coluna de interação e reordenar as colunas criadas
+		df[[1]] <- NULL   # coluna com a interação Estrato x Categoria
+		df <- df[, c(4, 3, 1, 2)]
+		return(df)
+	}
+	lista <- lapply(lista, dividir_interacao)
+
+	# adicionar o nome do programa social às colunas
+	levels(lista[[1]]$Categoria) <- paste0("Bolsa.Familia", ".", c("Sim", "Não"))
+	levels(lista[[2]]$Categoria) <- paste0("BPC", ".", c("Sim", "Não"))
+	levels(lista[[3]]$Categoria) <- paste0("Outros", ".", c("Sim", "Não"))
+
+	# reformatar e criar lista com valores e cv's
+	valores <- lapply(lista, function(df) reshape_wide(df[, -4]))
+	cv_list <- lapply(lista, function(df) reshape_wide(df[, -3]))
+
+	return(list(valores, cv_list))
 }
 
 # `faixas` : coluna com as faixas simples

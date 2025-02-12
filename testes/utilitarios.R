@@ -112,7 +112,7 @@ variaveis <- list(
 	`7431` = c("V2009", "VD4002", "VD4052", "V2010"),
 	`7432` = c("V2009", "VD4002", "VD4052"),
 	`7433` = c("V2009", "VD4002", "VD4052", "VD3004"),
-	`7434` = c("V2009", "VD4002", "VD4052", "2007"),
+	`7434` = c("V2009", "VD4002", "VD4052", "V2007"),
 	`7435` = c("V2005", "VD4019", "VD4048"),
 	`7436` = c(),
 	`7437` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
@@ -278,6 +278,27 @@ estimar_quantis <- function(desenho, renda) {
 	)
 }
 
+# estimativas por interação UF x programas sociais, utilizando svybys()
+estimar_interaction <- function(desenho, formula, FUN, progs) {
+
+	# preparar fórmula com a interação UF x Programas
+	interacao <- reformulate(
+		vapply(
+			progs,
+			function(p) paste0("interaction(UF, ", p, ")"), character(1L)
+		),
+		response = NULL
+	)
+
+	svybys(
+		design = desenho,
+		formula = formula,
+		bys = interacao,
+		FUN = FUN,
+		vartype = "cv",
+		keep.names = FALSE
+	)
+}
 
 # reformatar tabelas, criando uma coluna para cada categoria da variável
 reshape_wide <- function(df, timevar.pos = 1) {
@@ -291,6 +312,42 @@ reshape_wide <- function(df, timevar.pos = 1) {
 	colnames(resultado) <- c("UF", levels(df[[timevar.pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
+}
+
+# dividir colunas de interação criadas por svybys()  ex: dividir
+# "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
+# lista gerada usando reshape_wide(), funcção criada acima.
+agrupar_progs <- function(lista) {
+
+	# função que será aplicada a cada item da lista gerada por svyby()
+	dividir_interacao <- function(df) {
+
+		# adicionar as duas colunas que formam a interação
+		df$UF <- rep(unidades_federativas, times = 2)
+		df$Categoria <- factor(
+			rep(c("Sim", "Não"), each = 4),
+			levels = c("Sim", "Não")
+		)
+
+		# adicionar o nome do programa social às colunas
+		nome <- sub(
+			".*?\\.([^)]*)\\)", "\\1",    # entre o primeiro "." e o próximo ")"
+			colnames(df)[1]   # Ex: "interaction(UF, Domicilio.{Bolsa.Familia})"
+		)
+		levels(df$Categoria) <- paste0(levels(df$Categoria), ".", nome)
+
+		# remover a coluna de interação e reordenar as colunas criadas
+		df[[1]] <- NULL   # coluna com a interação UF.Categoria
+		df <- df[, c(4, 3, 1, 2)]
+		return(df)
+	}
+	lista <- lapply(lista, dividir_interacao)
+
+	# reformatar e criar lista com valores e cv's
+	valores <- lapply(lista, function(df) reshape_wide(df[, -4]))
+	cv_list <- lapply(lista, function(df) reshape_wide(df[, -3]))
+
+	return(list(valores, cv_list))
 }
 
 # `faixas` : coluna com as faixas simples

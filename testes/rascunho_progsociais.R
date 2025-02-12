@@ -50,7 +50,8 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_bolsafamilia[ids_bolsafamilia]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
@@ -64,11 +65,11 @@ pop_bolsafamilia <- estimar_totais(
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7447[c(4,7,3)])
-View(pop_bolsafamilia[c(1, 2, 4, 6)])
+View(pop_bolsafamilia[c(1, 2, 3, 5)])
 
 # formatar tabela para melhor visualização
-tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7447, "tab_7447.csv")
@@ -88,8 +89,8 @@ sidra_7448 <- get_sidra(
 names(sidra_7448)
 
 # formatar tabela para melhor visualização
-tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
-cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7448, "tab_7448.csv")
@@ -122,7 +123,8 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_bpc[ids_bpc]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
@@ -136,11 +138,11 @@ pop_bpc <- estimar_totais(
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7454[c(4,7,3)])
-view(pop_bolsafamilia[c(1, 2, 4, 5)])bpc
+View(pop_bpc[c(1, 2, 3, 5)])
 
 # formatar tabela para melhor visualização
-tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7454, "tab_7454.csv")
@@ -157,8 +159,8 @@ sidra_7455 <- get_sidra(
 names(sidra_7455)
 
 # formatar tabela para melhor visualização
-tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
-cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
 # salvar arquivo csv com a tabela
 write.csv(tab_7455, "tab_7455.csv")
@@ -241,11 +243,11 @@ colnames(bolsafam_acesso)[3:18] <- rotulos_benservicos
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7449[c(4,7,3)])
 # filtrar linhas em que algum morador recebe BOlsa Família
-View(bolsafam_acesso[1:4 * 2, -1])
+View(bolsafam_acesso[seq(1, 7, by = 2), -1])
 
 # dividir tabela com os totais e os cv's
-tab_7449 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
-cv_7449 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
+tab_7449 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7449 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
 # salvar arquivos CSV
 write.csv(tab_7449, "tabelas/tab_7449.csv")
@@ -263,11 +265,11 @@ sidra_7450 <- get_sidra(
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7450[c(4,7,3)])
 # filtrar linhas em que nenhum morador recebe BOlsa Família
-View(bolsafam_acesso[seq(1, 7, by = 2), -1])
+View(bolsafam_acesso[1:4 * 2, -1])
 
 # dividir tabela com os totais e os cv's
-tab_7450 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
-cv_7450 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
+tab_7450 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
+cv_7450 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
 
 # salvar arquivos CSV
 write.csv(tab_7450, "tabelas/tab_7450.csv")
@@ -324,11 +326,11 @@ colnames(bpc_acesso)[3:18] <- rotulos_benservicos
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7451[c(4,7,3)])
-View(bpc_acesso[1:4 * 2, -1])
+View(bpc_acesso[seq(1, 7, by = 2), -1])
 
 # dividir tabela com os totais e os cv's
-tab_7451 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
-cv_7451 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
+tab_7451 <- bpc_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7451 <-  bpc_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
 # salvar arquivos CSV
 write.csv(tab_7451, "tabelas/tab_7451.csv")
@@ -346,11 +348,11 @@ names(sidra_7431)
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7452[c(4,7,3)])
-View(bpc_acesso[seq(1, 7, by = 2), -1])
+View(bpc_acesso[1:4 * 2, -1])
 
 # dividir tabela com os totais e os cv's
-tab_7452 <- bpc_acesso[seq(1, 7, by = 2), c(2, 3:10)]
-cv_7452 <-  bpc_acesso[seq(1, 7, by = 2), c(2, 11:18)]
+tab_7452 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
+cv_7452 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
 
 # salvar arquivos CSV
 write.csv(tab_7452, "tabelas/tab_7452.csv")
@@ -360,13 +362,13 @@ write.csv(cv_7452, "tabelas/cv_7452.csv")
 info_sidra(7456)
 
 sidra_7456 <- get_sidra(
-	x = 7456, variable = 10784, period = "2023",
+	x = 7456, variable = 10163, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
-names(sidra_7431)
+names(sidra_7456)
 
-# vetor com os ids dos domicílios em que ao menos um morador recebe outros programas
+# ids dos domicílios em que ao menos um morador recebe outros programas
 ids_outrosprogramas <- tapply(
 	desenho$variables$V5003A == "Sim", 
 	desenho$variables$ID_DOMICILIO, 
@@ -380,36 +382,71 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_outrosprogramas[ids_outrosprogramas]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
-media_moradores_progs <- svyby(
-	design = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
+media_moradores_progs <- estimar_interaction(
+	desenho = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	formula = ~V2001,
-	by = ~
-		interaction(UF, Domicilio.Bolsa.Familia) +
-		interaction(UF, Domicilio.BPC) +
-		interaction(UF, Domicilio.Outros.Programas),
 	FUN = svymean,
-	keep.names = F,
-	vartype = "cv"
+	progs = c("Domicilio.Bolsa.Familia", "Domicilio.BPC",
+		"Domicilio.Outros.Programas")
 )
-
-teste <- do.call(rbind, media_moradores_progs)
+media_moradores_progs <- agrupar_progs(media_moradores_progs)
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7456[c(4,7,3)])
+View(media_moradores_progs[[1]])
+
+# dividir lista entre valores e cv's
+tab_7456 <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	media_moradores_progs[[1]]
+)
+cv_7456  <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	media_moradores_progs[[2]]
+)
+
+# salvar arquivos CSV
+write.csv(tab_7456, "tab_7456.csv")
+write.csv(cv_7456, "cv_7456.csv")
 
 # 7457 - total de domicílios, por recebimento e tipo de programa
 info_sidra(7457)
 
 sidra_7457 <- get_sidra(
-	x = 7457, variable = 10784, period = "2023",
+	x = 7457, variable = 162, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 )
-names(sidra_7431)
+names(sidra_7457)
+
+dom_progs <- estimar_interaction(
+	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
+	~V2005 == "Pessoa responsável pelo domicílio",
+	FUN = svytotal,
+	c("Domicilio.Bolsa.Familia", "Domicilio.BPC", "Domicilio.Outros.Programas")
+)
+# remover colunas em que o teste foi FALSE
+dom_progs <- lapply(dom_progs, `[`, c(-2, -4))
+dom_progs <- agrupar_progs(dom_progs)
 
 # visualizar tabela sidra e nossa estimativa a título de comparação
 View(sidra_7457[c(4,7,3)])
+View(dom_progs)
+
+# dividir lista entre valores e cv's
+tab_7457 <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	dom_progs[[1]]))
+cv_7457  <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	dom_progs[[2]]))
+
+# salvar arquivos CSV
+write.csv(tab_7457, "tab_7457.csv")
+write.csv(cv_7457, "cv_7457.csv")
+
