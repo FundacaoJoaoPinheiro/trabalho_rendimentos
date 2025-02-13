@@ -85,8 +85,8 @@ pop_bolsafamilia <- estimar_totais(
 tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
 cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
-write.csv(tab_7447, "tab_7447.csv")
-write.csv(cv_7447, "cv_7447.csv")
+write.csv2(tab_7447, "saida/tab_7447.csv")
+write.csv2(cv_7447, "saida/cv_7447.csv")
 
 # Tabela 7448 - O mesmo que 7447, mas para domicílios que não possuem
 # moradores beneficiários
@@ -94,8 +94,8 @@ write.csv(cv_7447, "cv_7447.csv")
 tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
 cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
-write.csv(tab_7448, "tab_7448.csv")
-write.csv(cv_7448, "cv_7448.csv")
+write.csv2(tab_7448, "saida/tab_7448.csv")
+write.csv2(cv_7448, "saida/cv_7448.csv")
 
 # Tabela 7454 - O mesmo que 7447, mas para domicílios que possuem beneficiários
 # do BPC-Loas
@@ -109,16 +109,16 @@ pop_bpc <- estimar_totais(
 tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
 cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
-write.csv(tab_7454, "tab_7454.csv")
-write.csv(cv_7454, "cv_7454.csv")
+write.csv2(tab_7454, "saida/tab_7454.csv")
+write.csv2(cv_7454, "saida/cv_7454.csv")
 
 # Tabela 7455 - O mesmo que 7454, mas para domicílios que não possuem beneficiários
 
 tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
 cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
-write.csv(tab_7455, "tab_7455.csv")
-write.csv(cv_7455, "cv_7455.csv")
+write.csv2(tab_7455, "saida/tab_7455.csv")
+write.csv2(cv_7455, "saida/cv_7455.csv")
 
 # Tabela 7449 - Domicílios com beneficiários do Bolsa Família, por posse
 # ou acesso a bens e serviços
@@ -183,16 +183,16 @@ colnames(bolsafam_acesso)[3:18] <- rotulos_benservicos
 tab_7449 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
 cv_7449 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
-write.csv(tab_7449, "tabelas/tab_7449.csv")
-write.csv(cv_7449, "tabelas/cv_7449.csv")
+write.csv2(tab_7449, "saida/tab_7449.csv")
+write.csv2(cv_7449, "saida/cv_7449.csv")
 
 # Tabela 7450 - O mesmo que 7449, mas para domicílios que não possuem beneficiários
 
 tab_7450 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
 cv_7450 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
 
-write.csv(tab_7450, "tabelas/tab_7450.csv")
-write.csv(cv_7450, "tabelas/cv_7450.csv")
+write.csv2(tab_7450, "saida/tab_7450.csv")
+write.csv2(cv_7450, "saida/cv_7450.csv")
 
 # Tabela 7451 - O mesmo que 7449, mas para beneficiários do BPC-Loas
 
@@ -232,16 +232,16 @@ colnames(bpc_acesso)[3:18] <- rotulos_benservicos
 tab_7451 <- bpc_acesso[seq(1, 7, by = 2), c(2, 3:10)]
 cv_7451 <-  bpc_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
-write.csv(tab_7451, "tabelas/tab_7451.csv")
-write.csv(cv_7451, "tabelas/cv_7451.csv")
+write.csv2(tab_7451, "saida/tab_7451.csv")
+write.csv2(cv_7451, "saida/cv_7451.csv")
 
 # Tabela 7452 - o mesmo que 7451, mas para domicílios sem beneficiários do BPC
 
 tab_7452 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
 cv_7452 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
 
-write.csv(tab_7452, "tabelas/tab_7452.csv")
-write.csv(cv_7452, "tabelas/cv_7452.csv")
+write.csv2(tab_7452, "saida/tab_7452.csv")
+write.csv2(cv_7452, "saida/cv_7452.csv")
 
 # Tabela 7456 - média de moradores por domicílio por recbimento e tipo de programa
 
@@ -263,8 +263,8 @@ cv_7456  <- Reduce(
 	media_moradores_progs[[2]]
 )
 
-write.csv(tab_7456, "tab_7456.csv")
-write.csv(cv_7456, "cv_7456.csv")
+write.csv2(tab_7456, "saida/tab_7456.csv")
+write.csv2(cv_7456, "saida/cv_7456.csv")
 
 # 7457 - total de domicílios, por recebimento e tipo de programa
 
@@ -287,5 +287,5 @@ cv_7457  <- Reduce(
 	dom_progs[[2]]
 )
 
-write.csv(tab_7457, "tab_7457.csv")
-write.csv(cv_7457, "cv_7457.csv")
+write.csv2(tab_7457, "saida/tab_7457.csv")
+write.csv2(cv_7457, "saida/cv_7457.csv")

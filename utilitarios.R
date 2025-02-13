@@ -8,7 +8,7 @@
 # Objetos utilizados na leitura dos dados da PNADc
 pnadc_ano <- 2023
 
-pnadc_dir <- "Microdados"
+pnadc_dir <- "entrada"
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
 input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
 deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")
@@ -270,7 +270,7 @@ estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
 # estimar quantis das classes percentuais simples e Estrato.Geo
 estimar_quantis <- function(desenho, renda) {
 	svyby(
-		formula = as.formula(renda),
+		formula = renda,
 		by = ~Estrato.Geo,
 		design = desenho,
 		FUN = svyquantile,
@@ -357,13 +357,13 @@ agrupar_progs <- function(lista) {
 # `limites`: lista com os limites superiores por Estrato.Geo
 add_faixas_simples <- function(renda, geo, limites) {
 	renda_geo <- split(renda, geo)
-	quantis_geo <- limites[-1]
+	quantis_geo <- split(limites[-1], limites[[1]])
 
 	faixas_geo <- Map(
 		function(valores, quantis) {
 			cut(
 				valores,
-				breaks = c(-Inf, quantis[1:12], Inf),   # garantir 12 limites
+				breaks = c(-Inf, quantis, Inf),   # garantir 12 limites
 				labels = faixas_simples,
 				right = FALSE
 			)

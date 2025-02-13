@@ -95,8 +95,8 @@ colnames(pop_fontes) <- c(
 tab_7426 <- pop_fontes[1:9]
 cv_7426  <- pop_fontes[-1 * 2:9]
 
-write.csv(tab_7426, "tabelas/tab_7426.csv")
-write.csv(cv_7426,  "tabelas/cv_7426.csv")
+write.csv2(tab_7426, "saida/tab_7426.csv")
+write.csv2(cv_7426,  "saida/cv_7426.csv")
 
 # 7429 - participação % de cada fonte no rendimento médio domiciliar per capita
 
@@ -129,8 +129,8 @@ colnames(participacao_rdpc) <- c(
 tab_7429 <- participacao_rdpc[c(1, 2:6)]
 cv_7429  <- participacao_rdpc[c(1, 7:11)]
 
-write.csv(tab_7429, "tabelas/tab_7429.csv")
-write.csv(cv_7429, "tabelas/cv_7429.csv")
+write.csv2(tab_7429, "saida/tab_7429.csv")
+write.csv2(cv_7429, "saida/cv_7429.csv")
 
 # 7437 - RMe da pop. com rendimento, por fonte de rendimento
 
@@ -171,5 +171,5 @@ colnames(rme_fontes) <- c(
 tab_7437 <- rme_fontes[c(1, 2:9)]
 cv_7437  <- rme_fontes[c(1, 10:17)]
 
-write.csv(tab_7437, "tabelas/tab_7437.csv")
-write.csv(cv_7437, "tabelas/cv_7437.csv")
+write.csv2(tab_7437, "saida/tab_7437.csv")
+write.csv2(cv_7437, "saida/cv_7437.csv")

@@ -14,7 +14,7 @@
 pnadc_ano <- 2023
 
 # diretório com os arquivos de microdados e os respectivos arquivos
-pnadc_dir <- "../Microdados"
+pnadc_dir <- "../entrada"
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
 input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
 deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")

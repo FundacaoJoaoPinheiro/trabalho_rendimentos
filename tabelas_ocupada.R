@@ -38,8 +38,8 @@ ocupada_cor <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2010)
 tab_7431 <- reshape_wide(ocupada_cor[-4])
 cv_7431 <- reshape_wide(ocupada_cor[-3])
 
-write.csv(tab_7431, "tabelas/tab_7431.csv")
-write.csv(cv_7431, "tabelas/cv_7431.csv")
+write.csv2(tab_7431, "saida/tab_7431.csv")
+write.csv2(cv_7431, "saida/cv_7431.csv")
 
 # Tabela 7432 - população ocupada por grupos de idade
 
@@ -53,8 +53,8 @@ ocupada_instrucao <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~VD3004)
 tab_7433 <- reshape_wide(ocupada_instrucao[-4])
 cv_7433 <- reshape_wide(ocupada_instrucao[-3])
 
-write.csv(tab_7433, "tabelas/tab_7433.csv")
-write.csv(cv_7433, "tabelas/cv_7433.csv")
+write.csv2(tab_7433, "saida/tab_7433.csv")
+write.csv2(cv_7433, "saida/cv_7433.csv")
 
 # Tabela 7434 - população ocupada por V2007, sexo;
 
@@ -62,8 +62,8 @@ ocupada_sexo <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2007)
 tab_7434 <- reshape_wide(ocupada_sexo[-4])
 cv_7434 <- reshape_wide(ocupada_sexo[-3])
 
-write.csv(tab_7434, "tabelas/tab_7434.csv")
-write.csv(cv_7434, "tabelas/cv_7434.csv")
+write.csv2(tab_7434, "saida/tab_7434.csv")
+write.csv2(cv_7434, "saida/cv_7434.csv")
 
 # Tabela 7439 - população ocupada por V2005, responsáveis;
 
@@ -75,8 +75,8 @@ ocupada_responsavel <- estimar_totais(
 tab_7439 <- ocupada_responsavel[1:2]
 cv_7439 <- ocupada_responsavel[-2]
 
-write.csv(tab_7439, "tabelas/tab_7439.csv")
-write.csv(cv_7439, "tabelas/cv_7439.csv")
+write.csv2(tab_7439, "saida/tab_7439.csv")
+write.csv2(cv_7439, "saida/cv_7439.csv")
 
 # Tabela 7440 - população ocupada por V1023, área;
 
@@ -85,8 +85,8 @@ levels(ocupada_area$V1023) <- areas_geograficas
 tab_7440 <- reshape_wide(ocupada_area[-4])
 cv_7440 <- reshape_wide(ocupada_area[-3])
 
-write.csv(tab_7440, "tabelas/tab_7440.csv")
-write.csv(cv_7440, "tabelas/cv_7440.csv")
+write.csv2(tab_7440, "saida/tab_7440.csv")
+write.csv2(cv_7440, "saida/cv_7440.csv")
 
 # Tabela 7436 - população ocupada por populacao residente
 
@@ -97,4 +97,4 @@ tab_7436 <- data.frame(
 	cv = cv(ocupada_total)
 )
 
-write.csv(tab_7436, "tabelas/tab_7436.csv")
+write.csv2(tab_7436, "saida/tab_7436.csv")
