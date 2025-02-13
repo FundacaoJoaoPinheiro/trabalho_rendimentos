@@ -11,7 +11,7 @@ source("utilitarios.R")     # objetos e funções utilizados abaixo
 
 pnadc_ano = 2023
 pnadc_dir = "Microdados"
-desenho <- gerar_desenho(tabelas_fontes)
+desenho <- gerar_desenho(tabelas_progsociais)
 
 # ---------------------------------------------------------------------
 
@@ -31,7 +31,8 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_bolsafamilia[ids_bolsafamilia]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
@@ -47,7 +48,8 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_bpc[ids_bpc]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
@@ -63,7 +65,8 @@ desenho$variables <- transform(
 		ifelse(
 			ID_DOMICILIO %in% names(ids_outrosprogramas[ids_outrosprogramas]),
 			"Sim", "Não"
-		)
+		),
+		levels = c("Sim", "Não")
 	)
 )
 
@@ -79,8 +82,8 @@ pop_bolsafamilia <- estimar_totais(
 )
 
 # reformatar tabela com uma coluna para cada nível de instrução
-tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
 write.csv(tab_7447, "tab_7447.csv")
 write.csv(cv_7447, "cv_7447.csv")
@@ -88,8 +91,8 @@ write.csv(cv_7447, "cv_7447.csv")
 # Tabela 7448 - O mesmo que 7447, mas para domicílios que não possuem
 # moradores beneficiários
 
-tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
-cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
 write.csv(tab_7448, "tab_7448.csv")
 write.csv(cv_7448, "cv_7448.csv")
@@ -103,16 +106,16 @@ pop_bpc <- estimar_totais(
 	por = ~VD3004
 )
 
-tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7454 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7454  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
 
 write.csv(tab_7454, "tab_7454.csv")
 write.csv(cv_7454, "cv_7454.csv")
 
 # Tabela 7455 - O mesmo que 7454, mas para domicílios que não possuem beneficiários
 
-tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
-cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
 
 write.csv(tab_7455, "tab_7455.csv")
 write.csv(cv_7455, "cv_7455.csv")
@@ -177,16 +180,16 @@ rotulos_benservicos <- c(
 
 colnames(bolsafam_acesso)[3:18] <- rotulos_benservicos
 
-tab_7449 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
-cv_7449 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
+tab_7449 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7449 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
 write.csv(tab_7449, "tabelas/tab_7449.csv")
 write.csv(cv_7449, "tabelas/cv_7449.csv")
 
 # Tabela 7450 - O mesmo que 7449, mas para domicílios que não possuem beneficiários
 
-tab_7450 <- bolsafam_acesso[seq(1, 7, by = 2), c(2, 3:10)]
-cv_7450 <-  bolsafam_acesso[seq(1, 7, by = 2), c(2, 11:18)]
+tab_7450 <- bolsafam_acesso[1:4 * 2, c(2, 3:10)]
+cv_7450 <-  bolsafam_acesso[1:4 * 2, c(2, 11:18)]
 
 write.csv(tab_7450, "tabelas/tab_7450.csv")
 write.csv(cv_7450, "tabelas/cv_7450.csv")
@@ -226,31 +229,63 @@ bpc_acesso <- estimar_totais(
 bpc_acesso <- bpc_acesso[-seq(3, 34, by = 2)]
 colnames(bpc_acesso)[3:18] <- rotulos_benservicos
 
-tab_7451 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
-cv_7451 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
+tab_7451 <- bpc_acesso[seq(1, 7, by = 2), c(2, 3:10)]
+cv_7451 <-  bpc_acesso[seq(1, 7, by = 2), c(2, 11:18)]
 
 write.csv(tab_7451, "tabelas/tab_7451.csv")
 write.csv(cv_7451, "tabelas/cv_7451.csv")
 
+# Tabela 7452 - o mesmo que 7451, mas para domicílios sem beneficiários do BPC
 
+tab_7452 <- bpc_acesso[1:4 * 2, c(2, 3:10)]
+cv_7452 <-  bpc_acesso[1:4 * 2, c(2, 11:18)]
 
+write.csv(tab_7452, "tabelas/tab_7452.csv")
+write.csv(cv_7452, "tabelas/cv_7452.csv")
 
+# Tabela 7456 - média de moradores por domicílio por recbimento e tipo de programa
 
+media_moradores_progs <- estimar_interaction(
+	desenho = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
+	formula = ~V2001,
+	FUN = svymean,
+	progs = c("Domicilio.Bolsa.Familia", "Domicilio.BPC",
+		"Domicilio.Outros.Programas")
+)
+media_moradores_progs <- agrupar_progs(media_moradores_progs)
 
+tab_7456 <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	media_moradores_progs[[1]]
+)
+cv_7456  <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	media_moradores_progs[[2]]
+)
 
+write.csv(tab_7456, "tab_7456.csv")
+write.csv(cv_7456, "cv_7456.csv")
 
+# 7457 - total de domicílios, por recebimento e tipo de programa
 
+dom_progs <- estimar_interaction(
+	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
+	~V2005 == "Pessoa responsável pelo domicílio",
+	FUN = svytotal,
+	c("Domicilio.Bolsa.Familia", "Domicilio.BPC", "Domicilio.Outros.Programas")
+)
+# remover colunas em que o teste foi FALSE
+dom_progs <- lapply(dom_progs, `[`, c(-2, -4))
+dom_progs <- agrupar_progs(dom_progs)
 
+tab_7457 <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	dom_progs[[1]]
+)
+cv_7457  <- Reduce(
+	function(...) merge(..., sort = FALSE),
+	dom_progs[[2]]
+)
 
-
-
-
-
-
-
-
-
-
-
-
-
+write.csv(tab_7457, "tab_7457.csv")
+write.csv(cv_7457, "cv_7457.csv")
