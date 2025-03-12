@@ -34,10 +34,7 @@ all(
 # e com rendimento de trabalho
 desenho$variables <- transform(
 	desenho$variables,
-	Ocupada.com.Rendimento = ifelse(
-		VD4002 == "Pessoas ocupadas" & V2009 >= 14 & VD4019 > 0,
-		1, NA
-	)
+	Pessoa.Ocupada = ifelse(VD4019 > 0, 1, 0)
 )
 
 # 7431 --> V2010, cor e raça;
@@ -54,15 +51,20 @@ sidra_7431 <- get_sidra(
 names(sidra_7431)
 
 # estimar população ocupada com rendimento por raça/cor
-ocupada_cor <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2010)
+ocupada_cor <- estimar_totais(
+	desenho = subset(desenho, Pessoa.Ocupada == 1),
+	formula = ~V2010
+)
+ocupada_cor$Total <- rowSums(ocupada_cor[2:7])
 
 # comparar estimativa com os valores publicados no SIDRA
 View(ocupada_cor)
 View(sidra_7431[c(4,7,3)])
 
 # reformatar tabela para facilitar a visualização
-tab_7431 <- reshape_wide(ocupada_cor[-4])
-cv_7431 <- reshape_wide(ocupada_cor[-3])
+tab_7431 <- ocupada_cor[, c(1, 2:7, 14)]
+cv_7431  <- ocupada_cor[, c(1, 8:13)]
+cv_7431[, -1] <- round(cv_7431[, -1] * 100, 1)
 
 # salvar tabela em formato CSV
 write.csv(tab_7431, "tabelas/tab_7431.csv")
@@ -88,7 +90,7 @@ desenho$variables <- transform(
 )
 
 # estimar população ocupada com rendimento por grupo de idade
-ocupada_idade <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~Grupos.de.Idade)
+ocupada_idade <- estimar_totais(desenho, ~Pessoa.Ocupada, ~Grupos.de.Idade)
 
 # comparar estimativa com os valores publicados no SIDRA
 View(sidra_7432[c(4,7,3)])
@@ -116,7 +118,7 @@ sidra_7433 <- get_sidra(
 names(sidra_7433)
 
 # estimar população ocupada com rendimento por nível de instrução
-ocupada_instrucao <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~VD3004)
+ocupada_instrucao <- estimar_totais(desenho, ~Pessoa.Ocupada, ~VD3004)
 
 # comparar estimativa com os valores publicados no SIDRA
 View(sidra_7433[c(4,7,3)])
@@ -144,7 +146,7 @@ sidra_7434 <- get_sidra(
 names(sidra_7434)
 
 # estimar população ocupada com rendimento por sexo
-ocupada_sexo <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V2007)
+ocupada_sexo <- estimar_totais(desenho, ~Pessoa.Ocupada, ~V2007)
 
 # comparar estimativa com os valores publicados no SIDRA
 print(sidra_7434[c(4,7,3)])
@@ -174,7 +176,7 @@ names(sidra_7439)
 # estimar população ocupada com rendimento e responsável pelo domicílio
 ocupada_responsavel <- estimar_totais(
 	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
-	~Ocupada.com.Rendimento
+	~Pessoa.Ocupada
 )
 
 # comparar estimativa com os valores publicados no SIDRA
@@ -203,7 +205,7 @@ sidra_7440 <- get_sidra(
 names(sidra_7440)
 
 # estimar população ocupada com rendimento por tipo de área geográfica
-ocupada_area <- estimar_totais(desenho, ~Ocupada.com.Rendimento, ~V1023)
+ocupada_area <- estimar_totais(desenho, ~Pessoa.Ocupada, ~V1023)
 levels(ocupada_area$V1023) <- areas_geograficas
 
 # comparar estimativa com os valores publicados no SIDRA
@@ -232,7 +234,7 @@ sidra_7436 <- get_sidra(
 names(sidra_7436)
 
 # estimar população residente por UF
-ocupada_total <- svytotal(~UF, desenho)
+ocupada_total <- svytotal(~UF, subset(desenho, VD4019 > 0), na.rm = TRUE)
 
 # comparar estimativa com os valores publicados no SIDRA
 print(sidra_7436[c(4,3)])
@@ -246,3 +248,137 @@ tab_7436 <- data.frame(
 
 # salvar tabela em formato CSV
 write.csv(tab_7436, "tabelas/tab_7436.csv")
+
+# 7537 --> csp
+info_sidra(7537)
+sidra_7537 <- get_sidra(
+	x = 7537, variable = 10844, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
+)
+names(sidra_7537)
+
+# deflacionar
+desenho$variables <- transform(
+	desenho$variables,
+	VD4019.Real = VD4019 * CO1,
+	VD4020.Real = VD4020 * CO1e
+)
+
+# limites
+limites_vd4019real <- estimar_quantis(
+	desenho,
+	formula = ~VD4019.Real
+)
+limites_vd4020real <- estimar_quantis(
+	desenho,
+	~VD4020.Real
+)
+limites_vd4020real[1, 2] <- 0.0001    # P5 estimado é 0
+
+# adicionar coluna com as classes simples
+desenho$variables <- transform(
+	desenho$variables,
+	VD4019.Classe = ad_classes_simples(
+		renda = VD4019.Real,
+		geo = UF,
+		quantis = limites_vd4019real
+	),
+	VD4020.Classe = ad_classes_simples(
+		VD4020.Real,
+		UF,
+		limites_vd4020real
+	)
+)
+
+ocupada_csp_h <- estimar_totais(desenho, ~VD4019.Classe)
+
+View(sidra_7537[c(4,7,3)])
+View(ocupada_csp_h)
+
+# 7547 --> 7537, CO1e
+ocupada_csp_e <- estimar_totais(desenho, ~VD4020.Classe)
+
+# 7541 --> 7537, CO2
+
+# 7551 --> 7541, CO2e
+
+# 7559 --> CAP, CO1e
+sidra_7559 <- get_sidra(
+	x = 7559, variable = 10844, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
+)
+names(sidra_7559)
+
+ocupada_cap_e <- vector("list", 13)
+ocupada_cap_e[[1]] <- ocupada_csp_e[, c(2, 15)]     # Até P5
+
+for (i in 2:13) {
+	sub_desenho <- subset(
+		desenho,
+		VD4020.Classe %in% classes_simples[1:i]
+	)
+    estimativa <- svytotal(~UF, sub_desenho, na.rm = TRUE)
+    ocupada_cap_e[[i]] <- cbind(estimativa, cv(estimativa))
+    colnames(ocupada_cap_e[[i]]) <- c(classes_acumuladas[i], "cv")
+}
+rm(sub_desenho, estimativa)
+
+View(sidra_7559[c(4,7,3)])
+View(ocupada_cap_e)
+
+tab_7559 <- data.frame(
+	unidades_federativas,
+	do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 1]))
+)
+colnames(tab_7559) <- c("UF", classes_acumuladas)
+
+cv_7559 <- data.frame(
+	unidades_federativas,
+	do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 2]))
+)
+colnames(cv_7559) <- c("UF", classes_acumuladas)
+cv_7559[, -1] <- round(cv_7559[, -1] * 100, 1)
+
+# 7560 --> 7559, CO2e
+
+# 7562 --> 7559, CO1
+sidra_7562 <- get_sidra(
+	x = 7562, variable = 10844, period = "2023",
+	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
+	header = TRUE, format = 2
+)
+names(sidra_7562)
+
+ocupada_cap_h <- vector("list", 13)
+ocupada_cap_h[[1]] <- ocupada_csp_h[, c(2, 15)]     # Até P5
+
+for (i in 2:13) {
+	sub_desenho <- subset(
+		desenho,
+		VD4019.Classe %in% classes_simples[1:i]
+	)
+    estimativa <- svytotal(~UF, sub_desenho, na.rm = TRUE)
+    ocupada_cap_h[[i]] <- cbind(estimativa, cv(estimativa))
+    colnames(ocupada_cap_h[[i]]) <- c(classes_acumuladas[i], "cv")
+}
+rm(sub_desenho, estimativa)
+
+View(sidra_7562[c(4,7,3)])
+View(ocupada_cap_h)
+
+tab_7562 <- data.frame(
+	unidades_federativas,
+	do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 1]))
+)
+colnames(tab_7562) <- c("UF", classes_acumuladas)
+
+cv_7562 <- data.frame(
+	unidades_federativas,
+	do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 2]))
+)
+colnames(cv_7562) <- c("UF", classes_acumuladas)
+cv_7562[, -1] <- round(cv_7562[, -1] * 100, 1)
+
+# 7563 --> 7562, CO2

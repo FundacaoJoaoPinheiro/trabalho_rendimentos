@@ -4,15 +4,13 @@
 
 pacotes <- c("sidrar", "PNADcIBGE", "survey", "convey")
 lapply(pacotes, library, character.only = TRUE)
-source("testes/utilitarios.R")
+source("utilitarios.R")
 options(scipen = 999)
-
-variaveis <- c("V2009", "VD4002", "VD4019", "VD4020")
 
 if (file.exists("desenho_distribuicao.RDS")) {
 	desenho <- readRDS("desenho_distribuicao.RDS")
 } else {
-	desenho <- gerar_DA(variaveis)
+	desenho <- gerar_desenho(tabelas_distribuicao)
 }
 
 # Distribuição do rendimento mensal -------------------------------------------
@@ -80,6 +78,8 @@ classes_simples1 <- Map(
 	breaks = quantis_UF1
 )
 
+quantis <- estimar_quantis(desenho, ~VD4019.Real)
+
 # adicionar coluna com as classes simples por percentual (CSP)
 desenho$variables <- transform(
 	desenho$variables,
@@ -107,7 +107,7 @@ distribuicao1 <- data.frame(
 	Distribuicao.Simples.RDPC1 = unlist(distribuicao_UF1)
 )
 
-View(sidra_7543[c(4,7,4)])
+View(sidra_7543[c(4,7,3)])
 View(distribuicao1)
 
 # 7544 --> VD4019 * CO1, classe acumulada; Resultados muito parecidos

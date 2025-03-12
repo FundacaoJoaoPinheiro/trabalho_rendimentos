@@ -74,9 +74,9 @@ grupos_idade = c(
 )
 
 # classes simples dde percentual (CSP)
-classes_simples <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
+classes <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
 
-faixas_simples <- c(
+classes_simples <- c(
 	"Até P5",
 	"Maior que P5 até P10",
 	"Maior que P10 até P20",
@@ -92,7 +92,7 @@ faixas_simples <- c(
 	"Maior que P99"
 )
 
-faixas_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
+classes_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
 # Definindo lista com as variáveis requeridas por cada tabela
 
@@ -264,28 +264,27 @@ estimar_medias <- function(desenho, formula, por = ~UF) {
 }
 
 # estimar quantis das classes percentuais simples e UF
-estimar_quantis <- function(desenho, renda) {
+estimar_quantis <- function(desenho, formula) {
 	svyby(
-		formula = as.formula(renda),
+		formula,
 		by = ~UF,
 		design = desenho,
 		FUN = svyquantile,
 		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
 		vartype = "cv",
 		keep.names = FALSE,
-		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
 }
 
 # estimativas por interação UF x programas sociais, utilizando svybys()
-estimar_interaction <- function(desenho, formula, FUN, progs) {
+estimar_interacao <- function(desenho, formula, FUN, vars) {
 
 	# preparar fórmula com a interação UF x Programas
 	interacao <- reformulate(
 		vapply(
-			progs,
-			function(p) paste0("interaction(UF, ", p, ")"), character(1L)
+			vars,
+			function(v) paste0("interaction(UF, ", v, ")"), character(1L)
 		),
 		response = NULL
 	)
@@ -300,23 +299,51 @@ estimar_interaction <- function(desenho, formula, FUN, progs) {
 	)
 }
 
+# estimar variáveis por faixa acumulada percentual(FAP)
+estimar_cap <- function(desenho, formula, csp) {
+
+	cap_list <- vector("list", 13)
+	for (i in 1:13) {
+	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
+	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
+	}
+
+	# agrupar valores e CV's dos data frames da lista
+	valores <- data.frame(
+		unidades_federativas,     # selecionar coluna de valores
+		do.call(cbind, lapply(cap_list, `[`, 2))
+	)
+	cvs <- data.frame(
+		unidades_federativas,     # selecionar coluna de CV's
+		do.call(cbind, lapply(cap_list, `[`, 3))
+	)
+	cvs[, -1] <- round(cvs[, -1] * 100, 1)
+
+	colnames(valores) <- c("UF", classes_acumuladas)
+	colnames(cvs) <- c("UF", classes_acumuladas)
+
+	return(list(valores, cvs))
+}
+
 # reformatar tabelas, criando uma coluna para cada categoria da variável
 reshape_wide <- function(df, timevar.pos = 1) {
+	# capturar categorias que serão usadas como nomes de colunas
+	timevar_names <- levels(df[[timevar.pos]])
 	# usar reshape para passar para o formato wide
-	resultado <- reshape(
+	df <- reshape(
 		df, direction = "wide",
 		idvar =  "UF",
 		timevar = colnames(df)[timevar.pos]
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
-	colnames(resultado) <- c("UF", levels(df[[timevar.pos]]))
-	rownames(resultado) <- NULL
-	return(resultado)
+	colnames(df) <- c("UF", timevar_names)
+	rownames(df) <- NULL
+	return(df)
 }
 
 # dividir colunas de interação criadas por svybys()  ex: dividir
 # "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
-# lista gerada usando reshape_wide(), funcção criada acima.
+# lista gerada usando reshape_wide(), função criada acima.
 agrupar_progs <- function(lista) {
 
 	# função que será aplicada a cada item da lista gerada por svyby()
@@ -345,37 +372,14 @@ agrupar_progs <- function(lista) {
 
 	# reformatar e criar lista com valores e cv's
 	valores <- lapply(lista, function(df) reshape_wide(df[, -4]))
-	cv_list <- lapply(lista, function(df) reshape_wide(df[, -3]))
+	lista_cvs <- lapply(lista, function(df) reshape_wide(df[, -3]))
 
-	return(list(valores, cv_list))
+	return(list(valores, lista_cvs))
 }
 
-# `faixas` : coluna com as faixas simples
-# `limites`: lista com os limites superiores por UF
-add_faixas_simples <- function(renda, geo, limites) {
-	renda_geo <- split(renda, geo)
-	quantis_geo <- limites[-1]
-
-	faixas_geo <- Map(
-		function(valores, quantis) {
-			cut(
-				valores,
-				breaks = c(-Inf, quantis[1:12], Inf),   # garantir 12 limites
-				labels = faixas_simples,
-				right = FALSE
-			)
-		},
-		renda_geo,
-		quantis_geo
-	)
-	
-	resultado <- unsplit(faixas_geo, geo)
-	return(resultado)
-}
-
-add_grupos_idade <- function(idade) {
+ad_grupos_idade <- function(idade.var) {
 	cut(
-		idade,
+		idade.var,
 		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
 		labels = grupos_idade,
 		right = TRUE
@@ -383,7 +387,7 @@ add_grupos_idade <- function(idade) {
 }
 
 # adiciona rendimento domiciliar per capita
-add_rdpc <- function(df, vars) {
+ad_rdpc <- function(df, vars) {
 	# criar colunas auxiliares, indicando se o morador entra no cálculo
 	# da renda domiciliar e o número de moradores que está incluso no cálculo
 	df$V2005.Rendimento <- ifelse(
@@ -417,19 +421,76 @@ add_rdpc <- function(df, vars) {
 	return(df)
 }
 
+# `faixas` : coluna com as faixas simples
+# `limites`: lista com os limites superiores por UF
+ad_classes_simples <- function(renda, geo, quantis) {
+
+	# garantir que os CV's não estão inclusos
+	quantis <- quantis[1:13]
+
+	# criar listas com um item por unidade territorial
+	renda_geo <- split(renda, geo)
+	quantis_geo <- split(quantis[, -1], quantis[[1]])
+	quantis_geo <- lapply(quantis_geo, as.numeric)
+
+	classes_geo <- Map(
+		function(renda, quantis) {
+			cut(
+				renda,
+				breaks = c(-Inf, quantis, Inf),
+				labels = classes_simples,
+				right = FALSE
+			)
+		},
+		renda_geo,
+		quantis_geo
+	)
+	
+	resultado <- unsplit(classes_geo, geo)
+	return(resultado)
+}
+
+acumular_rme <- function(rme, pop) {
+	rme_uf <- split(rme[, -1], rme[[1]])
+	pop_uf <- split(pop[, -1], pop[[1]])
+
+	rme_acumul_uf <- Map(
+		function(rme, pop) cumsum(rme * t(pop)) / cumsum(t(pop)),
+		rme_uf,
+		pop_uf
+	)
+
+	resultado <- data.frame(
+		unidades_federativas,
+		do.call(rbind, rme_acumul_uf)
+	)
+	rownames(resultado) <- NULL
+	colnames(resultado) <- c("UF", classes_acumuladas)
+
+	return(resultado)
+}
+
 # adicionar variáveis deflacionadas
-deflacionar <- function(df, vars, ano.base = 1) {
-	# criar loop entre as variáveis de rendimento
-	for (v in vars) {
-		# deflatores diferentes para rendimentos habituais/efetivos
-		if (v == "VD4019") {
-			deflator <- paste0("CO", ano.base)
-		} else {
-			deflator <- paste0("CO", ano.base, "e")
+deflacionar <- function(df, vars) {
+
+	deflacionar_ano <- function(df, ano.base) {
+		# criar loop entre as variáveis de rendimento
+		for (v in vars) {
+			# deflatores diferentes para rendimentos habituais/efetivos
+			if (v == "VD4019") {
+				deflator <- paste0("CO", ano.base)
+			} else {
+				deflator <- paste0("CO", ano.base, "e")
+			}
+			# adicionar variável deflacionada ao dataframe
+			col_name <- paste0(v, ".Real", ano.base)
+			df[[col_name]] <- df[[v]] * df[[deflator]]
 		}
-		# adicionar variável deflacionada ao dataframe
-		col_name <- paste0(v, ".Real")
-		df[[col_name]] <- df[[v]] * df[[deflator]]
+		return(df)
 	}
+
+	df <- deflacionar_ano(df, ano.base = 1)
+	df <- deflacionar_ano(df, ano.base = 2)
+
 	return(df)
 }

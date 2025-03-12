@@ -55,8 +55,8 @@ pop_fontes <- estimar_totais(
 	desenho,
 	formula = ~
 		(!is.na(VD4052))  +     # todas as fontes
-		(!is.na(VD4019))  +     # trabalho - habitual
-		(!is.na(VD4020))  +     # trabalho - efetiva
+		(VD4019 > 0)  +     # trabalho - habitual
+		(VD4020 > 0)  +     # trabalho - efetiva
 		(!is.na(VD4048))  +     # outras fontes
 	 	(!is.na(V5004A2)) +     # aposentadoria e pensão
 		(!is.na(V5007A2)) +     # aluguel e arrendamento

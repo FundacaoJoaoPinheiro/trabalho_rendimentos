@@ -5,7 +5,7 @@
 pacotes <- c("sidrar", "PNADcIBGE", "survey", "convey")
 lapply(pacotes, library, character.only = TRUE)
 options(scipen = 999)
-source("testes/utilitarios.R")
+source("utilitarios.R")
 
 # variaveis: V2001, V2005, VD4019, VD4048, V5001A, V5002A, V5003A.
 if (file.exists("desenho_RDPC.RDS")) {
@@ -73,6 +73,11 @@ desenho$variables <- transform(
 	)
 )
 
+desenho$variables <- transform(
+	desenho$variables,
+	Massa.RDCP = ave(VD5008.Real, UF, FUN = sum)
+)
+
 # 7526 - pequenas diferenças nos últimos dois limites_sup
 sidra_7526 <- get_sidra(
 	x = 7526, variable = 10838, period = "2023",
@@ -80,7 +85,7 @@ sidra_7526 <- get_sidra(
 	header = TRUE, format = 2
 )
 
-limites_sup <- estimar_quantis(~VD5008.Real, desenho)
+limites_sup <- estimar_quantis(desenho, ~VD5008.Real)
 
 write.csv(limites_sup, "tab_7526.csv")
 
@@ -95,7 +100,7 @@ sidra_7529 <- transform(sidra_7529, Valor = Valor * 1000)
 # adicionar coluna com as classes simples por percentual (CSP)
 desenho$variables <- transform(
 	desenho$variables,
-	Faixas.Simples = add_faixas_simples(VD5008.Real, UF, limites_sup)
+	Classes.Simples = ad_classes_simples(VD5008.Real, UF, limites_sup[1:13])
 )
 
 pop_simples2022 <- svyby(
@@ -107,8 +112,7 @@ pop_simples2022 <- svyby(
 	keep.names = FALSE,	
 	na.rm = TRUE
 )
-pop_simples2022 <- pop_simples2022[c(2,1,3)]
-colnames(pop_simples2022) <- c("UF", "Faixas.Simples", "Valor")
+colnames(pop_simples2022) <- c("Faixas.Simples", "UF", "Valor")
 
 View(sidra_7529[c(4,7,3)])
 View(pop_simples2022)
@@ -146,8 +150,8 @@ sidra_7427 <- transform(sidra_7427, Valor = Valor * 10^6)
 
 massa_rendimento <- svyby(
 	~VD5008.Real,
-	~Faixas.Simples + UF,
-	desenho,
+	~Classes.Simples + UF,
+	subset(desenho, V2005.Rendimento == 1),
 	FUN = svytotal,
 	vartype = "cv",
 	keep.names = FALSE,	
@@ -155,7 +159,7 @@ massa_rendimento <- svyby(
 )
 
 massa_rendimento <- data.frame(
-	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Faixas.Simples = c(classes_simples, paste0("cv.", classes_simples)),
 	Pará = c(massa_rendimento[1:13, 3], massa_rendimento[1:13, 4]),
 	Bahia = c(massa_rendimento[1:13, 3], massa_rendimento[1:13, 4]),
 	Minas.Gerais = c(massa_rendimento[27:39, 3], massa_rendimento[27:39, 4]),
@@ -183,7 +187,7 @@ rme_simples <- svyby(
 )
 
 rme_simples <- data.frame(
-	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Faixas.Simples = c(classes_simples, paste0("cv.", classes_simples)),
 	Pará = c(rme_simples[1:13, 3], rme_simples[1:13, 4]),
 	Bahia = c(rme_simples[1:13, 3], rme_simples[1:13, 4]),
 	Minas.Gerais = c(rme_simples[27:39, 3], rme_simples[27:39, 4]),
@@ -253,7 +257,7 @@ sidra_7438 <- get_sidra(
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
 	header = TRUE, format = 2
 
-# 7521 - idêntica a 7526
+# 7521 - idêntica a 7529
 sidra_7521 <- get_sidra(
 	x = 7521, variable = 606, period = "2023",
 	geo = "State", geo.filter = list("State" = c(15, 29, 31, 52)),
@@ -281,12 +285,12 @@ sidra_7527 <- get_sidra(
 massa_rendimento_UF = as.list(massa_rendimento[1:13, -1])
 
 distribuicao_UF <- lapply(massa_rendimento_UF, function(x) x * 100/ sum(x))
-distribuicao_UF$Faixas.Simples = faixas_simples
+distribuicao_UF$Faixas.Simples = classes_simples
 
 distribuicao <- distribuicao_UF[c(5, 1:4)]
 
 distribuicao <- data.frame(
-	Faixas.Simples = c(faixas_simples, paste0("cv.", faixas_simples)),
+	Faixas.Simples = c(classes_simples, paste0("cv.", classes_simples)),
 	Pará = c(distribuicao[1:13, 3], distribuicao[1:13, 4]),
 	Bahia = c(distribuicao[1:13, 3], distribuicao[1:13, 4]),
 	Minas.Gerais = c(distribuicao[27:39, 3], distribuicao[27:39, 4]),
@@ -307,7 +311,7 @@ distribuicao_acumulada_UF <- lapply(distribuicao_UF, cumsum)
 
 distribuicao_acumulada <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
-	Faixas.Simples = rep(faixas_simples, times = 4),
+	Faixas.Simples = rep(classes_simples, times = 4),
 	Distribuicao.Simples.RDPC1 = unlist(distribuicao_acumulada_UF)
 )
 
