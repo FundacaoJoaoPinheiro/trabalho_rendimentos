@@ -13,7 +13,7 @@ Mas devo considerar todos os moradores no denominador?
 
 ## Resultados praticamente idênticos
 
-Tabelas: 7526, 7533, 7534, 7527, 7530, 7435, 7543, 7544, 7431, 7432, 7433,
+Tabelas: 7526, 7533, 7534, 7527, 7530, 7435, 7544, 7431, 7432, 7433,
 7434, 7439, 7440, 7436, 7447, 7441, 7442, 7443, 7444, 7445, 7446, 7453,
 7534, 7538, 7539, 7542, 7426*, 7429
 
@@ -22,10 +22,35 @@ Tabelas: 7526, 7533, 7534, 7527, 7530, 7435, 7543, 7544, 7431, 7432, 7433,
 ## Resultados mais ou menos próximos
 
 Tabelas: 7529, 7564, 7427, 7431, 7432, 7433, 7434, 7449, 7431, 7432, 7433,
-7434,
+7434
 
 ## Resultados diferentes
 Tabelas: 7458
+
+## CV' altos (muitos valores acima de 20%)
+* RPDC: 7521;
+* progsociais: 7447, 7454, 7451;
+
+## CV's médios (muitos valores entre 10% e 20%)
+* RPDC: 7537, 7538, 7438;
+* ocupada: 7432 (valores médios todos concentrados nos dois primeiros grupos
+de idade), 7433 (valores bem altos para "sem instrução", muuitos próximos de
+15% e alguns acima de 25%); 7537, 7547
+* RMe: 7537;
+* progsociais: 7448 (médio-baixo), 7449;
+
+## CV's baixos (próximos de 10% em média)
+* RPDC: 7435, 7535 (1 valor alto), 7545 (2 valores altos), 7548, 7435;
+* ocupada: 7431 (baixos para Branca, Preta e Parda), 7434, 7439; 7440 (2 NaN's,
+e alguns poucos valores bem altos), 7559, 7562;
+* fontes: 7426 (maioria abaixo de 10%, com valores médios nas últimas três
+fontes), 7429, 7437 (parecido com 7426);
+* RMe: 7453, 7535 (um valor prox. a 50%), 7538, 7545 (2 NA's e 4 CV's
+acima de 20%), 7548 (2 NA's);
+* progsociais: 7450, 7452, 7456, 7457;
+
+## Não consegui reproduzir os CV's
+* RPDC: 7527, 7530
 
 # Variáveis utilizadas
 
@@ -72,21 +97,3 @@ Tabelas: 7458
 | S01024       | Este domicílio tem máquina de lavar roupa?
 | S01025       | Este domicílio tem televisão?
 | S01028       | Este domicílio tem microcomputador?
-
-# Colunas Criadas
-
-- Estrato.Geo - Estratos geográficos (todas as tabelas)
-- Outros.Rendimentos (Tipo de Rendimento)
-- V2005.incluidas (todas que lidam com RDPC)
-- V2005.incluidos (idem)
-- VD4019.Real2 (todas que lidam com RDPC a preços médios do último ano)
-- VD4048.Real2 (idem)
-- VD5007.Real2 (idem)
-- VD5008.Real2 (idem)
-- CSP_VD5008.Real2 (idem)
-- VD4019.Real1 (todas que lidam com RDPC a preços médios do ano)
-- VD4048.Real1 (idem)
-- VD5007.Real1 (idem)
-- VD5008.Real1 (idem)
-- CSP_VD5008.Real1 (idem)
-- Ocupadas.com.Rendimento (7431 a 7434)

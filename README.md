@@ -89,10 +89,10 @@ com rendimento, por tipo de rendimento
 - Tabela 7438 (x) - Limites superiores das classes de percentual das pessoas em
 ordem crescente de rendimento domiciliar per capita, a preços médios do ano
 
-- Tabela 7439 (-) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7439 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento e responsáveis pelo domicílio
 
-- Tabela 7440 (-) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7440 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento, por tipo de área geográfica
 
 - Tabela 7441 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
@@ -126,23 +126,23 @@ do último ano
 algum morador que recebeu rendimento do Programa Bolsa Família, por nível
 de instrução
 
-- Tabela 7448 (-) - Pessoas de 10 anos ou mais de idade cujo domicílio não
+- Tabela 7448 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio não
 possui morador que recebeu rendimento do Programa Bolsa Família, por
 nível de instrução
 
-- Tabela 7449 (-) - Domicílios em que algum morador do domicílio recebeu
+- Tabela 7449 (x) - Domicílios em que algum morador do domicílio recebeu
 rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
 serviços
 
-- Tabela 7450 (-) - Domicílios em que nenhum morador do domicílio recebeu
+- Tabela 7450 (x) - Domicílios em que nenhum morador do domicílio recebeu
 rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
 serviços
 
-- Tabela 7451 (-) - Domicílios em que algum morador do domicílio recebeu
+- Tabela 7451 (x) - Domicílios em que algum morador do domicílio recebeu
 rendimento do Benefício de Prestação Continuada, por posse ou acesso
 a bens ou serviços
 
-- Tabela 7452 (-) - Domicílios em que nenhum morador do domicílio recebeu
+- Tabela 7452 (x) - Domicílios em que nenhum morador do domicílio recebeu
 rendimento do Benefício de Prestação Continuada, por posse ou acesso
 a bens ou serviços
 
@@ -151,18 +151,18 @@ pessoas de 14 anos ou mais de idade ocupadas na semana de referência
 com rendimento de trabalho, habitualmente recebido em todos os trabalhos,
 a preços médios do ano
 
-- Tabela 7454 (-) - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+- Tabela 7454 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio possui
 algum morador que recebeu rendimento do Benefício de Prestação Continuada,
 por nível de instrução
 
-- Tabela 7455 (-) - Pessoas de 10 anos ou mais de idade cujo domicílio
+- Tabela 7455 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio
 não possui morador que recebeu rendimento do Benefício de Prestação
 Continuada, por nível de instrução
 
-- Tabela 7456 (-) - Número médio de moradores por domicílio, por recebimento
+- Tabela 7456 (x) - Número médio de moradores por domicílio, por recebimento
 de rendimento de programa social e tipo de programa social
 
-- Tabela 7457 (-) - Domicílios, por recebimento de rendimento de programa
+- Tabela 7457 (x) - Domicílios, por recebimento de rendimento de programa
 social e tipo de programa social
 
 - Tabela 7458 (x) - Rendimento médio mensal real domiciliar per capita, a
@@ -324,7 +324,7 @@ recebido, a preços médios do último ano
 - Tabela 7561 (x) - População residente, por classes acumuladas de percentual
 das pessoas por rendimento domiciliar per capita, a preços médios do ano
 
-- Tabela 7562 (-) - Pessoas de 14 anos ou mais de idade ocupadas na semana
+- Tabela 7562 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana
 de referência com rendimento de trabalho, por classes acumuladas de
 percentual das pessoas em ordem crescente de rendimento habitualmente
 recebido, a preços médios do ano
