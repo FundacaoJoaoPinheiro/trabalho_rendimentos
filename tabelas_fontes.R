@@ -1,20 +1,22 @@
-# Reproduzir tabelas SIDRA para os dez estratos geográficos de Minas Gerais.
+# Reproduz tabelas SIDRA para os dez estratos geográficos de Minas Gerais.
 # Tabelas referentes à fontes de rendimento: 7426, 7429, 7437.
-# ---------------------------------------------------------------------
 
+# ---------------------------------------------------------------------
 # Preparar ambiente
-pacotes <- c("PNADcIBGE", "survey")
-install.packages(setdiff(pacotes, rownames(installed.packages())))
-lapply(pacotes, library, character.only = TRUE)
-source("utilitarios.R")     # objetos e funções utilizados abaixo
 
-pnadc_ano = 2023
-pnadc_dir = "Microdados"
-desenho <- gerar_desenho(tabelas_fontes)
+pacotes <- c("PNADcIBGE", "survey")
+#install.packages(setdiff(pacotes, rownames(installed.packages())))
+lapply(pacotes, library, character.only = TRUE)
+
+# carregar objetos e funções utilizados no script:
+# gerar_desenho(); ad_rdpc(); deflacionar(); estimar_medias(); estimar_totais();
+# `tabelas_fontes`; `estratos_geo`.
+source("utilitarios.R")
 
 # ---------------------------------------------------------------------
-
 # Criar colunas necessárias
+
+desenho <- gerar_desenho(tabelas_fontes)
 
 desenho$variables <- transform(
 	desenho$variables,
@@ -25,23 +27,40 @@ desenho$variables <- transform(
 )
 desenho$variables <- transform(
 	desenho$variables,
-	Outros.Rendimentos = ifelse(Outros.Rendimentos == 0, NA, Outros.Rendimentos)
+	Outros.Rendimentos = ifelse(
+		Outros.Rendimentos == 0,
+		NA, Outros.Rendimentos
+	)
 )
 
-# renda domiciliar per capita (RDPC)
-desenho$variables <- add_rdpc(
+desenho$variables <- transform(
+	desenho$variables,
+	Recebe.Todas.Fontes  = ifelse(!is.na(VD4052), 1, 0),
+	Recebe.Trabalho.Hab  = ifelse(!is.na(VD4019), 1, 0),
+	Recebe.Trabalho.Efet = ifelse(!is.na(VD4020) & VD4020 > 0, 1, 0),
+	Recebe.Outras.Fontes = ifelse(!is.na(VD4048), 1, 0),
+	Recebe.Aposentadoria = ifelse(!is.na(V5004A2), 1, 0),
+	Recebe.Arrendamento  = ifelse(!is.na(V5007A2), 1, 0),
+	Recebe.Pensao.Alimen = ifelse(!is.na(V5006A2), 1, 0),
+	Recebe.Outros.Rendim = ifelse(!is.na(Outros.Rendimentos), 1, 0)
+)
+
+desenho$variables <- ad_rdpc(      # Renda Domiciliar Per Capita (RDPC)
 	desenho$variables,
 	c("VD4019", "VD4048", "V5004A2", "Outros.Rendimentos")
 )
 
-vars_def = c("VD4052", "VD4019", "VD4020", "VD4048", "V5004A2",
+cod_vars = c("VD4052", "VD4019", "VD4020", "VD4048", "V5004A2",
 	"V5007A2", "V5006A2", "Outros.Rendimentos")
 
 desenho$variables <- deflacionar(
 	desenho$variables,
-	vars = vars_def[-1],    # VD4052 = VD4019 (habitual) + VD4020 (efetivo)
+	vars = cod_vars[-1],
 	ano.base = 1
 )
+
+# rendimento de trabalho é deflacionado com CO1 e de outras fontes é deflacionado
+# com CO1e, por isso o rendimento de todas as fontes real é calculado assim:
 desenho$variables <- transform(
 	desenho$variables,
 	VD4052.Real = rowSums(
@@ -55,52 +74,30 @@ desenho$variables <- transform(
 )
 
 # ---------------------------------------------------------------------
+# Reproduzir tabelas
 
 # 7426 - População residente com rendimento, por fonte de rendimento
-
 pop_fontes <- estimar_totais(
 	desenho,
 	formula = ~
-		(!is.na(VD4052))  +     # todas as fontes
-		(!is.na(VD4019))  +     # trabalho - habitual
-		(!is.na(VD4020))  +     # trabalho - efetiva
-		(!is.na(VD4048))  +     # outras fontes
-	 	(!is.na(V5004A2)) +     # aposentadoria e pensão
-		(!is.na(V5007A2)) +     # aluguel e arrendamento
-		(!is.na(V5006A2)) +     # pensão alimentícia, doação e mesada
-		(!is.na(Outros.Rendimentos))
+		Recebe.Trabalho.Hab +
+		Recebe.Trabalho.Efet +
+		Recebe.Outras.Fontes +
+	 	Recebe.Aposentadoria +
+		Recebe.Arrendamento  +
+		Recebe.Pensao.Alimen +
+		Recebe.Outros.Rendim
 )
 
-pop_fontes <- pop_fontes[-c(1:16 * 2)]
-colnames(pop_fontes) <- c(
-	"Estrato.Geo",
-	"Todas.as.Fontes",
-	"Trabalho.Habitualmente",
-	"Trabalho.Efetiva",
-	"Outras.Fontes",
-	"Aposentadoria/Pensao",
-	"Aluguel/Arrendamento",
-	"Pensao.alimenticia",
-	"Outros.Rendimentos",
-	"cv.Todas.as.Fontes",
-	"cv.Trabalho.Habitualmente",
-	"cv.Trabalho.Efetiva",
-	"cv.Outras.Fontes",
-	"cv.Aposentadoria/Pensao",
-	"cv.Aluguel/Arrendamento",
-	"cv.Pensao.alimenticia",
-	"cv.Outros.Rendimentos"
-)
+pop_fontes$Estrato.Geo <- estratos_geo
+colnames(pop_fontes) <- gsub("^(cv\\.)?Recebe\\.", "", colnames(pop_fontes))
 
-tab_7426 <- pop_fontes[1:9]
-cv_7426  <- pop_fontes[-1 * 2:9]
-
-write.csv2(tab_7426, "saida/tab_7426.csv")
-write.csv2(cv_7426,  "saida/cv_7426.csv")
+tab_7426 <- pop_fontes[, c(1, 2:9)]
+cv_7426  <- pop_fontes[, c(1, 10:17)]
+cv_7426[, -1] <- round(cv_7426[, -1] * 100, 1)
 
 # 7429 - participação % de cada fonte no rendimento médio domiciliar per capita
-
-participacao_rdpc <- svyby(
+part_rdpc <- svyby(
 	~VD5008 + VD4019.DPC + VD4048.DPC + V5004A2.DPC + Outros.Rendimentos.DPC,
 	by = ~Estrato.Geo,
 	denominator = ~VD5008,    # rendimento total dom. per capita
@@ -112,30 +109,32 @@ participacao_rdpc <- svyby(
 	na.rm = TRUE
 )
 
-participacao_rdpc[-1] <- participacao_rdpc[-1] * 100    # [1] não é numérica
-colnames(participacao_rdpc) <- c(
+part_rdpc[, 1] <- estratos_geo
+part_rdpc[, -1] <- round(part_rdpc[, -1] * 100, 1)
+
+tab_7429 <- part_rdpc[c(1, 2:6)]
+cv_7429  <- part_rdpc[c(1, 7:11)]
+colnames(tab_7429) <- c(
 	"Estrato.Geo",
 	"Todas.as.Fontes",
-	"Trabalho.Habitualmente",
+	"Trabalho.Hab",
+	"Outras.Fontes",
 	"Aposentadoria/Pensao",
-	"Outros.Rendimentos",
-	"cv.Todas.as.Fontes",
-	"cv.Trabalho.Habitualmente",
-	"cv.Outras.Fontes",
-	"cv.Aposentadoria/Pensao",
-	"cv.Outros.Rendimentos"
+	"Outros.Rendimentos"
+)
+colnames(cv_7429) <- c(
+	"Estrato.Geo",
+	"Todas.as.Fontes",
+	"Trabalho.Hab",
+	"Outras.Fontes",
+	"Aposentadoria/Pensao",
+	"Outros.Rendimentos"
 )
 
-tab_7429 <- participacao_rdpc[c(1, 2:6)]
-cv_7429  <- participacao_rdpc[c(1, 7:11)]
-
-write.csv2(tab_7429, "saida/tab_7429.csv")
-write.csv2(cv_7429, "saida/cv_7429.csv")
-
-# 7437 - RMe da pop. com rendimento, por fonte de rendimento
-
+# 7437 - RMe da pop. com rendimento, por fonte de rendimento,
+# a preços médios do ano
 rme_fontes <- lapply(
-	vars_def,
+	cod_vars,
 	function(var) {
 		estimar_medias(
 			subset(desenho, get(var) > 0),        # apenas pop. com rendimento
@@ -143,33 +142,29 @@ rme_fontes <- lapply(
 		)
 	}
 )
-
-# juntar dataframes da lista em um único
 rme_fontes <- Reduce(function(...) merge(..., sort = FALSE), rme_fontes)
-# médias e cv's estão intercalados; reordenar
-rme_fontes <- rme_fontes[c(1, 1:8 * 2, seq(3, 17, by = 2))]
-colnames(rme_fontes) <- c(
-	"Estrato.Geo",
+rme_fontes[, 1] <- estratos_geo
+
+tab_7437 <- rme_fontes[, c(1, 1:8 * 2)]
+cv_7437  <- rme_fontes[, c(1, seq(3, 17, by = 2))]
+cv_7437[, -1] <- round(cv_7437[, -1] * 100, 1)
+colnames(tab_7437)[-1] <- c(
 	"Todas.as.Fontes",
-	"Trabalho.Habitualmente",
-	"Trabalho.Efetivamente",
+	"Trabalho.Hab",
+	"Trabalho.Efet",
 	"Outras.Fontes",
-	"Aposentadoria/Pensao",
-	"Aluguel.arrendamento",
-	"Pensao.alimenticia",
-	"Outros.Rendimentos",
-	"cv.Todas.as.Fontes",
-	"cv.Trabalho.Habitualmente",
-	"cv.Trabalho.Efetivamente",
-	"cv.Outras.Fontes",
-	"cv.Aposentadoria/Pensao",
-	"cv.Aluguel.arrendamento",
-	"cv.Pensao.alimenticia",
-	"cv.Outros.Rendimentos"
+	"Aposentadoria",
+	"Arrendamento",
+	"Pensao.Alimen",
+	"Outros.Rendimentos"
 )
-
-tab_7437 <- rme_fontes[c(1, 2:9)]
-cv_7437  <- rme_fontes[c(1, 10:17)]
-
-write.csv2(tab_7437, "saida/tab_7437.csv")
-write.csv2(cv_7437, "saida/cv_7437.csv")
+colnames(cv_7437)[-1] <- c(
+	"Todas.as.Fontes",
+	"Trabalho.Hab",
+	"Trabalho.Efet",
+	"Outras.Fontes",
+	"Aposentadoria",
+	"Arrendamento",
+	"Pensao.Alimen",
+	"Outros.Rendimentos"
+)
