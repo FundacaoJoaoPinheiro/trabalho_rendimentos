@@ -35,7 +35,7 @@ tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
                    "7533", "7534", "7564")
 
 # rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
-tabelas_RMe1 <- c("7453", "7453", "7535", "7538", "7545", "7548")    # prório ano
+tabelas_RMe1 <- c("7453", "7535", "7538", "7545", "7548")            # prório ano
 tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
                   "7539", "7542", "7549", "7552")
 
@@ -80,9 +80,9 @@ grupos_idade = c(
 	"60 anos ou mais"
 )
 
-classes_simples <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
+percentis <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
 
-faixas_simples <- c(
+classes_simples <- c(
 	"Até P5",
 	"Maior que P5 até P10",
 	"Maior que P10 até P20",
@@ -98,7 +98,7 @@ faixas_simples <- c(
 	"Maior que P99"
 )
 
-faixas_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
+classes_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
 
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
@@ -147,7 +147,7 @@ variaveis <- list(
 	`7456` = c("V2001", "V5001A", "V5002A", "V5003A"),
 	`7457` = c("V5001A", "V5002A", "V5003A"),
 	`7458` = c("V2005", "VD4019", "VD4048", "V5001A", "V5002A", "V5003A"),
-	`7521` = c("VD5011"),
+	`7521` = c("VD4019", "VD4048"),
 	`7526` = c("V2005", "VD4019", "VD4048"),
 	`7527` = c("V2005", "VD4019", "VD4048"),
 	`7529` = c("V2005", "VD4019", "VD4048"),
@@ -166,7 +166,7 @@ variaveis <- list(
 	`7542` = c("VD4019"),
 	`7543` = c("V2009", "VD4002", "VD4019"),
 	`7544` = c("V2009", "VD4002", "VD4019"),
-	`7545` = c("VD4019"),
+	`7545` = c("VD4020"),
 	`7546` = c("V2009", "VD4002", "VD4052", "VD4020"),
 	`7547` = c("V2009", "VD4002", "VD4052", "VD4020"),
 	`7548` = c("VD4019"),
@@ -197,7 +197,9 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- as.character(tabelas)
-	variaveis <- unique(unlist(variaveis[tabelas]))
+	variaveis <- unique(                   # idade
+		c(unlist(variaveis[tabelas]), "UF", "V2009")
+	)
 	
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
@@ -208,7 +210,7 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 			year = pnadc_ano,
 			interview = visita,
 			design = FALSE,                # ver abaixo pnadc_design()
-			vars = c(variaveis, "UF"),     # sempre importar UF
+			vars = variaveis,
 			deflator = requer_deflator
 		)
 	} else {
@@ -216,7 +218,7 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 			data_pnadc = read_pnadc(
 				microdata = microdados,
 				input = input,
-				vars = c(variaveis, "UF")  # sempre importar UF e Idade
+				vars = variaveis
 			),
 			dictionary.file = dicionario
 		)
@@ -268,9 +270,9 @@ estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
 }
 
 # estimar quantis das classes percentuais simples e Estrato.Geo
-estimar_quantis <- function(desenho, renda) {
+estimar_quantis <- function(desenho, formula) {
 	svyby(
-		formula = renda,
+		formula,
 		by = ~Estrato.Geo,
 		design = desenho,
 		FUN = svyquantile,
@@ -282,13 +284,38 @@ estimar_quantis <- function(desenho, renda) {
 	)
 }
 
-estimar_interaction <- function(desenho, formula, FUN, progs) {
+estimar_cap <- function(desenho, formula, csp) {
+
+	cap_list <- vector("list", 13)
+	for (i in 1:13) {
+	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
+	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
+	}
+
+	# agrupar valores e CV's dos data frames da lista
+	valores <- data.frame(
+		estratos_geo,     # selecionar coluna de valores
+		do.call(cbind, lapply(cap_list, `[`, 2))
+	)
+	cvs <- data.frame(
+		estratos_geo,     # selecionar coluna de CV's
+		do.call(cbind, lapply(cap_list, `[`, 3))
+	)
+	cvs[, -1] <- round(cvs[, -1] * 100, 1)
+
+	colnames(valores) <- c("Estrato.Geo", classes_acumuladas)
+	colnames(cvs) <- c("Estrato.Geo", classes_acumuladas)
+
+	return(list(valores, cvs))
+}
+
+estimar_interacao <- function(desenho, formula, FUN, vars) {
 
 	# preparar fórmula com a interação Estrato x Programas
 	interacao <- reformulate(
 		sapply(
-			progs,
-			function(p) paste0("interaction(Estrato.Geo, ", p, ")")
+			vars,
+			function(v) paste0("interaction(Estrato.Geo, ", v, ")")
 		),
 		response = NULL
 	)
@@ -315,6 +342,7 @@ reshape_wide <- function(df, timevar.pos = 1) {
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
 	colnames(resultado) <- c("Estrato.Geo", levels(df[[timevar.pos]]))
+	resultado$Estrato.Geo <- estratos_geo
 	rownames(resultado) <- NULL
 	return(resultado)
 }
@@ -355,28 +383,35 @@ agrupar_progs <- function(lista) {
 
 # `faixas` : coluna com as faixas simples
 # `limites`: lista com os limites superiores por Estrato.Geo
-add_faixas_simples <- function(renda, geo, limites) {
-	renda_geo <- split(renda, geo)
-	quantis_geo <- split(limites[-1], limites[[1]])
+ad_classes_simples <- function(renda, geo, limites) {
 
-	faixas_geo <- Map(
-		function(valores, quantis) {
+	# garantir que os CV's não estão inclusos
+	limites <- limites[1:13]
+
+	# criar listas com um item por unidade territorial
+	renda_geo <- split(renda, geo)
+	limites_geo <- split(limites[, -1], limites[[1]])
+	limites_geo <- lapply(limites_geo, as.numeric)
+
+	classes_geo <- Map(
+		function(y, lim) {
 			cut(
-				valores,
-				breaks = c(-Inf, quantis, Inf),   # garantir 12 limites
-				labels = faixas_simples,
-				right = FALSE
+				y,
+				breaks = c(-Inf, lim, Inf),
+				labels = classes_simples,
+				right = FALSE,
+				include.lowest = TRUE
 			)
 		},
 		renda_geo,
-		quantis_geo
+		limites_geo
 	)
 	
-	resultado <- unsplit(faixas_geo, geo)
+	resultado <- unsplit(classes_geo, geo)
 	return(resultado)
 }
 
-add_grupos_idade <- function(idade) {
+ad_grupos_idade <- function(idade) {
 	cut(
 		idade,
 		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
@@ -386,7 +421,7 @@ add_grupos_idade <- function(idade) {
 }
 
 # adiciona rendimento domiciliar per capita
-add_rdpc <- function(df, vars) {
+ad_rdpc <- function(df, vars) {
 	# criar colunas auxiliares, indicando se o morador entra no cálculo
 	# da renda domiciliar e o número de moradores que está incluso no cálculo
 	df$V2005.Rendimento <- ifelse(
