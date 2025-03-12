@@ -233,7 +233,7 @@ cv_7456  <- Reduce(
 )
 cv_7456[, -1] <- round(cv_7456[, -1] * 100, 1)
 
-# 7457 - total de domicílios, por recebimento e tipo de programa
+# Tabela 7457 - total de domicílios, por recebimento e tipo de programa
 dom_progs <- estimar_interacao(
 	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	~V2005 == "Pessoa responsável pelo domicílio",

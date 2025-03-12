@@ -35,7 +35,8 @@ tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
                    "7533", "7534", "7564")
 
 # rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
-tabelas_RMe1 <- c("7453", "7535", "7538", "7545", "7548")            # prório ano
+tabelas_RMe1 <- c("7453", "7535", "7537", "7538", "7545",            # prório ano
+				  "7548", "7549", "7552")
 tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
                   "7539", "7542", "7549", "7552")
 
