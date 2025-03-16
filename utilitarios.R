@@ -28,22 +28,18 @@ tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
 # categorias por fontes de rendimento (trabalho, outras fontes, etc)
 tabelas_fontes <- c("7426", "7429", "7437")
 
-# rendimento domicilar per capita a preços prório/último do ano
-tabelas_RDPC1 <- c("7428", "7438", "7521", "7527",       # prório ano
+# rendimento domicilar per capita a preços médios do ano
+tabelas_RDPC <- c("7428", "7438", "7521", "7527",
                    "7530", "7531", "7532", "7561")
-tabelas_RDPC2 <- c("7427", "7458", "7526", "7529",       # último ano
-                   "7533", "7534", "7564")
 
-# rendimento médio mensal de pessoas ocupadas a preços do prório/último ano
-tabelas_RMe1 <- c("7453", "7535", "7537", "7538", "7545",            # prório ano
-				  "7548", "7549", "7552")
-tabelas_RMe2 <- c("7441", "7442", "7443", "7444", "7445", "7446",    # último ano
-                  "7539", "7542", "7549", "7552")
+# rendimento médio mensal de pessoas ocupadas a preços médios do ano
+tabelas_RMe <- c("7453", "7535", "7537", "7538", "7545",
+				  "7548")
 
 # população ocupada por categoria (sexo, cor/raça, instrução, etc)
 tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
-                     "7439", "7537", "7541", "7546",
-                     "7547", "7559", "7560", "7562", "7563") 
+                     "7439", "7536", "7537", "7546",
+                     "7547", "7559", "7562") 
 
 # população com domicílios em que alguém recebe benefícios
 tabelas_progsociais <- c("7447", "7448", "7449", "7450",
