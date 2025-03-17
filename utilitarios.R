@@ -22,19 +22,16 @@ sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
 	"7447", "7448", "7449", "7450", "7451", "7452", "7454", "7455",
 	"7456", "7457")
 
-# a distribuição da massa de rendimento
-tabelas_distribuicao <- c("7543", "7544", "7553", "7554")
-
 # categorias por fontes de rendimento (trabalho, outras fontes, etc)
 tabelas_fontes <- c("7426", "7429", "7437")
 
 # rendimento domicilar per capita a preços médios do ano
-tabelas_RDPC <- c("7428", "7438", "7521", "7527",
-                   "7530", "7531", "7532", "7561")
+tabelas_RDPC <- c("7428", "7429", "7435", "7438",
+                  "7521", "7531", "7532", "7561")
 
-# rendimento médio mensal de pessoas ocupadas a preços médios do ano
-tabelas_RMe <- c("7453", "7535", "7537", "7538", "7545",
-				  "7548")
+# rendimento médio mensal real de pessoas ocupadas
+tabelas_RMe <- c("7453", "7535", "7538", "7545", "7548",         # próprio do ano
+				 "7441", "7442", "7443", "7444", "7446")         # último ano
 
 # população ocupada por categoria (sexo, cor/raça, instrução, etc)
 tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
