@@ -14,7 +14,7 @@ Mas devo considerar todos os moradores no denominador?
 ## Resultados praticamente idênticos
 
 Tabelas: 7526, 7533, 7534, 7527, 7530, 7435, 7544, 7431, 7432, 7433,
-7434, 7439, 7440, 7436, 7447, 7441, 7442, 7443, 7444, 7445, 7446, 7453,
+7434, 7439, 7436, 7447, 7441, 7442, 7443, 7444, 7445, 7446, 7453,
 7534, 7538, 7539, 7542, 7426*, 7429
 
 * rendimento efetivamente recebido em todos os trabalhos é o único diferente.
@@ -40,9 +40,8 @@ de idade), 7433 (valores bem altos para "sem instrução", muuitos próximos de
 * progsociais: 7448 (médio-baixo), 7449;
 
 ## CV's baixos (próximos de 10% em média)
-* RPDC: 7435, 7535 (1 valor alto), 7545 (2 valores altos), 7548, 7435;
-* ocupada: 7431 (baixos para Branca, Preta e Parda), 7434, 7439; 7440 (2 NaN's,
-e alguns poucos valores bem altos), 7559, 7562;
+* RPDC: 7435, 7535 (1 valor alto), 7545 (2 valores altos), 7548, 7435,
+* ocupada: 7431 (baixos para Branca, Preta e Parda), 7434, 7439, 7559, 7562;
 * fontes: 7426 (maioria abaixo de 10%, com valores médios nas últimas três
 fontes), 7429, 7437 (parecido com 7426);
 * RMe: 7453, 7535 (um valor prox. a 50%), 7538, 7545 (2 NA's e 4 CV's

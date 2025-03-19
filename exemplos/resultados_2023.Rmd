@@ -1,0 +1,361 @@
+---
+title: "Rendimento de todas as fontes"
+subtitle: "Reproduzindo tabelas SIDRA para os estratos geográficos de MG"
+author: "João Paulo Gonzaga Garcia"
+date: "03/2025"
+output: odt_document
+---
+
+```{r setup, include = FALSE}
+pacotes <- c("ggplot2", "knitr", "kableExtra")
+#install.packages(setdiff(pacotes, rownames(installed.packages())))
+lapply(pacotes, library, character.only = TRUE)
+```
+
+# Panorama Geral
+
+- Total de tabelas no SIDRA: 66 (três tabelas foram excluídas)
+- Total de tabelas reproduzidas: 44
+- Tabelas que não foram reproduzidas:
+	- tabelas duplicadas com preços médios do último ano: 16
+	- tabelas em que o cálculo dos cv's não foi possível: 06
+
+## Tabelas por subtema:
+
+- População ocupada por categoria: 12(14) tabelas
+- Fontes/tipos de rendimento: 3 tabelas
+- Rendimento mensal médio: 10(15) tabelas
+- Rendimento domiciliar per capita: 7(16) tabelas
+- Programas sociais: 12
+- Distribuição do rendimento mensal: 0(4) tabelas
+
+## Gráfico 1 - CV's maiores que 15% por Estrato Geográfico
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=600, dev='png'}
+
+estratos_geo <- c(
+    "Belo Horizonte (MG)",     # 3110,
+	"Entorno metropol. de Belo Horizonte (MG)",    # 3120,
+	"Colar metropolitano de Belo Horizonte (MG)",  # 3130,
+	"Integrada de Brasília em Minas Gerais",       # 3140,
+	"Sul de Minas Gerais",     # 3151,
+	"Triângulo Mineiro",       # 3152,
+	"Zona da Mata (MG)",       # 3153,
+	"Norte de Minas Gerais",   # 3154,
+	"Vale do Rio Doce (MG)",   # 3155,
+	"Central de Minas Gerais " # 3156
+)
+
+contar_freq <- function(dir, limite) {
+	arquivos_cv <- list.files(
+		dir, pattern = "^cv_7.*\\.csv$", full.names = TRUE,
+		recursive = TRUE
+	)
+	
+	result <- data.frame(
+		Estrato.Geo = estratos_geo,
+		sapply(arquivos_cv, function(arq) {
+			df <- read.csv2(arq)
+			rowSums(df > limite, na.rm = TRUE)
+		}, simplify = TRUE, USE.NAMES = TRUE)
+	)
+
+	colnames(result)[-1] <- gsub(
+		".*cv_", "",
+		gsub(".csv$", "", colnames(result)[-1])
+	)
+
+	return(result)
+}
+
+freq_cv15 <- contar_freq("saida", 15)
+freq_cv30 <- contar_freq("saida", 30)
+
+df_plot <- data.frame(
+	Estrato = estratos_geo,
+	Frequencia = rowSums(freq_cv15[, -1])
+)
+
+df_plot$Estrato <- gsub("([^ ]* [^ ]* [^ ]*) ", "\\1\n", df_plot$Estrato)
+
+df_plot$Estrato <- factor(
+	df_plot$Estrato,
+	levels = df_plot$Estrato[order(df_plot$Frequencia)]
+)
+
+ggplot(df_plot, aes(x = Frequencia, y = Estrato)) +
+	geom_bar(stat = "identity", fill = "moccasin") +
+	labs(x = "Frequencia ds cv's maiores que 15%", y = "Estrato geográfico") +
+	theme_minimal() +
+	theme(axis.text.y = element_text(hjust = 1, size = 8))
+```
+
+## Gráfico 2 - CV's maiores que 30% por Estrato Geográfico
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=600, dev='png'}
+
+df_plot <- data.frame(
+	Estrato = estratos_geo,
+	Frequencia = rowSums(freq_cv30[, -1]) # Soma de todas as colunas cv_*
+)
+
+df_plot$Estrato <- gsub("([^ ]* [^ ]* [^ ]*) ", "\\1\n", df_plot$Estrato)
+
+df_plot$Estrato <- factor(
+	df_plot$Estrato,
+	levels = df_plot$Estrato[order(df_plot$Frequencia)]
+)
+
+ggplot(df_plot, aes(x = Frequencia, y = Estrato)) +
+	geom_bar(stat = "identity", fill = "indianred") +
+	labs(x = "Frequencia ds cv's maiores que 15%", y = "Estrato geográfico") +
+	theme_minimal() +
+	theme(axis.text.y = element_text(hjust = 1, size = 8))
+```
+
+# Pessoas ocupadas de 14 anos ou mais , por categoria
+
+- Tabela 7431 - Por cor ou raça;
+
+- Tabela 7432 - Por grupo de idade;
+
+- Tabela 7433 - Por nível de instrução;
+
+- Tabela 7434 - Por sexo;
+
+- Tabela 7436 - População residente (total);
+
+- Tabela 7439 - Responsáveis pelo domicílio;
+
+- Tabela 7536 - Limites superiores das classes de percentual das pessoas
+em ordem crescente de rendimento habitualmente recebido, a preços médios
+
+- Tabela 7537 - Por classes simples de percentual das pessoas em ordem
+crescente de rendimento habitualmente recebido, a preços médios do ano;
+
+- Tabela 7546 - Limites superiores das classes de percentual das pessoas
+em ordem crescente de rendimento efetivamente recebido, a preços médios
+
+- Tabela 7547 - Por classes simples de percentual das pessoas em ordem
+crescente de rendimento efetivamente recebido, a preços médios do ano;
+
+- Tabela 7559 - Por classes acumuladas de percentual das pessoas em ordem
+crescente de rendimento efetivamente recebido, a preços médios do ano;
+
+- Tabela 7562 - Por classes acumuladas de percentual das pessoas em ordem
+crescente de rendimento habitualmente recebido, a preços médios do ano.
+
+## Tabela 1 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+
+```{r, echo=FALSE}
+
+freq_cv15 <- contar_freq("saida/ocupada", 15)
+kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 2 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
+
+```{r, echo=FALSE}
+freq_cv30 <- contar_freq("saida/ocupada", 30)
+kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+```
+
+- Estratos com os __maiores__ cv's: Integrada de Brasília em Minas Gerais e
+Colar metropolitano de Belo Horizonte.
+
+- Estratos com os __menores__ cv's: Entorno metropolitano de Belo Horizonte,
+Belo Horizonte, Triângulo Mineiro e Sul de Minas Gerais.
+
+- Tabelas com os __maiores__ cv's: 7537 e 7547.
+
+- Tabelas com os __menores__ cv's: 7559 e 7562.
+
+- As tabelas com os maiores cv's são aquelas com a população ocupada
+por classe simples de rendimento (habitualmente e efetivamente recebidos),
+enquanto as tabelas com os menores cv's são da população ocupada por
+classe __acumulada__ de rendimento.
+
+## Gráfico 3 - CV's maiores que 15% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+
+cores_suaves <- colorRampPalette(c("#88CCEE", "#DDCC77", "#CC6677", "#AA4499",
+	"#44AA99", "#999933", "#882255"))(12)
+
+plotar_freq <- function(df) {
+	df_plot <- reshape(
+		df,
+		direction = "long",
+		varying = colnames(df)[-1],  # Todas as colunas exceto a primeira
+		v.names = "Frequencia",
+		idvar = "Estrato.Geo",
+		timevar = "Tabela",
+		times = colnames(df)[-1]
+	)
+
+	ordem <- aggregate(Frequencia ~ Estrato.Geo, data = df_plot, sum, na.rm = TRUE)
+	ordem <- ordem$Estrato.Geo[order(ordem$Frequencia, decreasing = TRUE)]
+
+	df_plot$Estrato.Geo <- factor(df_plot$Estrato.Geo, levels = ordem)
+	df_plot$Estrato.Geo <- gsub("([^ ]* [^ ]* [^ ]*) ", "\\1\n", df_plot$Estrato.Geo)
+	df_plot$Tabela <- gsub(".*cv_", "", gsub(".csv$", "", df_plot$Tabela))
+
+	p <- ggplot(df_plot, aes(x = Frequencia, y = Estrato.Geo, fill = Tabela)) +
+		geom_bar(stat = "identity", position = "stack") +
+		scale_fill_manual(values = cores_suaves) +
+		theme_minimal() +
+		theme(
+			axis.text.y = element_text(hjust = 1, size = 8)
+		) +
+		labs(
+			x = "Estrato Geográfico",
+			y = "Frequencia",
+			fill = "Tabela"
+		)
+
+	return(p)
+}
+
+plotar_freq(freq_cv15)
+```
+
+## Gráfico 4 - CV's maiores que 30% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv30)
+```
+
+## Tabela 7537 - Pop. Ocupada por CSP das pessoas em ordem de rendimento habitual
+
+```{r, echo=FALSE}
+valores <- read.csv2("saida/ocupada/tab_7537.csv")
+cvs <- read.csv2("saida/ocupada/cv_7537.csv")
+
+kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## CV's 7537
+
+```{r, echo=FALSE}
+kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 7562 - Pop. Ocupada por CAP das pessoas em ordem de rendimento habitual
+
+```{r, echo=FALSE}
+valores <- read.csv2("saida/ocupada/tab_7562.csv")
+cvs <- read.csv2("saida/ocupada/cv_7562.csv")
+
+kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## CV's 7542
+
+```{r, echo=FALSE}
+kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+# Fontes ou tipos de rendimento
+
+## Tabela 3 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv15 <- contar_freq("saida/fontes", 15)
+kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 4 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv30 <- contar_freq("saida/fontes", 30)
+kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+```
+
+## Gráfico 5 - CV's maiores que 15% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv15)
+```
+
+## Gráfico 6 - CV's maiores que 30% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv30)
+```
+
+# Rendimento médio
+
+## Tabela 5 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv15 <- contar_freq("saida/RMe", 15)
+kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 6 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv30 <- contar_freq("saida/RMe", 30)
+kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+```
+
+## Gráfico 7 - CV's maiores que 15% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv15)
+```
+
+## Gráfico 8 - CV's maiores que 30% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv30)
+```
+
+# Rendimento domiciliar per capita
+
+## Tabela 7 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv15 <- contar_freq("saida/RDPC", 15)
+kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 8 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv30 <- contar_freq("saida/RDPC", 30)
+kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+```
+
+## Gráfico 9 - CV's maiores que 15% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv15)
+```
+
+## Gráfico 10 - CV's maiores que 30% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv30)
+```
+
+# Programas Sociais
+
+## Tabela 9 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv15 <- contar_freq("saida/progsociais", 15)
+kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```
+
+## Tabela 10 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
+```{r, echo=FALSE}
+freq_cv30 <- contar_freq("saida/progsociais", 30)
+kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+```
+
+## Gráfico 11 - CV's maiores que 15% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv15)
+```
+
+## Gráfico 12 - CV's maiores que 30% por Estrato Geográfico e Tabela
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
+plotar_freq(freq_cv30)
+```
+

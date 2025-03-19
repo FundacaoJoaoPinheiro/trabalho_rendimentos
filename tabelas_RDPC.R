@@ -75,7 +75,8 @@ desenho$variables <- transform(
 )
 
 # função definida em utilitarios.R, estima `percentis` por estrato geográfico
-rdpc_limites <- estimar_quantis(desenho, formula = ~VD5008.Real)
+limites_vd5008real <- estimar_quantis(desenho, formula = ~VD5008.Real)
+colnames(limites_vd5008real) <- c("Estrato.Geo", percentis)
 
 # adiciona coluna com as classes simples de percentual por estrato geográfico
 desenho$variables <- transform(
@@ -83,7 +84,7 @@ desenho$variables <- transform(
 	VD5008.Classes = ad_classes_simples(     # função definida em utilitarios.R
 		renda = VD5008.Real,
 		geo = Estrato.Geo,
-		limites = rdpc_limites
+		limites = limites_vd5008real
 	)
 )
 
@@ -93,41 +94,75 @@ desenho$variables <- transform(
 # Tabela 7428 - Massa de rendimento domiciliar per capita (RDPC) por
 # classe simples de percentual (CSP) e estrato geográfico
 # função definida em utilitarios.R, estima totais por estrato geográfico
-rdpc_massa <- estimar_totais(
+massa_vd5008real <- estimar_totais(
 	desenho = subset(desenho, V2005.Rendimento == 1),
 	formula = ~VD5008.Real,
 	por = ~VD5008.Classes
 )
 
-tab_7428 <- reshape_wide(rdpc_massa[, -4])
-cv_7428  <- reshape_wide(rdpc_massa[, -3])
-cv_7428[, -1] <- round(cv_7428[, -1] * 100, 1)
+tab_7428 <- reshape_wide(massa_vd5008real[, -4])
+cv_7428  <- reshape_wide(massa_vd5008real[, -3])
 
 # Tabela 7438 - limites superiores por estrato geográfico
-rdpc_limites[[1]] <- estratos_geo
-
-tab_7438 <- rdpc_limites[, c(1, 2:13)]
-cv_7438  <- rdpc_limites[, c(1, 14:25)]
-cv_7438[, -1] <- round(cv_7438[, -1] * 100, 1)
+tab_7438 <- limites_vd5008real[, c(1, 2:13)]
+cv_7438  <- limites_vd5008real[, c(1, 14:25)]
 
 # Tabela 7521 - População por classe simples de percentual (CSP)
-pop_classesimples <- estimar_totais(
+pop_vd5008classes <- estimar_totais(
 	subset(desenho, V2005.Rendimento == 1),
 	~VD5008.Classes
 )
+colnames(cv_7521) <- c("Estrato.Geo", classes_simples)
 
-tab_7521 <- pop_classesimples[, c(1, 2:14)]
-cv_7521  <- pop_classesimples[, c(1, 15:27)]
-cv_7521[, -1] <- round(cv_7521[, -1] * 100, 1)
+tab_7521 <- pop_vd5008classes[, c(1, 2:14)]
+cv_7521  <- pop_vd5008classes[, c(1, 15:27)]
 
 # Tabela 7531 - RMe real domiciliar per capita, por classe simples
+rme_vd5008classe <- estimar_medias(
+	subset(desenho, V2005.Rendimento == 1),
+	~VD5008.Real,
+	~VD5008.Classes
+)
+
+tab_7531 <- reshape_wide(rme_vd5008classe[, -4])
+cv_7531  <- reshape_wide(rme_vd5008classe[, -3])
 
 # Tabela 7532 - RMe real domiciliar per capita, por classe acumulada
+rme_vd5008cap <- estimar_cap(
+	subset(desenho, V2005.Rendimento == 1),
+	formula = ~VD5008.Real,
+	FUN = estimar_medias,
+	csp = "VD5008.Classes"
+)
+
+tab_7532 <- rme_vd5008cap[[1]]
+cv_7532  <- rme_vd5008cap[[2]]
 
 # Tabela 7561 - População por classe acumulada
+cap_list <-  vector("list", 13)
+
+for (i in 1:13) {
+    sub_desenho <- subset(
+    	desenho,
+    	V2005.Rendimento == 1 & VD5008.Classes %in% classes_simples[1:i]
+	)
+    cap_list[[i]] <- svytotal(~Estrato.Geo, sub_desenho, na.rm = T)
+}
+
+tab_7561 <- data.frame(
+	estratos_geo,
+	do.call(cbind, lapply(cap_list, `[`, 1:10))
+)
+colnames(tab_7561) <- c("Estrato.Geo", classes_acumuladas)
+
+cv_7561 <- data.frame(
+	estratos_geo,
+	do.call(cbind, lapply(cap_list, cv))
+)
+colnames(cv_7561) <- c("Estrato.Geo", classes_acumuladas)
 
 # Tabela 7435 - valores próximos, iguais arredondando
-rdpc_gini <- svyby(
+gini_vd5008real <- svyby(
 	~VD5008.Real,
 	~Estrato.Geo,
 	subset(desenho, V2005.Rendimento == 1),
@@ -137,8 +172,30 @@ rdpc_gini <- svyby(
 	na.rm = TRUE
 )
 
-tab_7435 <- rdpc_gini
+tab_7435 <- gini_vd5008real
 colnames(tab_7435) <- c("Estrato.Geo", "Valor", "CV")
-tab_7435[[1]] <- estratos_geo
-tab_7435[, 2] <- round(tab_7435[, 2], 3)
-tab_7435[, 3] <- round(tab_7435[, 3] * 100, 1)
+
+# ---------------------------------------------------------------------
+# Finalizar tabelas
+
+for (obj in ls(pattern = "cv_7")) {
+	df <- get(obj)
+	df$Estrato.Geo <- estratos_geo
+	df[, -1] <- round(df[, -1] * 100, 1)
+	assign(obj, df)
+}
+
+for (obj in ls(pattern = "tab_7..[^5]$")) {
+	df <- get(obj)
+	df$Estrato.Geo <- estratos_geo
+	df[, -1] <- round(df[, -1], 2)
+	assign(obj, df)
+}
+
+tab_7435[, 1] <- estratos_geo
+tab_7435[, 2] <- round(tab_7435[, 2], 3)          # índice de gini
+tab_7435[, 3] <- round(tab_7435[, 3] * 100, 1)    # cv's
+
+# passar populações para "mil pessoas"
+tab_7521[, -1] <- round(tab_7521[, -1] / 1000)
+tab_7561[, -1] <- round(tab_7561[, -1] / 1000)

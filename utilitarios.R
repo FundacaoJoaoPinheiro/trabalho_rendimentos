@@ -277,12 +277,12 @@ estimar_quantis <- function(desenho, formula) {
 	)
 }
 
-estimar_cap <- function(desenho, formula, csp) {
+estimar_cap <- function(desenho, formula, FUN, csp) {
 
 	cap_list <- vector("list", 13)
 	for (i in 1:13) {
 	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
-	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
+	    cap_list[[i]] <- FUN(sub_desenho, formula)
 	}
 
 	# agrupar valores e CV's dos data frames da lista
@@ -294,7 +294,6 @@ estimar_cap <- function(desenho, formula, csp) {
 		estratos_geo,     # selecionar coluna de CV's
 		do.call(cbind, lapply(cap_list, `[`, 3))
 	)
-	cvs[, -1] <- round(cvs[, -1] * 100, 1)
 
 	colnames(valores) <- c("Estrato.Geo", classes_acumuladas)
 	colnames(cvs) <- c("Estrato.Geo", classes_acumuladas)
@@ -335,7 +334,6 @@ reshape_wide <- function(df, timevar.pos = 1) {
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
 	colnames(resultado) <- c("Estrato.Geo", levels(df[[timevar.pos]]))
-	resultado$Estrato.Geo <- estratos_geo
 	rownames(resultado) <- NULL
 	return(resultado)
 }

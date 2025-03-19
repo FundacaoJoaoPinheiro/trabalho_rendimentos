@@ -91,12 +91,18 @@ pop_fontes <- estimar_totais(
 
 pop_fontes$Estrato.Geo <- estratos_geo
 
-tab_7426 <- pop_fontes[, c(1, 2:9)]
-cv_7426  <- pop_fontes[, c(1, 10:17)]
-colnames(tab_7426) <- c("UF", "Trab.Hab", "Trab.Efet", "Outras.Fontes", "Aposentadoria",
-	"Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos")
-colnames(cv_7426) <- c("UF", "Trab.Hab", "Trab.Efet", "Outras.Fontes", "Aposentadoria",
-	"Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos")
+tab_7426 <- pop_fontes[, c(1, 2:8)]
+colnames(tab_7426) <- c(
+	"Estrato.Geo", "Trab.Hab", "Trab.Efet", "Outras.Fontes",
+	"Aposentadoria", "Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos"
+)
+tab_7426[, -1] <- round(tab_7426[, -1] / 1000)
+
+cv_7426  <- pop_fontes[, c(1, 9:15)]
+colnames(cv_7426) <- c(
+	"Estrato.Geo", "Trab.Hab", "Trab.Efet", "Outras.Fontes", "Aposentadoria",
+	"Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos"
+)
 cv_7426[, -1] <- round(cv_7426[, -1] * 100, 1)
 
 # 7429 - participação % de cada fonte no rendimento médio domiciliar per capita

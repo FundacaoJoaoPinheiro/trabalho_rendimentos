@@ -5,4 +5,9 @@ saida/*
 *.Rdata
 *.RDS
 *.csv
+*.pdf
+*.pptx
+*.odt
+*.docx
+*files/
 .Rproj.user

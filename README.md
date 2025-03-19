@@ -92,9 +92,6 @@ ordem crescente de rendimento domiciliar per capita, a preços médios do ano
 - Tabela 7439 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento e responsáveis pelo domicílio
 
-- Tabela 7440 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
-referência com rendimento, por tipo de área geográfica
-
 - Tabela 7441 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos, a preços médios do último ano, por cor ou raça

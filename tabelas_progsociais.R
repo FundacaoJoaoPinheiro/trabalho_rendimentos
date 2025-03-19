@@ -145,8 +145,6 @@ acesso_bolsafam <- estimar_totais(
 # remover colunas em que os testes das variáveis suplementares foi FALSE
 acesso_bolsafam <- acesso_bolsafam[, -seq(3, 34, by = 2)]
 
-acesso_bolsafam$Estrato.Geo <- estratos_geo
-
 rotulos_benservicos <- c(
 	"Abastecimento.de.Agua",
 	"Esgotamento.Sanitario",
@@ -157,17 +155,26 @@ rotulos_benservicos <- c(
 	"Televisao",
 	"Microcomputador"
 )
-colnames(acesso_bolsafam)[3:18] <- rotulos_benservicos
 
 tab_7449 <- acesso_bolsafam[seq(1, 19 , by = 2), c(2, 3:10)]
 cv_7449 <-  acesso_bolsafam[seq(1, 19 , by = 2), c(2, 11:18)]
 cv_7449[, -1] <- round(cv_7449[, -1] * 100, 1)
+
+colnames(tab_7449) <- c("Estrato.Geo", rotulos_benservicos)
+colnames(cv_7449)  <- c("Estrato.Geo", rotulos_benservicos)
+tab_7449$Estrato.Geo <- estratos_geo
+cv_7449$Estrato.Geo  <- estratos_geo
 
 # Tabela 7450 - O mesmo que 7449, mas para domicílios que não possuem
 # beneficiários
 tab_7450 <- acesso_bolsafam[1:10 * 2, c(2, 3:10)]
 cv_7450 <-  acesso_bolsafam[1:10 * 2, c(2, 11:18)]
 cv_7450[, -1] <- round(cv_7450[, -1] * 100, 1)
+
+colnames(tab_7450) <- c("Estrato.Geo", rotulos_benservicos)
+colnames(cv_7450)  <- c("Estrato.Geo", rotulos_benservicos)
+tab_7450$Estrato.Geo <- estratos_geo
+cv_7450$Estrato.Geo  <- estratos_geo
 
 # Tabela 7451 - O mesmo que 7449, mas para beneficiários do BPC-Loas
 acesso_bpc <- estimar_totais(
@@ -201,17 +208,25 @@ acesso_bpc <- estimar_totais(
 )
 
 acesso_bpc <- acesso_bpc[-seq(3, 34, by = 2)]
-acesso_bpc$Estrato.Geo <- estratos_geo
-colnames(acesso_bpc)[3:18] <- rotulos_benservicos
 
-tab_7451 <- acesso_bpc[seq(1, 20, by = 2), c(2, 3:10)]
-cv_7451 <-  acesso_bpc[seq(1, 20, by = 2), c(2, 11:18)]
+tab_7451 <- acesso_bpc[seq(1, 19 , by = 2), c(2, 3:10)]
+cv_7451 <-  acesso_bpc[seq(1, 19 , by = 2), c(2, 11:18)]
 cv_7451[, -1] <- round(cv_7451[, -1] * 100, 1)
+
+colnames(tab_7451) <- c("Estrato.Geo", rotulos_benservicos)
+colnames(cv_7451)  <- c("Estrato.Geo", rotulos_benservicos)
+tab_7451$Estrato.Geo <- estratos_geo
+cv_7451$Estrato.Geo  <- estratos_geo
 
 # Tabela 7452 - o mesmo que 7451, mas para domicílios sem beneficiários do BPC
 tab_7452 <- acesso_bpc[seq(2, 20, by = 2), c(2, 3:10)]
 cv_7452 <-  acesso_bpc[seq(2, 20, by = 2), c(2, 11:18)]
 cv_7452[, -1] <- round(cv_7452[, -1] * 100, 1)
+
+colnames(tab_7452) <- c("Estrato.Geo", rotulos_benservicos)
+colnames(cv_7452)  <- c("Estrato.Geo", rotulos_benservicos)
+tab_7452$Estrato.Geo <- estratos_geo
+cv_7452$Estrato.Geo  <- estratos_geo
 
 # Tabela 7456 - média de moradores por domicílio por recbimento e tipo de programa
 media_moradores_progs <- estimar_interacao(

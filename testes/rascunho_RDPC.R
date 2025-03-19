@@ -127,6 +127,26 @@ sidra_7564 <- transform(sidra_7564, Valor = Valor * 1000)
 
 pop_simples_UF2022 <- split(pop_simples2022$Valor, pop_simples2022$UF)
 
+cap_list <-  vector("list", 13)
+
+for (i in 1:13) {
+    sub_desenho <- subset(
+    	desenho,
+    	V2005.Rendimento == 1 & Classes.Simples %in% classes_simples[1:i]
+	)
+    cap_list[[i]] <- svytotal(~UF, sub_desenho, na.rm = T)
+}
+
+valores <- data.frame(
+	c("Minas Gerais", "Goiás"),
+	do.call(cbind, lapply(cap_list, `[`, 1:2))
+)
+
+cvs <- data.frame(
+	c("Minas Gerais", "Goiás"),
+	do.call(cbind, lapply(cap_list, cv))
+)
+
 pop_acumuladas2 <- data.frame(
 	UF = rep(unidades_federativas, each = 13),
 	Classes.Acumuladas = rep(rotulos_acumuladas, times = 4),
