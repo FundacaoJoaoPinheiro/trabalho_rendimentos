@@ -68,8 +68,8 @@ contar_freq <- function(dir, limite) {
 	return(result)
 }
 
-freq_cv15 <- contar_freq("saida", 15)
-freq_cv30 <- contar_freq("saida", 30)
+freq_cv15 <- contar_freq("../saida", 15)
+freq_cv30 <- contar_freq("../saida", 30)
 
 df_plot <- data.frame(
 	Estrato = estratos_geo,
@@ -149,14 +149,14 @@ crescente de rendimento habitualmente recebido, a preços médios do ano.
 
 ```{r, echo=FALSE}
 
-freq_cv15 <- contar_freq("saida/ocupada", 15)
+freq_cv15 <- contar_freq("../saida/ocupada", 15)
 kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
 
 ## Tabela 2 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
 
 ```{r, echo=FALSE}
-freq_cv30 <- contar_freq("saida/ocupada", 30)
+freq_cv30 <- contar_freq("../saida/ocupada", 30)
 kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
 ```
 
@@ -228,8 +228,8 @@ plotar_freq(freq_cv30)
 ## Tabela 7537 - Pop. Ocupada por CSP das pessoas em ordem de rendimento habitual
 
 ```{r, echo=FALSE}
-valores <- read.csv2("saida/ocupada/tab_7537.csv")
-cvs <- read.csv2("saida/ocupada/cv_7537.csv")
+valores <- read.csv2("../saida/ocupada/tab_7537.csv")
+cvs <- read.csv2("../saida/ocupada/cv_7537.csv")
 
 kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
@@ -243,8 +243,8 @@ kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ## Tabela 7562 - Pop. Ocupada por CAP das pessoas em ordem de rendimento habitual
 
 ```{r, echo=FALSE}
-valores <- read.csv2("saida/ocupada/tab_7562.csv")
-cvs <- read.csv2("saida/ocupada/cv_7562.csv")
+valores <- read.csv2("../saida/ocupada/tab_7562.csv")
+cvs <- read.csv2("../saida/ocupada/cv_7562.csv")
 
 kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
@@ -259,13 +259,13 @@ kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 
 ## Tabela 3 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv15 <- contar_freq("saida/fontes", 15)
+freq_cv15 <- contar_freq("../saida/fontes", 15)
 kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
 
 ## Tabela 4 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv30 <- contar_freq("saida/fontes", 30)
+freq_cv30 <- contar_freq("../saida/fontes", 30)
 kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
 ```
 
@@ -285,13 +285,13 @@ plotar_freq(freq_cv30)
 
 ## Tabela 5 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv15 <- contar_freq("saida/RMe", 15)
+freq_cv15 <- contar_freq("../saida/RMe", 15)
 kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
 
 ## Tabela 6 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv30 <- contar_freq("saida/RMe", 30)
+freq_cv30 <- contar_freq("../saida/RMe", 30)
 kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
 ```
 
@@ -311,13 +311,13 @@ plotar_freq(freq_cv30)
 
 ## Tabela 7 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv15 <- contar_freq("saida/RDPC", 15)
+freq_cv15 <- contar_freq("../saida/RDPC", 15)
 kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
 
 ## Tabela 8 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv30 <- contar_freq("saida/RDPC", 30)
+freq_cv30 <- contar_freq("../saida/RDPC", 30)
 kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
 ```
 
@@ -337,13 +337,13 @@ plotar_freq(freq_cv30)
 
 ## Tabela 9 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv15 <- contar_freq("saida/progsociais", 15)
+freq_cv15 <- contar_freq("../saida/progsociais", 15)
 kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
 ```
 
 ## Tabela 10 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 ```{r, echo=FALSE}
-freq_cv30 <- contar_freq("saida/progsociais", 30)
+freq_cv30 <- contar_freq("../saida/progsociais", 30)
 kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
 ```
 
