@@ -26,8 +26,8 @@ sem_deflator <- c("7426", "7431", "7432", "7433", "7434", "7436", "7439",
 tabelas_fontes <- c("7426", "7429", "7437")
 
 # rendimento domicilar per capita a preços médios do ano
-tabelas_RDPC <- c("7428", "7429", "7435", "7438",
-                  "7521", "7531", "7532", "7561")
+tabelas_RDPC <- c("7428", "7435", "7438", "7521",
+                  "7531", "7532", "7561")
 
 # rendimento médio mensal real de pessoas ocupadas
 tabelas_RMe <- c("7453", "7535", "7538", "7545", "7548",         # próprio do ano
@@ -49,50 +49,58 @@ tabelas_progsociais <- c("7447", "7448", "7449", "7450",
 # Objetos utilizados como rótulos na criação de colunas
 
 estratos_geo <- c(
-    "Belo Horizonte (MG)",     # 3110,
-	"Entorno metropol. de Belo Horizonte (MG)",    # 3120,
-	"Colar metropolitano de Belo Horizonte (MG)",  # 3130,
-	"Integrada de Brasília em Minas Gerais",       # 3140,
-	"Sul de Minas Gerais",     # 3151,
-	"Triângulo Mineiro",       # 3152,
-	"Zona da Mata (MG)",       # 3153,
-	"Norte de Minas Gerais",   # 3154,
-	"Vale do Rio Doce (MG)",   # 3155,
-	"Central de Minas Gerais " # 3156
+    "Belo Horizonte",               # 3110
+	"Entorno metropol. de BH",      # 3120
+	"Colar metropolitano de BH",    # 3130
+	"Integrada de Brasília em MG",  # 3140
+	"Sul de Minas Gerais",          # 3151
+	"Triângulo Mineiro",            # 3152
+	"Zona da Mata",                 # 3153
+	"Norte de Minas Gerais",        # 3154
+	"Vale do Rio Doce",             # 3155
+	"Central de Minas Gerais "      # 3156
 )
 
-areas_geograficas <- c("Capital", "Resto.da.RM", "Resto.da.RIDE", "Resto.da.UF")
-
 grupos_idade = c(
-	"14 a 17 anos",
-	"18 e 19 anos",
-	"20 a 24 anos",
-	"25 a 29 anos",
-	"30 a 39 anos",
-	"40 a 49 anos",
-	"50 a 59 anos",
-	"60 anos ou mais"
+	"14-17",
+	"18-19",
+	"20-24",
+	"25-29",
+	"30-39",
+	"40-49",
+	"50-59",
+	"60+"
+)
+
+niveis_instrucao = c(
+	"Sem instrução",
+	"Fundamental incompleto",
+	"Fundamental completo",
+	"Médio incompleto",
+	"Médio completo",
+	"Superior incompleto",
+	"Superior completo"
 )
 
 percentis <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
 
 classes_simples <- c(
 	"Até P5",
-	"Maior que P5 até P10",
-	"Maior que P10 até P20",
-	"Maior que P20 até P30",
-	"Maior que P30 até P40",
-	"Maior que P40 até P50",
-	"Maior que P50 até P60",
-	"Maior que P60 até P70",
-	"Maior que P70 até P80",
-	"Maior que P80 até P90",
-	"Maior que P90 até P95",
-	"Maior que P95 até P99",
-	"Maior que P99"
+	"P5-P10",
+	"P10-P20",
+	"P20-P30",
+	"P30-P40",
+	"P40-P50",
+	"P50-P60",
+	"P60-P70",
+	"P70-P80",
+	"P80-P90",
+	"P90-P95",
+	"P95-P99",
+	"P99+"
 )
 
-classes_acumuladas <- c(paste0("Até P", c(5, 1:9 * 10, 95, 99)), "Total")
+classes_acumuladas <- c(paste0("Até ", percentis), "Total")
 
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
@@ -333,7 +341,7 @@ reshape_wide <- function(df, timevar.pos = 1) {
 		timevar = colnames(df)[timevar.pos]
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
-	colnames(resultado) <- c("Estrato.Geo", levels(df[[timevar.pos]]))
+	colnames(resultado) <- c("Estrato", levels(df[[timevar.pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
 }

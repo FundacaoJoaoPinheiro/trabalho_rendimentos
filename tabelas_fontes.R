@@ -13,6 +13,17 @@ lapply(pacotes, library, character.only = TRUE)
 # `tabelas_fontes`; `estratos_geo`.
 source("utilitarios.R")
 
+fontes_rendimento <- c(
+	"Todas as Fontes",
+	"Trabalho Hab.",
+	"Trabalho Efet.",
+	"Outras Fontes",
+	"Aposentadoria",
+	"Aluguel",
+	"Pensão Alimenticia",
+	"Outros Rendimentos"
+)
+
 # ---------------------------------------------------------------------
 # Criar colunas necessárias
 
@@ -80,7 +91,8 @@ desenho$variables <- transform(
 pop_fontes <- estimar_totais(
 	desenho,
 	formula = ~
-		Recebe.Trabalho.Hab +
+		Recebe.Todas.Fontes  +
+		Recebe.Trabalho.Hab  +
 		Recebe.Trabalho.Efet +
 		Recebe.Outras.Fontes +
 	 	Recebe.Aposentadoria +
@@ -89,21 +101,8 @@ pop_fontes <- estimar_totais(
 		Recebe.Outros.Rendim
 )
 
-pop_fontes$Estrato.Geo <- estratos_geo
-
-tab_7426 <- pop_fontes[, c(1, 2:8)]
-colnames(tab_7426) <- c(
-	"Estrato.Geo", "Trab.Hab", "Trab.Efet", "Outras.Fontes",
-	"Aposentadoria", "Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos"
-)
-tab_7426[, -1] <- round(tab_7426[, -1] / 1000)
-
-cv_7426  <- pop_fontes[, c(1, 9:15)]
-colnames(cv_7426) <- c(
-	"Estrato.Geo", "Trab.Hab", "Trab.Efet", "Outras.Fontes", "Aposentadoria",
-	"Arrendamento", "Pensao.Alimenticia", "Outros.Rendimentos"
-)
-cv_7426[, -1] <- round(cv_7426[, -1] * 100, 1)
+tab_7426 <- pop_fontes[, c(1, 2:9)]
+cv_7426  <- pop_fontes[, c(1, 10:17)]
 
 # 7429 - participação % de cada fonte no rendimento médio domiciliar per capita
 part_rdpc <- svyby(
@@ -118,27 +117,8 @@ part_rdpc <- svyby(
 	na.rm = TRUE
 )
 
-part_rdpc[, 1] <- estratos_geo
-part_rdpc[, -1] <- round(part_rdpc[, -1] * 100, 1)
-
 tab_7429 <- part_rdpc[c(1, 2:6)]
 cv_7429  <- part_rdpc[c(1, 7:11)]
-colnames(tab_7429) <- c(
-	"Estrato.Geo",
-	"Todas.as.Fontes",
-	"Trabalho.Hab",
-	"Outras.Fontes",
-	"Aposentadoria/Pensao",
-	"Outros.Rendimentos"
-)
-colnames(cv_7429) <- c(
-	"Estrato.Geo",
-	"Todas.as.Fontes",
-	"Trabalho.Hab",
-	"Outras.Fontes",
-	"Aposentadoria/Pensao",
-	"Outros.Rendimentos"
-)
 
 # 7437 - RMe da pop. com rendimento, por fonte de rendimento,
 # a preços médios do ano
@@ -152,28 +132,45 @@ rme_fontes <- lapply(
 	}
 )
 rme_fontes <- Reduce(function(...) merge(..., sort = FALSE), rme_fontes)
-rme_fontes[, 1] <- estratos_geo
 
 tab_7437 <- rme_fontes[, c(1, 1:8 * 2)]
 cv_7437  <- rme_fontes[, c(1, seq(3, 17, by = 2))]
-cv_7437[, -1] <- round(cv_7437[, -1] * 100, 1)
-colnames(tab_7437)[-1] <- c(
-	"Todas.as.Fontes",
-	"Trabalho.Hab",
-	"Trabalho.Efet",
-	"Outras.Fontes",
-	"Aposentadoria",
-	"Arrendamento",
-	"Pensao.Alimen",
-	"Outros.Rendimentos"
-)
-colnames(cv_7437)[-1] <- c(
-	"Todas.as.Fontes",
-	"Trabalho.Hab",
-	"Trabalho.Efet",
-	"Outras.Fontes",
-	"Aposentadoria",
-	"Arrendamento",
-	"Pensao.Alimen",
-	"Outros.Rendimentos"
-)
+
+# ---------------------------------------------------------------------
+# Formatar tabelas geradas
+
+for (obj in ls(pattern = "^(cv|tab)_7")) {
+	df <- get(obj)
+	df[[1]] <- estratos_geo
+	assign(obj, df)
+}
+
+for (obj in ls(pattern = "^cv_7")) {
+	df <- get(obj)
+	df[, -1] <- round(df[, -1] * 100, 1)
+	assign(obj, df)
+}
+
+tab_7426[, -1] <- round(tab_7426[, -1] / 1000)    # mil pessoas
+tab_7429[, -1] <- round(tab_7429[, -1] * 100, 1)  # %
+tab_7437[, -1] <- round(tab_7437[, -1], 2)        # R$
+
+for (obj in ls(pattern = "_74(26|37)$")) {
+	df <- get(obj)
+	colnames(df) <- c("Estrato", fontes_rendimento)
+	assign(obj, df)
+}
+
+colnames(tab_7429) <- c("Estrato", fontes_rendimento[c(1, 2, 4, 5, 8)])
+colnames(cv_7429)  <- c("Estrato", fontes_rendimento[c(1, 2, 4, 5, 8)])
+
+# ---------------------------------------------------------------------
+# Salvar arquivos 
+
+for (obj in ls(pattern = "^(cv|tab)_7")) {
+	write.csv2(
+		get(obj),
+		paste0("saida/fontes/", obj, ".csv"),
+		row.names = FALSE
+	)
+}

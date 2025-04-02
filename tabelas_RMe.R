@@ -77,7 +77,10 @@ gini_vd4019RMe <- svyby(
 )
 
 tab_7453 <- gini_vd4019RMe
-colnames(tab_7453) <- c("Estrato.Geo", "Indice.de.Gini", "CV")
+colnames(tab_7453) <- c("Estrato", "Indice.de.Gini", "CV")
+
+cv_7453 <- gini_vd4019RMe[, -2]
+colnames(cv_7453) <- c("Estrato", "cv")
 
 # Tabela 7535 - Rendimento habitual médio por classe simples de percentual
 rme_vd4019classe <- estimar_medias(
@@ -93,6 +96,7 @@ cv_7535  <- reshape_wide(rme_vd4019classe[, -3])
 rme_vd4019cap <- estimar_cap(
 	desenho = subset(desenho, VD4019 > 0),
 	formula = ~VD4019.Real,
+	FUN = estimar_medias,
 	csp = "VD4019.Classe"
 )
 
@@ -113,6 +117,7 @@ cv_7545  <- reshape_wide(rme_vd4020classe[, -3])
 rme_vd4020cap <- estimar_cap(
 	subset(desenho, VD4020 > 0),
 	~VD4020.Real,
+	FUN = estimar_medias,
 	"VD4020.Classe"
 )
 
@@ -150,6 +155,7 @@ rme_instrucao <- estimar_medias(
 	~VD4019.Real,
 	~VD3004
 )
+levels(rme_instrucao) <- niveis_instrucao
 
 tab_7443 <- reshape_wide(rme_instrucao[, -4])
 cv_7443  <- reshape_wide(rme_instrucao[, -3])
@@ -170,20 +176,41 @@ rme_responsavel <- estimar_medias(
 	~VD4019.Real
 )
 
-tab_7446[[1]] <- estratos_geo
-tab_7446[[3]] <- round(rme_responsavel[[3]] * 100, 1)
+tab_7446 <- rme_responsavel
+colnames(tab_7446) <- c("Estrato", "Rendimento")
+
+cv_7446 <- rme_responsavel[, -2]
+colnames(cv_7446) <- c("Estrato", "cv")
 
 # ---------------------------------------------------------------------
-# Finalizar tabelas
+# Formatar tabelas
 
-#for (obj in ls(pattern = "(tab|cv)_7")) {
-	#df <- get(obj)
-	#df$Estrato.Geo <- estratos_geo
-	#if (obj != "tab_7453") {
-		#df[, -1] <- round(df[, -1] * 100, 2)
-	#} else {
-		#df[, 2] <- round(df[, 2], 3)    # 3 casas para índice de gini
-		#df[, 3] <- round(df[, 3] * 100, 2)    # 3 casas para índice de gini
-	#}
-	#assign(obj, df)
-#}
+objetos <- ls(pattern = "_7")
+
+for (obj in objetos) {
+	df <- get(obj)
+	df[[1]] <- estratos_geo
+	assign(obj, df)
+}
+
+# passar cv's para %
+for (obj in ls(pattern = "cv_7")) {
+	df <- get(obj)
+	df[, -1] <- round(df[, -1] * 100, 1)
+	assign(obj, df)
+}
+
+tab_7453[, 2] <- round(tab_7453[, 2], 3)          # índice de gini
+tab_7453[, 3] <- round(tab_7453[, 3] * 100, 1)    # cv
+
+objetos <- setdiff(objetos, c("tab_7453", "tab_7446"))
+
+# ---------------------------------------------------------------------
+# Salvar arquivos 
+
+for (obj in ls(pattern = "^(cv|tab)_7")) {
+	write.csv2(
+		get(obj), paste0("saida/RMe/", obj, ".csv"),
+		row.names = FALSE
+	)
+}

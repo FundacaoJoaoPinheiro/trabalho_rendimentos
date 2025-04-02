@@ -76,7 +76,7 @@ desenho$variables <- transform(
 
 # função definida em utilitarios.R, estima `percentis` por estrato geográfico
 limites_vd5008real <- estimar_quantis(desenho, formula = ~VD5008.Real)
-colnames(limites_vd5008real) <- c("Estrato.Geo", percentis)
+colnames(limites_vd5008real) <- c("Estrato", percentis)
 
 # adiciona coluna com as classes simples de percentual por estrato geográfico
 desenho$variables <- transform(
@@ -112,10 +112,11 @@ pop_vd5008classes <- estimar_totais(
 	subset(desenho, V2005.Rendimento == 1),
 	~VD5008.Classes
 )
-colnames(cv_7521) <- c("Estrato.Geo", classes_simples)
 
 tab_7521 <- pop_vd5008classes[, c(1, 2:14)]
+colnames(tab_7521) <- c("Estrato", classes_simples)
 cv_7521  <- pop_vd5008classes[, c(1, 15:27)]
+colnames(cv_7521) <- c("Estrato", classes_simples)
 
 # Tabela 7531 - RMe real domiciliar per capita, por classe simples
 rme_vd5008classe <- estimar_medias(
@@ -153,13 +154,13 @@ tab_7561 <- data.frame(
 	estratos_geo,
 	do.call(cbind, lapply(cap_list, `[`, 1:10))
 )
-colnames(tab_7561) <- c("Estrato.Geo", classes_acumuladas)
+colnames(tab_7561) <- c("Estrato", classes_acumuladas)
 
 cv_7561 <- data.frame(
 	estratos_geo,
 	do.call(cbind, lapply(cap_list, cv))
 )
-colnames(cv_7561) <- c("Estrato.Geo", classes_acumuladas)
+colnames(cv_7561) <- c("Estrato", classes_acumuladas)
 
 # Tabela 7435 - valores próximos, iguais arredondando
 gini_vd5008real <- svyby(
@@ -173,29 +174,45 @@ gini_vd5008real <- svyby(
 )
 
 tab_7435 <- gini_vd5008real
-colnames(tab_7435) <- c("Estrato.Geo", "Valor", "CV")
+colnames(tab_7435) <- c("Estrato", "Valor", "cv")
+cv_7435 <- gini_vd5008real[, -2]
+colnames(cv_7435) <- c("Estrato", "cv")
 
 # ---------------------------------------------------------------------
 # Finalizar tabelas
 
-for (obj in ls(pattern = "cv_7")) {
+for (obj in ls(pattern = "_7")) {
 	df <- get(obj)
-	df$Estrato.Geo <- estratos_geo
-	df[, -1] <- round(df[, -1] * 100, 1)
+	df[[1]] <- estratos_geo
 	assign(obj, df)
 }
 
 for (obj in ls(pattern = "tab_7..[^5]$")) {
 	df <- get(obj)
-	df$Estrato.Geo <- estratos_geo
 	df[, -1] <- round(df[, -1], 2)
 	assign(obj, df)
 }
 
-tab_7435[, 1] <- estratos_geo
+# passar cv's para %
+for (obj in ls(pattern = "cv_7")) {
+	df <- get(obj)
+	df[, -1] <- round(df[, -1] * 100, 1)
+	assign(obj, df)
+}
+
 tab_7435[, 2] <- round(tab_7435[, 2], 3)          # índice de gini
 tab_7435[, 3] <- round(tab_7435[, 3] * 100, 1)    # cv's
 
 # passar populações para "mil pessoas"
 tab_7521[, -1] <- round(tab_7521[, -1] / 1000)
 tab_7561[, -1] <- round(tab_7561[, -1] / 1000)
+
+# ---------------------------------------------------------------------
+# Salvar arquivos 
+
+for (obj in ls(pattern = "^(cv|tab)_7")) {
+	write.csv2(
+		get(obj), paste0("saida/RDPC/", obj, ".csv"),
+		row.names = FALSE
+	)
+}

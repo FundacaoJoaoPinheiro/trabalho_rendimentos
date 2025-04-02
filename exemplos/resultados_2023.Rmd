@@ -3,13 +3,131 @@ title: "Rendimento de todas as fontes"
 subtitle: "Reproduzindo tabelas SIDRA para os estratos geográficos de MG"
 author: "João Paulo Gonzaga Garcia"
 date: "03/2025"
-output: odt_document
+output:
+  powerpoint_presentation:
+    slide_level: 2
 ---
 
 ```{r setup, include = FALSE}
-pacotes <- c("ggplot2", "knitr", "kableExtra")
+pacotes <- c("ggplot2", "flextable", "officer")
 #install.packages(setdiff(pacotes, rownames(installed.packages())))
 lapply(pacotes, library, character.only = TRUE)
+
+options(stringsAsFactors = FALSE)
+```
+
+```{r definicoes, include = FALSE}
+
+estratos_geo <- c(
+    "Belo Horizonte",               # 3110
+	"Entorno metropol. de BH",      # 3120
+	"Colar metropolitano de BH",    # 3130
+	"Integrada de Brasília em MG",  # 3140
+	"Sul de Minas Gerais",          # 3151
+	"Triângulo Mineiro",            # 3152
+	"Zona da Mata",                 # 3153
+	"Norte de Minas Gerais",        # 3154
+	"Vale do Rio Doce",             # 3155
+	"Central de Minas Gerais "      # 3156
+)
+
+contar_freq <- function(dir, limite) {
+	arquivos_cv <- list.files(
+		dir, pattern = "^cv_7.*\\.csv$", full.names = TRUE,
+		recursive = TRUE
+	)
+	
+	result <- data.frame(
+		Estrato.Geo = estratos_geo,
+		sapply(arquivos_cv, function(arq) {
+			df <- read.csv2(arq, check.names = F)
+			rowSums(df > limite, na.rm = TRUE)
+		}, simplify = TRUE, USE.NAMES = TRUE)
+	)
+
+	colnames(result)[-1] <- gsub(
+		".*cv_", "",
+		gsub(".csv$", "", colnames(result)[-1])
+	)
+
+	return(result)
+}
+
+tabelar <- function(df, digitos = 2) {
+	ft <- flextable(df)
+
+	ft <- colformat_num(
+		ft,
+		digits = digitos,
+		na_str = "-",
+		decimal.mark = ",",
+		big.mark = ".",
+		drop_trailing_zeros = TRUE 
+	)
+
+	ft <- theme_zebra(
+		ft,
+		odd_body = "white",
+		even_body = "#F5F5F5"
+	)
+
+	ft <- border_remove(ft)
+	ft <- hline_top(ft)
+	ft <- hline_bottom(ft)
+	ft <- hline(ft, part = "body")
+	ft <- align(ft, align = "center", part = "all")
+	ft <- font(ft, fontname = "Arial", part = "all")
+	ft <- fontsize(ft, size = 10, part = "all")
+
+	ft <- width(ft, j = 1, width = 3.2, unit = "cm")
+	if (ncol(df) > 1) {
+		ft <- width(ft, j = 2:ncol(df), width = NA)
+	}
+
+	ft <- set_table_properties(ft, layout = "autofit")
+	
+	return(ft)
+}
+
+cores_suaves <- colorRampPalette(c("#88CCEE", "#DDCC77", "#CC6677", "#AA4499",
+	"#44AA99", "#999933", "#882255"))(13)
+
+plotar_freq <- function(df) {
+	df$totais <- rowSums(df[, -1])
+	df <- df[order(df$totais), ]
+	ordem_estratos <- df[[1]]
+	df$totais <- NULL
+
+	df_plot <- reshape(
+		df,
+		direction = "long",
+		varying = colnames(df)[-1],  # Todas as colunas exceto a primeira
+		v.names = "Frequencia",
+		idvar = "Estrato.Geo",
+		timevar = "Tabela",
+		times = colnames(df)[-1]
+	)
+
+	df_plot$Estrato.Geo <- factor(df_plot[[1]], levels = ordem_estratos)
+	df_plot$Estrato.Geo <- gsub("([^ ]* [^ ]* [^ ]*) ", "\\1\n", df_plot$Estrato.Geo)
+	levels_quebrados <- gsub("([^ ]+ [^ ]+ [^ ]+) ", "\\1\n", ordem_estratos)
+	df_plot$Estrato.Geo <- factor(df_plot$Estrato.Geo, levels = levels_quebrados)
+
+	ggplot(df_plot, aes(x = Frequencia, y = Estrato.Geo, fill = Tabela)) +
+		geom_col(position = "stack") +
+		scale_fill_manual(values = cores_suaves) +
+		labs(
+			x = "Frequência",
+			y = "Estrato",
+			fill = "Tabela"
+		) +
+		theme_minimal() +
+		theme(
+			axis.text.y = element_text(hjust = 1, size = 9),
+			axis.text.x = element_text(hjust = 1, size = 11)
+		)
+}
+
 ```
 
 # Panorama Geral
@@ -29,44 +147,9 @@ lapply(pacotes, library, character.only = TRUE)
 - Programas sociais: 12
 - Distribuição do rendimento mensal: 0(4) tabelas
 
-## Gráfico 1 - CV's maiores que 15% por Estrato Geográfico
+## Gráfico 1 - Frequência geral de CV's maiores que 15%
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=600, dev='png'}
-
-estratos_geo <- c(
-    "Belo Horizonte (MG)",     # 3110,
-	"Entorno metropol. de Belo Horizonte (MG)",    # 3120,
-	"Colar metropolitano de Belo Horizonte (MG)",  # 3130,
-	"Integrada de Brasília em Minas Gerais",       # 3140,
-	"Sul de Minas Gerais",     # 3151,
-	"Triângulo Mineiro",       # 3152,
-	"Zona da Mata (MG)",       # 3153,
-	"Norte de Minas Gerais",   # 3154,
-	"Vale do Rio Doce (MG)",   # 3155,
-	"Central de Minas Gerais " # 3156
-)
-
-contar_freq <- function(dir, limite) {
-	arquivos_cv <- list.files(
-		dir, pattern = "^cv_7.*\\.csv$", full.names = TRUE,
-		recursive = TRUE
-	)
-	
-	result <- data.frame(
-		Estrato.Geo = estratos_geo,
-		sapply(arquivos_cv, function(arq) {
-			df <- read.csv2(arq)
-			rowSums(df > limite, na.rm = TRUE)
-		}, simplify = TRUE, USE.NAMES = TRUE)
-	)
-
-	colnames(result)[-1] <- gsub(
-		".*cv_", "",
-		gsub(".csv$", "", colnames(result)[-1])
-	)
-
-	return(result)
-}
 
 freq_cv15 <- contar_freq("../saida", 15)
 freq_cv30 <- contar_freq("../saida", 30)
@@ -85,12 +168,13 @@ df_plot$Estrato <- factor(
 
 ggplot(df_plot, aes(x = Frequencia, y = Estrato)) +
 	geom_bar(stat = "identity", fill = "moccasin") +
-	labs(x = "Frequencia ds cv's maiores que 15%", y = "Estrato geográfico") +
+	labs(x = "Frequência", y = "Estrato") +
 	theme_minimal() +
-	theme(axis.text.y = element_text(hjust = 1, size = 8))
+	theme(axis.text.y = element_text(hjust = 1, size = 9),
+		axis.text.x = element_text(hjust = 1, size = 11))
 ```
 
-## Gráfico 2 - CV's maiores que 30% por Estrato Geográfico
+## Gráfico 2 - Frequência geral de CV's maiores que 30%
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=600, dev='png'}
 
@@ -108,12 +192,21 @@ df_plot$Estrato <- factor(
 
 ggplot(df_plot, aes(x = Frequencia, y = Estrato)) +
 	geom_bar(stat = "identity", fill = "indianred") +
-	labs(x = "Frequencia ds cv's maiores que 15%", y = "Estrato geográfico") +
+	labs(x = "Frequência", y = "Estrato") +
 	theme_minimal() +
-	theme(axis.text.y = element_text(hjust = 1, size = 8))
+	theme(axis.text.y = element_text(hjust = 1, size = 9))
+		axis.text.x = element_text(hjust = 1, size = 11)
 ```
 
-# Pessoas ocupadas de 14 anos ou mais , por categoria
+---
+
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de Brasília
+em Minas Gerais, Colar metropolitano de Belo Horizonte e Norte de Minas Gerais.
+
+- Estratos com as __menores__ frequências de cv's altos: Belo Horizonte,
+Entorno metropol. de Belo Horizonte e Triângulo Mineiro.
+
+# Pessoas ocupadas de 14 anos ou mais, por categorias
 
 - Tabela 7431 - Por cor ou raça;
 
@@ -128,98 +221,67 @@ ggplot(df_plot, aes(x = Frequencia, y = Estrato)) +
 - Tabela 7439 - Responsáveis pelo domicílio;
 
 - Tabela 7536 - Limites superiores das classes de percentual das pessoas
-em ordem crescente de rendimento habitualmente recebido, a preços médios
+em ordem crescente de rendimento habitualmente recebido;
+
+---
 
 - Tabela 7537 - Por classes simples de percentual das pessoas em ordem
-crescente de rendimento habitualmente recebido, a preços médios do ano;
+crescente de rendimento habitualmente recebido;
 
 - Tabela 7546 - Limites superiores das classes de percentual das pessoas
-em ordem crescente de rendimento efetivamente recebido, a preços médios
+em ordem crescente de rendimento efetivamente recebido;
 
 - Tabela 7547 - Por classes simples de percentual das pessoas em ordem
-crescente de rendimento efetivamente recebido, a preços médios do ano;
+crescente de rendimento efetivamente recebido;
 
 - Tabela 7559 - Por classes acumuladas de percentual das pessoas em ordem
-crescente de rendimento efetivamente recebido, a preços médios do ano;
+crescente de rendimento efetivamente recebido;
 
 - Tabela 7562 - Por classes acumuladas de percentual das pessoas em ordem
-crescente de rendimento habitualmente recebido, a preços médios do ano.
+crescente de rendimento habitualmente recebido;
 
 ## Tabela 1 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
 
-```{r, echo=FALSE}
+```{r, results='asis', echo=FALSE}
 
 freq_cv15 <- contar_freq("../saida/ocupada", 15)
-kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+tabelar(freq_cv15)
 ```
 
 ## Tabela 2 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
 
-```{r, echo=FALSE}
+```{r, results='asis', echo=FALSE}
+
 freq_cv30 <- contar_freq("../saida/ocupada", 30)
-kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+tabelar(freq_cv30)
 ```
 
-- Estratos com os __maiores__ cv's: Integrada de Brasília em Minas Gerais e
-Colar metropolitano de Belo Horizonte.
+---
 
-- Estratos com os __menores__ cv's: Entorno metropolitano de Belo Horizonte,
-Belo Horizonte, Triângulo Mineiro e Sul de Minas Gerais.
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de
+Brasília em Minas Gerais e Colar metropolitano de BH.
 
-- Tabelas com os __maiores__ cv's: 7537 e 7547.
+- Estratos com as __menores__ frequências de cv's altos: Entorno
+metropolitano de BH, Belo Horizonte, Triângulo Mineiro e Sul
+de Minas Gerais.
 
-- Tabelas com os __menores__ cv's: 7559 e 7562.
+- Tabelas com as __maiores__ frequências de cv's altos: 7537 e 7547.
+
+- Tabelas com as __menores__ frequências de cv's altos: 7559 e 7562.
 
 - As tabelas com os maiores cv's são aquelas com a população ocupada
 por classe simples de rendimento (habitualmente e efetivamente recebidos),
 enquanto as tabelas com os menores cv's são da população ocupada por
 classe __acumulada__ de rendimento.
 
-## Gráfico 3 - CV's maiores que 15% por Estrato Geográfico e Tabela
+## Gráfico 3 - CV's maiores que 15% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
-
-cores_suaves <- colorRampPalette(c("#88CCEE", "#DDCC77", "#CC6677", "#AA4499",
-	"#44AA99", "#999933", "#882255"))(12)
-
-plotar_freq <- function(df) {
-	df_plot <- reshape(
-		df,
-		direction = "long",
-		varying = colnames(df)[-1],  # Todas as colunas exceto a primeira
-		v.names = "Frequencia",
-		idvar = "Estrato.Geo",
-		timevar = "Tabela",
-		times = colnames(df)[-1]
-	)
-
-	ordem <- aggregate(Frequencia ~ Estrato.Geo, data = df_plot, sum, na.rm = TRUE)
-	ordem <- ordem$Estrato.Geo[order(ordem$Frequencia, decreasing = TRUE)]
-
-	df_plot$Estrato.Geo <- factor(df_plot$Estrato.Geo, levels = ordem)
-	df_plot$Estrato.Geo <- gsub("([^ ]* [^ ]* [^ ]*) ", "\\1\n", df_plot$Estrato.Geo)
-	df_plot$Tabela <- gsub(".*cv_", "", gsub(".csv$", "", df_plot$Tabela))
-
-	p <- ggplot(df_plot, aes(x = Frequencia, y = Estrato.Geo, fill = Tabela)) +
-		geom_bar(stat = "identity", position = "stack") +
-		scale_fill_manual(values = cores_suaves) +
-		theme_minimal() +
-		theme(
-			axis.text.y = element_text(hjust = 1, size = 8)
-		) +
-		labs(
-			x = "Estrato Geográfico",
-			y = "Frequencia",
-			fill = "Tabela"
-		)
-
-	return(p)
-}
 
 plotar_freq(freq_cv15)
 ```
 
-## Gráfico 4 - CV's maiores que 30% por Estrato Geográfico e Tabela
+## Gráfico 4 - CV's maiores que 30% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv30)
@@ -227,135 +289,472 @@ plotar_freq(freq_cv30)
 
 ## Tabela 7537 - Pop. Ocupada por CSP das pessoas em ordem de rendimento habitual
 
-```{r, echo=FALSE}
-valores <- read.csv2("../saida/ocupada/tab_7537.csv")
-cvs <- read.csv2("../saida/ocupada/cv_7537.csv")
+```{r, results='asis', echo=FALSE}
 
-kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+valores <- read.csv2("../saida/ocupada/tab_7537.csv", check.names = F)
+tabelar(valores)
 ```
 
 ## CV's 7537
 
-```{r, echo=FALSE}
-kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/ocupada/cv_7537.csv", check.names = F)
+tabelar(cvs)
 ```
 
 ## Tabela 7562 - Pop. Ocupada por CAP das pessoas em ordem de rendimento habitual
 
-```{r, echo=FALSE}
-valores <- read.csv2("../saida/ocupada/tab_7562.csv")
-cvs <- read.csv2("../saida/ocupada/cv_7562.csv")
+```{r, results='asis', echo=FALSE}
 
-kable(valores, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+valores <- read.csv2("../saida/ocupada/tab_7562.csv", check.names = F)
+tabelar(valores)
 ```
 
 ## CV's 7542
 
-```{r, echo=FALSE}
-kable(cvs, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/ocupada/cv_7562.csv", check.names = F)
+tabelar(cvs)
 ```
 
-# Fontes ou tipos de rendimento
+# Tabelas por tipo/fonte de rendimento
+
+- Tabela 7426 - População residente com rendimento;
+
+- Tabela 7429 - Participação percentual na composição do rendimento
+médio mensal real domiciliar per capita;
+
+- Tabela 7437 - Rendimento médio mensal real da população com rendimento;
 
 ## Tabela 3 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv15 <- contar_freq("../saida/fontes", 15)
-kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+tabelar(freq_cv15)
 ```
 
-## Tabela 4 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+## Tabela 4 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv30 <- contar_freq("../saida/fontes", 30)
-kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+tabelar(freq_cv30)
 ```
 
-## Gráfico 5 - CV's maiores que 15% por Estrato Geográfico e Tabela
+## Gráfico 5 - CV's maiores que 15% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv15)
 ```
 
-## Gráfico 6 - CV's maiores que 30% por Estrato Geográfico e Tabela
+## Gráfico 6 - CV's maiores que 30% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv30)
 ```
 
-# Rendimento médio
+---
+
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de
+Brasília em Minas Gerais e Colar metropolitano de BH.
+
+- Estrato com as __menores__ frequências de cv's altos: Belo Horizonte.
+
+- Apenas três tabelas, não houve tanta diferença nos cv's. Resultados um
+pouco piores para tabela 7437.
+
+## Tabela 7429 - Composição do rendimento médio domiciliar per capita por fonte
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/fontes/tab_7429.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7429
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/fontes/cv_7429.csv", check.names = F)
+tabelar(cvs)
+```
+
+# Rendimento médio (RMe)
+
+- Tabela 7453 - Índice de Gini do RMe das pessoas com rendimento de
+trabalho habitualmente recebido;
+
+- Tabela 7535 - RMe das pessoas com rendimento de trabalho habitualmente
+recebido, por classe simples de percentual;
+
+- Tabela 7538 - RMe das pessoas com rendimento de trabalho habitualmente
+recebido, por classe acumuladas de percentual;
+
+- Tabela 7545 - RMe das pessoas com rendimento de trabalho efetivamente
+recebido, por classe simples de percentual;
+
+- Tabela 7548 - RMe das pessoas com rendimento de trabalho efetivamente
+recebido, por classe acumuladas de percentual;
+
+---
+
+- Tabela 7441 - RMe das pessoas com rendimento de trabalho, por cor ou raça;
+
+- Tabela 7442 - RMe das pessoas com rendimento de trabalho, por grupo de idade;
+
+- Tabela 7443 - RMe das pessoas com rendimento de trabalho, por nível de
+instrução;
+
+- Tabela 7444 - RMe das pessoas com rendimento de trabalho. por sexo;
+
+- Tabela 7446 - RMe das pessoas com rendimento de trabalho e responsáveis
+pelo domicílio.
 
 ## Tabela 5 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv15 <- contar_freq("../saida/RMe", 15)
-kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+tabelar(freq_cv15)
 ```
 
-## Tabela 6 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+## Tabela 6 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv30 <- contar_freq("../saida/RMe", 30)
-kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+tabelar(freq_cv30)
 ```
 
-## Gráfico 7 - CV's maiores que 15% por Estrato Geográfico e Tabela
+## Gráfico 7 - CV's maiores que 15% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv15)
 ```
 
-## Gráfico 8 - CV's maiores que 30% por Estrato Geográfico e Tabela
+## Gráfico 8 - CV's maiores que 30% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv30)
 ```
 
-# Rendimento domiciliar per capita
+---
+
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de
+Brasília em Minas Gerais e Norte de Minas.
+
+- Estrato com as __menores__ frequências de cv's altos: Belo Horizonte e
+Central de Minas Gerais.
+
+- Tabela com as __maiores__ frequências de cv's altos: 7443 e 7442.
+
+- Tabelas com as __menores__ frequências de cv's altos: 7453, 7446 e 7538.
+
+## Tabela 7442 - RMe das pessoas com rendimento de trabalho; por grupo de idade
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RMe/tab_7442.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7442
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RMe/cv_7442.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7453 - Índice de Gini
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RMe/tab_7453.csv", check.names = F)
+tabelar(valores, digitos = 3)
+```
+
+## CV's 7453
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RMe/cv_7453.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7446 - RMe das pessoas responsáveis pelo domicílio
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RMe/tab_7446.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7446
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RMe/cv_7446.csv", check.names = F)
+tabelar(cvs)
+```
+
+# Rendimento domiciliar per capita (RDPC)
+
+- Tabela 7428 - Massa de RDPC, por classe simples de percentual;
+
+- Tabela 7435 - Índice de Gini do RDPC;
+
+- Tabela 7438 - Limites superiores das classes de percentual;
+
+- Tabela 7521 - População residente, por classes simples de percentual;
+
+- Tabela 7531 - Rendimento médio domiciliar per capita, por classes simples
+de percentual;
+
+- Tabela 7532 - Rendimento médio domiciliar per capita, por classes acumuladas
+de percentual;
+
+- Tabela 7561 - População residente, por classes acumuladas de percentual.
 
 ## Tabela 7 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv15 <- contar_freq("../saida/RDPC", 15)
-kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+tabelar(freq_cv15)
 ```
 
-## Tabela 8 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+## Tabela 8 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv30 <- contar_freq("../saida/RDPC", 30)
-kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+tabelar(freq_cv30)
 ```
 
-## Gráfico 9 - CV's maiores que 15% por Estrato Geográfico e Tabela
+## Gráfico 9 - CV's maiores que 15% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv15)
 ```
 
-## Gráfico 10 - CV's maiores que 30% por Estrato Geográfico e Tabela
+## Gráfico 10 - CV's maiores que 30% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv30)
+```
+
+---
+
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de Brasília
+em Minas Gerais e Colar metropolitano de BH.
+
+- Estrato com as __menores__ frequências de cv's altos: Belo Horizonte,
+Entorno metropol. de BH e Sul de Minas Gerais.
+
+- Tabela com as __maiores__ frequências de cv's altos: 7428 e 7521.
+
+- Tabela com as __menores__ frequências de cv's altos: 7435 e 7532.
+
+- frequência maior para classes simples e frequência menor para classes acumuladas
+
+## Tabela 7428 - Massa de RDPC
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RDPC/tab_7428.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7428
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RDPC/cv_7428.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7521 - População residente por classes simples de percentual
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RDPC/tab_7521.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7521
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RDPC/cv_7521.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7532 - RDPC por classes acumuladas de percentuais
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/RDPC/tab_7532.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7532
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/RDPC/cv_7532.csv", check.names = F)
+tabelar(cvs)
 ```
 
 # Programas Sociais
 
+- Tabela 7447 - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+algum morador que recebeu rendimento do Programa Bolsa Família, por nível
+de instrução;
+
+- Tabela 7448 - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+não morador que recebeu rendimento do Programa Bolsa Família, por nível
+de instrução;
+
+- Tabela 7449 - Domicílios em que algum morador do domicílio recebeu
+rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
+serviços;
+
+- Tabela 7450 - Domicílios em que nenhum morador do domicílio recebeu
+rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
+serviços;
+
+- Tabela 7451 - Domicílios em que algum morador do domicílio recebeu
+rendimento do Benefício de Prestação Continuada, por posse ou acesso
+a bens ou serviços;
+
+---
+
+- Tabela 7452 - Domicílios em que nenhum morador do domicílio recebeu
+rendimento do Benefício de Prestação Continuada, por posse ou acesso
+a bens ou serviços;
+
+- Tabela 7454 - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+algum morador que recebeu rendimento do Benefício de Prestação Continuada,
+por nível de instrução;
+
+- Tabela 7455 - Pessoas de 10 anos ou mais de idade cujo ndomicílio não possui
+morador que recebeu rendimento do Benefício de Prestação Continuada, por nível
+de instrução;
+
+- Tabela 7456 - Número médio de moradores por domicílio, por recebimento
+de rendimento de programa social e tipo de programa social;
+
+- Tabela 7457 - Domicílios, por recebimento de rendimento de programa
+social e tipo de programa social.
+
 ## Tabela 9 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv15 <- contar_freq("../saida/progsociais", 15)
-kable(freq_cv15, align = "c", format = "pandoc", booktabs = TRUE, row.names = F)
+tabelar(freq_cv15)
 ```
 
-## Tabela 10 - Frequencia de cv's maiores que 15% por tabela e estrato geográfico:
-```{r, echo=FALSE}
+## Tabela 10 - Frequencia de cv's maiores que 30% por tabela e estrato geográfico:
+
+```{r, results='asis', echo=FALSE}
+
 freq_cv30 <- contar_freq("../saida/progsociais", 30)
-kable(freq_cv30, align = "c", format = "pandoc", booktabs = TRUE)
+tabelar(freq_cv30)
 ```
 
-## Gráfico 11 - CV's maiores que 15% por Estrato Geográfico e Tabela
+## Gráfico 11 - CV's maiores que 15% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv15)
 ```
 
-## Gráfico 12 - CV's maiores que 30% por Estrato Geográfico e Tabela
+## Gráfico 12 - CV's maiores que 30% por Estrato e Tabela
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, dpi=560, dev='png'}
 plotar_freq(freq_cv30)
+```
+
+---
+
+- Estratos com as __maiores__ frequências de cv's altos: Integrada de Brasília
+em Minas Gerais e Colar metropolitano de BH.
+
+- Estrato com as __menores__ frequências de cv's altos: Entorno metropol. de
+Belo Horizonte e Vale do Rio Doce.
+
+- Tabela com as __maiores__ frequências de cv's altos: 7454 e 7447.
+
+- Tabelas com as __menores__ frequências de cv's altos: 7450 e 7455.
+
+- frequência maior para tabelas de domicílios com morador que recebeu rendimento
+de programa social e frequência menor para domicílios sem morador que recebeu.
+
+## Tabela 7454 - Pessoas de 10 anos ou mais cujo domicílio possui algum morador que recebeu BPC
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/progsociais/tab_7454.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7454
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/progsociais/cv_7454.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7455 -  Pessoas de 10 anos ou mais cujo domicílio não possui morador que recebeu BPC
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/progsociais/tab_7455.csv", check.names = F)
+tabelar(valores)
+```
+
+### # CV's 7455
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/progsociais/cv_7455.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7447 - Pessoas de 10 anos ou mais cujo domicílio possui morador que recebeu Bolsa Família
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/progsociais/tab_7447.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7447
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/progsociais/cv_7447.csv", check.names = F)
+tabelar(cvs)
+```
+
+## Tabela 7448 - Pessoas de 10 anos ou mais cujo domicílio não possui morador que recebeu Bolsa Família
+
+```{r, results='asis', echo=FALSE}
+
+valores <- read.csv2("../saida/progsociais/tab_7448.csv", check.names = F)
+tabelar(valores)
+```
+
+## CV's 7448
+
+```{r, results='asis', echo=FALSE}
+
+cvs <- read.csv2("../saida/progsociais/cv_7448.csv", check.names = F)
+tabelar(cvs)
 ```
 

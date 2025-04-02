@@ -54,7 +54,7 @@ desenho$variables <- transform(
 	)
 )
 
-ids_outrosprogramas <- tapply(
+ids_outros <- tapply(
 	desenho$variables$V5003A == "Sim", 
 	desenho$variables$ID_DOMICILIO, 
 	FUN = any
@@ -64,7 +64,7 @@ desenho$variables <- transform(
 	desenho$variables,
 	Domicilio.Outros.Programas = factor(
 		ifelse(
-			ID_DOMICILIO %in% names(ids_outrosprogramas[ids_outrosprogramas]),
+			ID_DOMICILIO %in% names(ids_outros[ids_outros]),
 			"Sim", "Não"
 		),
 		levels = c("Sim", "Não")
@@ -81,16 +81,15 @@ pop_bolsafamilia <- estimar_totais(
 	formula = ~Domicilio.Bolsa.Familia,
 	por = ~VD3004
 )
+levels(pop_bolsafamilia) <- niveis_instrucao
 
 tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
 cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
-cv_7447[, -1] <- round(cv_7447[, -1] * 100, 1)
 
 # Tabela 7448 - O mesmo que 7447, mas para domicílios que não possuem
 # moradores beneficiários
 tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
 cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
-cv_7448[, -1] <- round(cv_7448[, -1] * 100, 1)
 
 # Tabela 7454 - O mesmo que 7447, mas para domicílios que possuem beneficiários
 # do BPC-Loas
@@ -99,10 +98,10 @@ pop_bpc <- estimar_totais(
 	formula = ~Domicilio.BPC,
 	por = ~VD3004
 )
+levels(pop_bpc) <- niveis_instrucao
 
 tab_7454 <- reshape_wide(pop_bpc[c(1, 2, 3)])
 cv_7454  <- reshape_wide(pop_bpc[c(1, 2, 5)])
-cv_7454[, -1] <- round(cv_7454[, -1] * 100, 1)
 
 # Tabela 7455 - O mesmo que 7454, mas para domicílios que não possuem
 # beneficiários
@@ -146,35 +145,29 @@ acesso_bolsafam <- estimar_totais(
 acesso_bolsafam <- acesso_bolsafam[, -seq(3, 34, by = 2)]
 
 rotulos_benservicos <- c(
-	"Abastecimento.de.Agua",
-	"Esgotamento.Sanitario",
-	"Coleta.de.lixo",
-	"Iluminacao.Eletrica",
+	"Abastecimento de Agua",
+	"Esgotamento Sanitario",
+	"Coleta de lixo",
+	"Iluminacao Eletrica",
 	"Geladeira",
-	"Maquina.de.lavar",
+	"Maquina de lavar",
 	"Televisao",
 	"Microcomputador"
 )
 
 tab_7449 <- acesso_bolsafam[seq(1, 19 , by = 2), c(2, 3:10)]
 cv_7449 <-  acesso_bolsafam[seq(1, 19 , by = 2), c(2, 11:18)]
-cv_7449[, -1] <- round(cv_7449[, -1] * 100, 1)
 
-colnames(tab_7449) <- c("Estrato.Geo", rotulos_benservicos)
-colnames(cv_7449)  <- c("Estrato.Geo", rotulos_benservicos)
-tab_7449$Estrato.Geo <- estratos_geo
-cv_7449$Estrato.Geo  <- estratos_geo
+colnames(tab_7449) <- c("Estrato", rotulos_benservicos)
+colnames(cv_7449)  <- c("Estrato", rotulos_benservicos)
 
 # Tabela 7450 - O mesmo que 7449, mas para domicílios que não possuem
 # beneficiários
 tab_7450 <- acesso_bolsafam[1:10 * 2, c(2, 3:10)]
 cv_7450 <-  acesso_bolsafam[1:10 * 2, c(2, 11:18)]
-cv_7450[, -1] <- round(cv_7450[, -1] * 100, 1)
 
-colnames(tab_7450) <- c("Estrato.Geo", rotulos_benservicos)
-colnames(cv_7450)  <- c("Estrato.Geo", rotulos_benservicos)
-tab_7450$Estrato.Geo <- estratos_geo
-cv_7450$Estrato.Geo  <- estratos_geo
+colnames(tab_7450) <- c("Estrato", rotulos_benservicos)
+colnames(cv_7450)  <- c("Estrato", rotulos_benservicos)
 
 # Tabela 7451 - O mesmo que 7449, mas para beneficiários do BPC-Loas
 acesso_bpc <- estimar_totais(
@@ -211,24 +204,18 @@ acesso_bpc <- acesso_bpc[-seq(3, 34, by = 2)]
 
 tab_7451 <- acesso_bpc[seq(1, 19 , by = 2), c(2, 3:10)]
 cv_7451 <-  acesso_bpc[seq(1, 19 , by = 2), c(2, 11:18)]
-cv_7451[, -1] <- round(cv_7451[, -1] * 100, 1)
 
-colnames(tab_7451) <- c("Estrato.Geo", rotulos_benservicos)
-colnames(cv_7451)  <- c("Estrato.Geo", rotulos_benservicos)
-tab_7451$Estrato.Geo <- estratos_geo
-cv_7451$Estrato.Geo  <- estratos_geo
+colnames(tab_7451) <- c("Estrato", rotulos_benservicos)
+colnames(cv_7451)  <- c("Estrato", rotulos_benservicos)
 
 # Tabela 7452 - o mesmo que 7451, mas para domicílios sem beneficiários do BPC
 tab_7452 <- acesso_bpc[seq(2, 20, by = 2), c(2, 3:10)]
 cv_7452 <-  acesso_bpc[seq(2, 20, by = 2), c(2, 11:18)]
-cv_7452[, -1] <- round(cv_7452[, -1] * 100, 1)
 
-colnames(tab_7452) <- c("Estrato.Geo", rotulos_benservicos)
-colnames(cv_7452)  <- c("Estrato.Geo", rotulos_benservicos)
-tab_7452$Estrato.Geo <- estratos_geo
-cv_7452$Estrato.Geo  <- estratos_geo
+colnames(tab_7452) <- c("Estrato", rotulos_benservicos)
+colnames(cv_7452)  <- c("Estrato", rotulos_benservicos)
 
-# Tabela 7456 - média de moradores por domicílio por recbimento e tipo de programa
+# Tabela 7456 - média de moradores por domicílio por recebimento e tipo de prog.
 media_moradores_progs <- estimar_interacao(
 	desenho = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	formula = ~V2001,
@@ -246,7 +233,6 @@ cv_7456  <- Reduce(
 	function(...) merge(..., sort = FALSE),
 	media_moradores_progs[[2]]
 )
-cv_7456[, -1] <- round(cv_7456[, -1] * 100, 1)
 
 # Tabela 7457 - total de domicílios, por recebimento e tipo de programa
 dom_progs <- estimar_interacao(
@@ -267,4 +253,55 @@ cv_7457  <- Reduce(
 	function(...) merge(..., sort = FALSE),
 	dom_progs[[2]]
 )
-cv_7457[, -1] <- round(cv_7457[, -1] * 100, 1)
+
+# ---------------------------------------------------------------------
+# Formatar tabelas geradas
+
+# adicionar nomes dos estratos
+for (obj in ls(pattern = "^(cv|tab)_7")) {
+	df <- get(obj)
+	df[[1]] <- estratos_geo
+	assign(obj, df)
+}
+
+# adicionar os totais em cada tabela
+total_bpc <- svytotal(~Estrato.Geo, subset(desenho, Domicilio.BPC == 1))
+total_bolsafam <- svytotal(~Estrato.Geo,
+	subset(desenho, Domicilio.Bolsa.Familia == 1))
+total_outros <- svytotal(~Estrato.Geo,
+	subset(desenho, Domicilio.Outros.Programas == 1))
+
+# mudar medidas para mil pessoas
+tabelas_pop <- setdiff(
+	ls(pattern="tab_"),
+	paste0("tab_", c(7449:7452, 7456, 7457))
+)
+
+cv_pop <- setdiff(
+	ls(pattern="cv_"),
+	paste0("cv_", c(7449:7452, 7456, 7457))
+)
+
+# alterar medidas para mil pessoas
+for (obj in tabelas_pop) {
+	df <- get(obj)
+	df[, -1] <- round(df[, -1] / 1000)
+	assign(obj, df)
+}
+
+# passar cv's para %
+for (obj in ls(pattern = "^cv_7")) {
+	df <- get(obj)
+	df[, -1] <- round(df[, -1] * 100, 1)
+	assign(obj, df)
+}
+
+# ---------------------------------------------------------------------
+# Salvar arquivos 
+
+for (obj in ls(pattern = "_7")) {
+	write.csv2(
+		get(obj), paste0("saida/progsociais/", obj, ".csv"),
+		row.names = FALSE
+	)
+}
