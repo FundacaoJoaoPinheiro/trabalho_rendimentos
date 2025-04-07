@@ -9,7 +9,7 @@ pacotes <- c("PNADcIBGE", "survey")
 lapply(pacotes, library, character.only = TRUE)
 
 # carregar objetos e funções utilizados no script:
-# gerar_desenho(); ad_rdpc(); deflacionar(); estimar_medias(); estimar_totais();
+# gerar_desenho(); ad.rdpc(); deflacionar(); estimar.medias(); estimar.totais();
 # `tabelas_fontes`; `estratos_geo`.
 source("utilitarios.R")
 
@@ -56,7 +56,7 @@ desenho$variables <- transform(
 	Recebe.Outros.Rendim = ifelse(!is.na(Outros.Rendimentos), 1, 0)
 )
 
-desenho$variables <- ad_rdpc(      # Renda Domiciliar Per Capita (RDPC)
+desenho$variables <- ad.rdpc(      # Renda Domiciliar Per Capita (RDPC)
 	desenho$variables,
 	c("VD4019", "VD4048", "V5004A2", "Outros.Rendimentos")
 )
@@ -88,7 +88,7 @@ desenho$variables <- transform(
 # Reproduzir tabelas
 
 # 7426 - População residente com rendimento, por fonte de rendimento
-pop_fontes <- estimar_totais(
+pop_fontes <- estimar.totais(
 	desenho,
 	formula = ~
 		Recebe.Todas.Fontes  +
@@ -125,7 +125,7 @@ cv_7429  <- part_rdpc[c(1, 7:11)]
 rme_fontes <- lapply(
 	cod_vars,
 	function(var) {
-		estimar_medias(
+		estimar.medias(
 			subset(desenho, get(var) > 0),        # apenas pop. com rendimento
 			as.formula(paste0("~", var, ".Real"))
 		)

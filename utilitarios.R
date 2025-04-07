@@ -182,7 +182,7 @@ variaveis <- list(
 
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `ano`     : ano da pesquisa (numérico)
-gerar_desenho <- function(tabelas, ano = pnadc_ano) {
+gerar.desenho <- function(tabelas, ano = pnadc_ano) {
 
 	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
@@ -270,7 +270,7 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano) {
 
 
 # estimar totais por Estrato.Geo
-estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
+estimar.totais <- function(desenho, formula, por = ~Estrato.Geo) {
 	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
 		formula = as.formula(formula),
@@ -285,7 +285,7 @@ estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
 }
 
 # estimar médias por Estrato.Geo
-estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
+estimar.medias <- function(desenho, formula, por = ~Estrato.Geo) {
 	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
 		formula = as.formula(formula),
@@ -300,7 +300,7 @@ estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
 }
 
 # estimar quantis das classes percentuais simples e Estrato.Geo
-estimar_quantis <- function(desenho, formula) {
+estimar.quantis <- function(desenho, formula) {
 	svyby(
 		formula,
 		by = ~Estrato.Geo,
@@ -314,12 +314,12 @@ estimar_quantis <- function(desenho, formula) {
 	)
 }
 
-estimar_cap <- function(desenho, formula, csp) {
+estimar.cap <- function(desenho, formula, csp) {
 
 	cap_list <- vector("list", 13)
 	for (i in 1:13) {
 	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
-	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
+	    cap_list[[i]] <- estimar.medias(sub_desenho, formula)
 	}
 
 	# agrupar valores e CV's dos data frames da lista
@@ -338,7 +338,7 @@ estimar_cap <- function(desenho, formula, csp) {
 	return(list(valores, cvs))
 }
 
-estimar_interacao <- function(desenho, formula, FUN, vars) {
+estimar.interacao <- function(desenho, formula, FUN, vars) {
 
 	# preparar fórmula com a interação Estrato x Programas
 	interacao <- reformulate(
@@ -362,7 +362,7 @@ estimar_interacao <- function(desenho, formula, FUN, vars) {
 }
 
 # reformatar tabelas, criando uma coluna para cada categoria da variável
-reshape_wide <- function(df, timevar.pos = 1) {
+reshape.wide <- function(df, timevar.pos = 1) {
 	# usar reshape para passar para o formato wide
 	resultado <- reshape(
 		df, direction = "wide",
@@ -377,11 +377,11 @@ reshape_wide <- function(df, timevar.pos = 1) {
 
 # dividir colunas de interação criadas por svybys()  ex: dividir
 # "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
-# lista gerada usando reshape_wide(), funcção criada acima.
-agrupar_progs <- function(lista) {
+# lista gerada usando reshape.wide(), funcção criada acima.
+agrupar.progs <- function(lista) {
 
 	# função que será aplicada a cada item da lista gerada por svyby()
-	dividir_interacao <- function(df) {
+	dividir.interacao <- function(df) {
 
 		# adicionar as duas colunas que formam a interação
 		df$Estrato.Geo <- rep(estratos_geo, times = 2)
@@ -395,7 +395,7 @@ agrupar_progs <- function(lista) {
 		df <- df[, c(4, 3, 1, 2)]
 		return(df)
 	}
-	lista <- lapply(lista, dividir_interacao)
+	lista <- lapply(lista, dividir.interacao)
 
 	# adicionar o nome do programa social às colunas
 	levels(lista[[1]]$Categoria) <- paste0("Bolsa.Familia", ".", c("Sim", "Não"))
@@ -403,15 +403,15 @@ agrupar_progs <- function(lista) {
 	levels(lista[[3]]$Categoria) <- paste0("Outros", ".", c("Sim", "Não"))
 
 	# reformatar e criar lista com valores e cv's
-	valores <- lapply(lista, function(df) reshape_wide(df[, -4]))
-	cv_list <- lapply(lista, function(df) reshape_wide(df[, -3]))
+	valores <- lapply(lista, function(df) reshape.wide(df[, -4]))
+	cv_list <- lapply(lista, function(df) reshape.wide(df[, -3]))
 
 	return(list(valores, cv_list))
 }
 
 # `faixas` : coluna com as faixas simples
 # `limites`: lista com os limites superiores por Estrato.Geo
-ad_classes_simples <- function(renda, geo, limites) {
+ad.classes.simples <- function(renda, geo, limites) {
 
 	# garantir que os CV's não estão inclusos
 	limites <- limites[1:13]
@@ -439,7 +439,7 @@ ad_classes_simples <- function(renda, geo, limites) {
 	return(resultado)
 }
 
-ad_grupos_idade <- function(idade) {
+ad.grupos.idade <- function(idade) {
 	cut(
 		idade,
 		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
@@ -449,7 +449,7 @@ ad_grupos_idade <- function(idade) {
 }
 
 # adiciona rendimento domiciliar per capita
-ad_rdpc <- function(df, vars) {
+ad.rdpc <- function(df, vars) {
 	# criar colunas auxiliares, indicando se o morador entra no cálculo
 	# da renda domiciliar e o número de moradores que está incluso no cálculo
 	df$V2005.Rendimento <- ifelse(

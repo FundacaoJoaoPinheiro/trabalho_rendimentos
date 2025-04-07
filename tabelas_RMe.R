@@ -15,8 +15,8 @@ pacotes <- c("PNADcIBGE", "survey", "convey")
 lapply(pacotes, library, character.only = TRUE)
 
 # carregar objetos e funções utilizados no script:
-# gerar_desenho(); estimar_quantis(); ad_classes_simples(); estimar_medias();
-# estimar_totais(); estimar_cap; reshape_wide();
+# gerar_desenho(); estimar.quantis(); ad.classes.simples(); estimar.medias();
+# estimar.totais(); estimar.cap; reshape.wide();
 # `tabelas_RMe`; `estratos_geo`
 source("utilitarios.R")     # objetos e funções utilizados abaixo
 
@@ -33,29 +33,29 @@ desenho$variables <- transform(
 
 desenho$variables <- transform(
 	desenho$variables,
-	Grupo.de.Idade = ad_grupos_idade(idade = V2009)
+	Grupo.de.Idade = ad.grupos.idade(idade = V2009)
 )
 
 # tabela 7536
-limites_vd4019real <- estimar_quantis(
+limites_vd4019real <- estimar.quantis(
 	desenho = subset(desenho, VD4019 > 0),
 	formula = ~VD4019.Real
 )
 
 # tabela 7546
-limites_vd4020real <- estimar_quantis(
+limites_vd4020real <- estimar.quantis(
 	subset(desenho, VD4019 > 0),
 	~VD4020.Real
 )
 
 desenho$variables <- transform(
 	desenho$variables,
-	VD4019.Classe = ad_classes_simples(
+	VD4019.Classe = ad.classes.simples(
 		renda = VD4019.Real,
 		geo = Estrato.Geo,
 		limites = limites_vd4019real[, 1:13]
 	),
-	VD4020.Classe = ad_classes_simples(
+	VD4020.Classe = ad.classes.simples(
 		renda = VD4020.Real,
 		geo = Estrato.Geo,
 		limites = limites_vd4020real[, 1:13]
@@ -83,17 +83,17 @@ cv_7453 <- gini_vd4019RMe[, -2]
 colnames(cv_7453) <- c("Estrato", "cv")
 
 # Tabela 7535 - Rendimento habitual médio por classe simples de percentual
-rme_vd4019classe <- estimar_medias(
+rme_vd4019classe <- estimar.medias(
 	desenho = subset(desenho, VD4019 > 0),
 	formula = ~VD4019.Real,
 	por = ~VD4019.Classe
 )
 
-tab_7535 <- reshape_wide(rme_vd4019classe[, -4])
-cv_7535  <- reshape_wide(rme_vd4019classe[, -3])
+tab_7535 <- reshape.wide(rme_vd4019classe[, -4])
+cv_7535  <- reshape.wide(rme_vd4019classe[, -3])
 
 # Tabela 7538 - Rendimento habitual médio por classe acumulada de percentual
-rme_vd4019cap <- estimar_cap(
+rme_vd4019cap <- estimar.cap(
 	desenho = subset(desenho, VD4019 > 0),
 	formula = ~VD4019.Real,
 	csp = "VD4019.Classe"
@@ -103,17 +103,17 @@ tab_7538 <- rme_vd4019cap[[1]]
 cv_7538  <- rme_vd4019cap[[2]]
 
 # Tabela 7545 - Rendimento efetivo médio por classe simples de percentual
-rme_vd4020classe <- estimar_medias(
+rme_vd4020classe <- estimar.medias(
 	desenho = subset(desenho, VD4020 > 0),
 	formula = ~VD4020.Real,
 	por = ~VD4020.Classe
 )
 
-tab_7545 <- reshape_wide(rme_vd4020classe[, -4])
-cv_7545  <- reshape_wide(rme_vd4020classe[, -3])
+tab_7545 <- reshape.wide(rme_vd4020classe[, -4])
+cv_7545  <- reshape.wide(rme_vd4020classe[, -3])
 
 # Tabela 7548 - Rendimento habitual médio por classe acumulada de percentual
-rme_vd4020cap <- estimar_cap(
+rme_vd4020cap <- estimar.cap(
 	subset(desenho, VD4020 > 0),
 	~VD4020.Real,
 	"VD4020.Classe"
@@ -123,7 +123,7 @@ tab_7548 <- rme_vd4020cap[[1]]
 cv_7548  <- rme_vd4020cap[[2]]
 
 # Tabela 7441 - Rendimento médio real por cor ou raça
-rme_cor <- estimar_medias(
+rme_cor <- estimar.medias(
 	subset(
 		desenho,
 		VD4019 > 0 & V2010 %in% c("Branca", "Preta", "Parda")
@@ -134,42 +134,42 @@ rme_cor <- estimar_medias(
 rme_cor <- subset(rme_cor, V2010 %in% c("Branca", "Preta", "Parda"))
 rme_cor$V2010 <- droplevels(rme_cor$V2010)
 
-tab_7441 <- reshape_wide(rme_cor[, -4])
-cv_7441  <- reshape_wide(rme_cor[, -3])
+tab_7441 <- reshape.wide(rme_cor[, -4])
+cv_7441  <- reshape.wide(rme_cor[, -3])
 
 # Tabela 7442 - Rendimento médio real por grupo de idade
-rme_idade <- estimar_medias(
+rme_idade <- estimar.medias(
 	subset(desenho, VD4019 > 0),
 	~VD4019.Real,
 	~Grupo.de.Idade
 )
 
-tab_7442 <- reshape_wide(rme_idade[, -4])
-cv_7442  <- reshape_wide(rme_idade[, -3])
+tab_7442 <- reshape.wide(rme_idade[, -4])
+cv_7442  <- reshape.wide(rme_idade[, -3])
 
 # Tabela 7443 - Rendimento médio real por nível de instrução
-rme_instrucao <- estimar_medias(
+rme_instrucao <- estimar.medias(
 	subset(desenho, VD4019 > 0),
 	~VD4019.Real,
 	~VD3004
 )
 levels(rme_instrucao) <- niveis_instrucao
 
-tab_7443 <- reshape_wide(rme_instrucao[, -4])
-cv_7443  <- reshape_wide(rme_instrucao[, -3])
+tab_7443 <- reshape.wide(rme_instrucao[, -4])
+cv_7443  <- reshape.wide(rme_instrucao[, -3])
 
 # Tabela 7444 - Rendimento médio real por sexo
-rme_sexo <- estimar_medias(
+rme_sexo <- estimar.medias(
 	subset(desenho, VD4019 > 0),
 	~VD4019.Real,
 	~V2007
 )
 
-tab_7444 <- reshape_wide(rme_sexo[-4])
-cv_7444  <- reshape_wide(rme_sexo[-3])
+tab_7444 <- reshape.wide(rme_sexo[-4])
+cv_7444  <- reshape.wide(rme_sexo[-3])
 
 # Tabela 7446 - Rendimento médio real de pessoas responsáveis pelo domícilio
-rme_responsavel <- estimar_medias(
+rme_responsavel <- estimar.medias(
 	subset(desenho, VD4019 > 0 & V2005 == "Pessoa responsável pelo domicílio"),
 	~VD4019.Real
 )

@@ -9,7 +9,7 @@ pacotes <- c("PNADcIBGE", "survey")
 lapply(pacotes, library, character.only = TRUE)
 
 # carregar objetos e funções utilizados no script:
-# gerar_desenho(); estimar_totais(); reshape_wide(); estimar_interacao();
+# gerar_desenho(); estimar.totais(); reshape.wide(); estimar.interacao();
 # `tabelas_progsociais`;
 source("utilitarios.R")
 
@@ -76,41 +76,41 @@ desenho$variables <- transform(
 
 # Tabela 7447 - Pessoas de 10 anos ou mais cujo domicílio possui morador
 # que recebe bolsa família, por nível de instrução (VD3004)
-pop_bolsafamilia <- estimar_totais(
+pop_bolsafamilia <- estimar.totais(
 	desenho = subset(desenho, V2009 >= 10),
 	formula = ~Domicilio.Bolsa.Familia,
 	por = ~VD3004
 )
 levels(pop_bolsafamilia) <- niveis_instrucao
 
-tab_7447 <- reshape_wide(pop_bolsafamilia[c(1, 2, 3)])
-cv_7447  <- reshape_wide(pop_bolsafamilia[c(1, 2, 5)])
+tab_7447 <- reshape.wide(pop_bolsafamilia[c(1, 2, 3)])
+cv_7447  <- reshape.wide(pop_bolsafamilia[c(1, 2, 5)])
 
 # Tabela 7448 - O mesmo que 7447, mas para domicílios que não possuem
 # moradores beneficiários
-tab_7448 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7448  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7448 <- reshape.wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7448  <- reshape.wide(pop_bolsafamilia[c(1, 2, 6)])
 
 # Tabela 7454 - O mesmo que 7447, mas para domicílios que possuem beneficiários
 # do BPC-Loas
-pop_bpc <- estimar_totais(
+pop_bpc <- estimar.totais(
 	desenho = subset(desenho, V2009 >= 10),
 	formula = ~Domicilio.BPC,
 	por = ~VD3004
 )
 levels(pop_bpc) <- niveis_instrucao
 
-tab_7454 <- reshape_wide(pop_bpc[c(1, 2, 3)])
-cv_7454  <- reshape_wide(pop_bpc[c(1, 2, 5)])
+tab_7454 <- reshape.wide(pop_bpc[c(1, 2, 3)])
+cv_7454  <- reshape.wide(pop_bpc[c(1, 2, 5)])
 
 # Tabela 7455 - O mesmo que 7454, mas para domicílios que não possuem
 # beneficiários
-tab_7455 <- reshape_wide(pop_bolsafamilia[c(1, 2, 4)])
-cv_7455  <- reshape_wide(pop_bolsafamilia[c(1, 2, 6)])
+tab_7455 <- reshape.wide(pop_bolsafamilia[c(1, 2, 4)])
+cv_7455  <- reshape.wide(pop_bolsafamilia[c(1, 2, 6)])
 
 # Tabela 7449 - Domicílios com beneficiários do Bolsa Família, por posse
 # ou acesso a bens e serviços
-acesso_bolsafam <- estimar_totais(
+acesso_bolsafam <- estimar.totais(
 	desenho = subset(
 		desenho,
 		# há apenas um responsável por domicílio, assim evitamos dupla contagem
@@ -170,7 +170,7 @@ colnames(tab_7450) <- c("Estrato", rotulos_benservicos)
 colnames(cv_7450)  <- c("Estrato", rotulos_benservicos)
 
 # Tabela 7451 - O mesmo que 7449, mas para beneficiários do BPC-Loas
-acesso_bpc <- estimar_totais(
+acesso_bpc <- estimar.totais(
 	desenho = subset(
 		desenho,
 		V2005 == "Pessoa responsável pelo domicílio"
@@ -216,14 +216,14 @@ colnames(tab_7452) <- c("Estrato", rotulos_benservicos)
 colnames(cv_7452)  <- c("Estrato", rotulos_benservicos)
 
 # Tabela 7456 - média de moradores por domicílio por recebimento e tipo de prog.
-media_moradores_progs <- estimar_interacao(
+media_moradores_progs <- estimar.interacao(
 	desenho = subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	formula = ~V2001,
 	FUN = svymean,
 	vars = c("Domicilio.Bolsa.Familia", "Domicilio.BPC",
 		"Domicilio.Outros.Programas")
 )
-media_moradores_progs <- agrupar_progs(media_moradores_progs)
+media_moradores_progs <- agrupar.progs(media_moradores_progs)
 
 tab_7456 <- Reduce(
 	function(...) merge(..., sort = FALSE),
@@ -235,7 +235,7 @@ cv_7456  <- Reduce(
 )
 
 # Tabela 7457 - total de domicílios, por recebimento e tipo de programa
-dom_progs <- estimar_interacao(
+dom_progs <- estimar.interacao(
 	subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
 	~V2005 == "Pessoa responsável pelo domicílio",
 	FUN = svytotal,
@@ -243,7 +243,7 @@ dom_progs <- estimar_interacao(
 )
 # remover colunas em que o teste foi FALSE
 dom_progs <- lapply(dom_progs, `[`, c(-2, -4))
-dom_progs <- agrupar_progs(dom_progs)
+dom_progs <- agrupar.progs(dom_progs)
 
 tab_7457 <- Reduce(
 	function(...) merge(..., sort = FALSE),
