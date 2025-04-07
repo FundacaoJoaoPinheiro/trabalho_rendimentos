@@ -132,7 +132,6 @@ cv_7531  <- reshape_wide(rme_vd5008classe[, -3])
 rme_vd5008cap <- estimar_cap(
 	subset(desenho, V2005.Rendimento == 1),
 	formula = ~VD5008.Real,
-	FUN = estimar_medias,
 	csp = "VD5008.Classes"
 )
 

@@ -96,7 +96,6 @@ cv_7535  <- reshape_wide(rme_vd4019classe[, -3])
 rme_vd4019cap <- estimar_cap(
 	desenho = subset(desenho, VD4019 > 0),
 	formula = ~VD4019.Real,
-	FUN = estimar_medias,
 	csp = "VD4019.Classe"
 )
 
@@ -117,7 +116,6 @@ cv_7545  <- reshape_wide(rme_vd4020classe[, -3])
 rme_vd4020cap <- estimar_cap(
 	subset(desenho, VD4020 > 0),
 	~VD4020.Real,
-	FUN = estimar_medias,
 	"VD4020.Classe"
 )
 

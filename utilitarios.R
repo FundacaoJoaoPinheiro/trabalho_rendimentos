@@ -306,12 +306,12 @@ estimar_quantis <- function(desenho, formula) {
 	)
 }
 
-estimar_cap <- function(desenho, formula, FUN, csp) {
+estimar_cap <- function(desenho, formula, csp) {
 
 	cap_list <- vector("list", 13)
 	for (i in 1:13) {
 	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
-	    cap_list[[i]] <- FUN(sub_desenho, formula)
+	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
 	}
 
 	# agrupar valores e CV's dos data frames da lista
