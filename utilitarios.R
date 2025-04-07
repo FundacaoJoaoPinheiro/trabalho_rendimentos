@@ -5,15 +5,10 @@
 #----------------------------------------------------------
 # OBJETOS
 
-# Objetos utilizados na leitura dos dados da PNADc
+# Caminhos
 pnadc_ano <- 2023
-pnadc_dir <- file.path("entrada", pnadc_ano)
-
-microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
-input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
-deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")
-dicionario <- file.path(pnadc_dir,
-	"dicionario_PNADC_microdados_2023_visita1_20241220.xls")
+entrada <- "entrada"
+deflator  <- list.files(entrada, pattern = "^deflator", full.names = TRUE)
 
 # Tabelas agrupadas por características em comum
 
@@ -30,8 +25,8 @@ tabelas_RDPC <- c("7428", "7435", "7438", "7521",
                   "7531", "7532", "7561")
 
 # rendimento médio mensal real de pessoas ocupadas
-tabelas_RMe <- c("7453", "7535", "7538", "7545", "7548",         # próprio do ano
-				 "7441", "7442", "7443", "7444", "7446")         # último ano
+tabelas_RMe <- c("7453", "7535", "7538", "7545", "7548",
+				 "7441", "7442", "7443", "7444", "7446")
 
 # população ocupada por categoria (sexo, cor/raça, instrução, etc)
 tabelas_ocupada <- c("7431", "7432", "7433", "7434", "7436",
@@ -43,10 +38,7 @@ tabelas_progsociais <- c("7447", "7448", "7449", "7450",
                          "7451", "7452", "7454", "7455",
                          "7456", "7457")
 
-# Definindo outros objetos úteis, utilizados principalmente como "rótulos"
-# para colunas das tabelas
-
-# Objetos utilizados como rótulos na criação de colunas
+# Objetos utilizados como rótulos para nomear colunas
 
 estratos_geo <- c(
     "Belo Horizonte",                        # 3110
@@ -99,6 +91,8 @@ classes_simples <- c(
 )
 
 classes_acumuladas <- c(paste0("Até ", percentis), "Total")
+
+# Lista com variáveis por tabela
 
 variaveis <- list(
 	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
@@ -201,25 +195,39 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano) {
 	
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
-	
+
 	# ler os dados
+	pnadc_dir <- file.path("entrada", ano)
+
 	if (!dir.exists(pnadc_dir)) {
+
 		dir.create(pnadc_dir, recursive = TRUE)
 		dados <- get_pnadc(
 			year = pnadc_ano,
 			interview = visita,
-			design = FALSE,                # ver abaixo pnadc_design()
+			design = FALSE,     # ver abaixo pnadc_design()
 			vars = variaveis,
 			deflator = requer_deflator,
 			savedir = pnadc_dir
 		)
+
 	} else {
+
+		microdados <- list.files(pnadc_dir, "^PNADC_.*txt$", full.names = TRUE)
+		input <- list.files(pnadc_dir, "^input_PNADC_.*txt$", full.names = TRUE)
+		dicionario <- list.files(
+			pnadc_dir,
+			"^dicionario_PNADC_microdados_.*xls$",
+			full.names = TRUE
+		)
+
+		dados <- read_pnadc(
+			microdata = microdados,
+			input = input,
+			vars = variaveis
+		)
 		dados <- pnadc_labeller(
-			data_pnadc = read_pnadc(
-				microdata = microdados,
-				input = input,
-				vars = variaveis
-			),
+			data_pnadc = dados ,
 			dictionary.file = dicionario
 		)
 		if (requer_deflator) {
