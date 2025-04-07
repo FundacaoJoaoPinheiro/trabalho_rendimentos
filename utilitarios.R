@@ -7,8 +7,8 @@
 
 # Objetos utilizados na leitura dos dados da PNADc
 pnadc_ano <- 2023
+pnadc_dir <- file.path("entrada", pnadc_ano)
 
-pnadc_dir <- "entrada"
 microdados <- file.path(pnadc_dir, "PNADC_2023_visita1.txt")
 input      <- file.path(pnadc_dir, "input_PNADC_2023_visita1_20241220.txt")
 deflator   <- file.path(pnadc_dir, "deflator_PNADC_2023.xls")
@@ -49,16 +49,14 @@ tabelas_progsociais <- c("7447", "7448", "7449", "7450",
 # Objetos utilizados como rótulos na criação de colunas
 
 estratos_geo <- c(
-    "Belo Horizonte",               # 3110
-	"Entorno metropol. de BH",      # 3120
-	"Colar metropolitano de BH",    # 3130
-	"Integrada de Brasília em MG",  # 3140
-	"Sul de Minas Gerais",          # 3151
-	"Triângulo Mineiro",            # 3152
-	"Zona da Mata",                 # 3153
-	"Norte de Minas Gerais",        # 3154
-	"Vale do Rio Doce",             # 3155
-	"Central de Minas Gerais "      # 3156
+    "Belo Horizonte",                        # 3110
+	"Entorno + Colar metropol. de BH",       # 3120 + 3130
+	"Integrada de BSB em MG + Norte de MG",  # 3140 + 3154
+	"Sul de Minas Gerais",                   # 3151
+	"Triângulo Mineiro",                     # 3152
+	"Zona da Mata",                          # 3153
+	"Vale do Rio Doce",                      # 3155
+	"Central de Minas Gerais "               # 3156
 )
 
 grupos_idade = c(
@@ -190,8 +188,7 @@ variaveis <- list(
 
 # `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
 # `ano`     : ano da pesquisa (numérico)
-# `download`: um argumento lógico que define se a importação será online
-gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
+gerar_desenho <- function(tabelas, ano = pnadc_ano) {
 
 	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
@@ -206,13 +203,15 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
 	
 	# ler os dados
-	if (download) {
+	if (!dir.exists(pnadc_dir)) {
+		dir.create(pnadc_dir, recursive = TRUE)
 		dados <- get_pnadc(
 			year = pnadc_ano,
 			interview = visita,
 			design = FALSE,                # ver abaixo pnadc_design()
 			vars = variaveis,
-			deflator = requer_deflator
+			deflator = requer_deflator,
+			savedir = pnadc_dir
 		)
 	} else {
 		dados <- pnadc_labeller(
@@ -235,6 +234,28 @@ gerar_desenho <- function(tabelas, ano = pnadc_ano, download = FALSE) {
 		dados$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
 	)                                                # dão o estrato geografico
+	# agrupar Colar e Entorno metropolitano
+	dados$variables <- transform(
+		dados$variables,
+		Estrato.Geo = factor(
+			ifelse(
+				Estrato.Geo == 3120 | Estrato.Geo == 3130,
+				"3120+3130",
+				as.character(Estrato.Geo)
+			)
+		)
+	)
+	# agrupar Integrada de Brasília e Norte de Minas
+	dados$variables <- transform(
+		dados$variables,
+		Estrato.Geo = factor(
+			ifelse(
+				Estrato.Geo == 3140 | Estrato.Geo == 3154,
+				"3140+3154",
+				as.character(Estrato.Geo)
+			)
+		)
+	)
 
 	return(dados)
 }
