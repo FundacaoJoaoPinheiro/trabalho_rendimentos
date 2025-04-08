@@ -53,23 +53,17 @@ estratos_geo <- c(
 
 grupos_idade = c(
 	"14-17",
-	"18-19",
-	"20-24",
-	"25-29",
-	"30-39",
+	"18-24",
+	"25-39",
 	"40-49",
-	"50-59",
-	"60+"
+	"50+
 )
 
 niveis_instrucao = c(
-	"Sem instrução",
-	"Fundamental incompleto",
-	"Fundamental completo",
-	"Médio incompleto",
-	"Médio completo",
-	"Superior incompleto",
-	"Superior completo"
+	"Sem instrução + Fund. incompleto",
+	"Fund. completo + Médio incompleto",
+	"Médio completo + Sup. incompleto",
+	"Sup. completo"
 )
 
 percentis <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
@@ -440,7 +434,7 @@ ad.classes.simples <- function(renda, geo, limites) {
 ad.grupos.idade <- function(idade) {
 	cut(
 		idade,
-		breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
+		breaks = c(13, 17, 24, 39, 49, Inf),
 		labels = grupos_idade,
 		right = TRUE
 	)
@@ -496,4 +490,25 @@ deflacionar <- function(df, vars, ano.base = 1) {
 		df[[col_name]] <- df[[v]] * df[[deflator]]
 	}
 	return(df)
+}
+
+# Aplica vários casos de ifelse()
+
+cases <- function(...) {
+	conditions <- list(...)
+	n <- length(conditions)
+
+	if (n %% 2 != 0) {
+		stop("Padrão esperado: cond1, resultado1, cond2, resultado2, ...")
+	}
+
+	conds <- conditions[seq(1, n, by = 2)]
+	results <- conditions[seq(2, n, by = 2)]
+	out <- rep(NA, length(conds[[1]]))
+
+	for (i in seq_along(conds)) {
+		out <- ifelse(conds[[i]] & is.na(out), results[[i]], out)
+	}
+
+	return(out)
 }
