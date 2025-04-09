@@ -453,25 +453,29 @@ ad_rdpc <- function(df, vars) {
 	df$V2001.Rendimento <- ave(
 		df$V2005.Rendimento,
 		df$ID_DOMICILIO,
-		FUN = function(x) sum(x, na.rm=T)
+		FUN = function(x) sum(x, na.rm = TRUE)
 	)
 	# loop para criar as colunas
 	for (v in vars) {
 		# renda domiciliar
-		renda_dom <- ave(
-			df[[v]],
+		df$renda <- ifelse(df$V2005.Rendimento == 1, df[[v]], NA)
+		df$renda_dom <- ave(
+			df$renda,
 			df$ID_DOMICILIO,
-			FUN = function(x) sum(x, na.rm = TRUE)
+			FUN = function(x) sum(x,na.rm = TRUE)
 		)
 		# adicionar ".DPC" como sufixo no nome da coluna
 		col_name <- paste0(v, ".DPC")
 		# criar coluna com a renda domiciliar per capita
 		df[[col_name]] <- ifelse(
 			df$V2005.Rendimento == 1,
-			renda_dom / df$V2001.Rendimento,
+			df$renda_dom / df$V2001.Rendimento,
 			NA
 		)
 	}
+
+	df$renda <- NULL
+	df$renda_dom <- NULL
 	return(df)
 }
 
