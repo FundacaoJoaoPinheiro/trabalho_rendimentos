@@ -56,13 +56,13 @@ grupos_idade = c(
 	"18-24",
 	"25-39",
 	"40-49",
-	"50+
+	"50+"
 )
 
 niveis_instrucao = c(
-	"Sem instrução + Fund. incompleto",
-	"Fund. completo + Médio incompleto",
-	"Médio completo + Sup. incompleto",
+	"Sem instrucao + Fund. incompleto",
+	"Fund. completo + Medio incompleto",
+	"Medio completo + Sup. incompleto",
 	"Sup. completo"
 )
 
@@ -89,98 +89,98 @@ classes_acumuladas <- c(paste0("Até ", percentis), "Total")
 # Lista com variáveis por tabela
 
 variaveis <- list(
-	`7426` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
-               "V5005A2", "V5006A2", "V5007A2", "V5008A2",
-               "VD5008", "VD4019",  "VD4020",  "VD4048", 
-               "VD4052", "V2001",   "V2005"),
-	`7427` = c("V2005", "VD4019", "VD4048"),
-	`7428` = c("V2005", "VD4019", "VD4048"),
-	`7429` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
-               "V5005A2", "V5008A2", "VD4019",  "VD4048",
-               "V2001", "V2005"),
-	`7430` = c("VD4019", "VD4020"),
-	`7431` = c("VD4019", "V2010"),
-	`7432` = c("V2009", "VD4002", "VD4052"),
-	`7433` = c("V2009", "VD4002", "VD4052", "VD3004"),
-	`7434` = c("VD4019", "V2007"),
-	`7435` = c("V2001", "V2005", "VD4019", "VD4048"),
-	`7436` = c(),
-	`7437` = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
-               "V5005A2", "V5006A2", "V5007A2", "V5008A2",
-               "VD4019",  "VD4020",  "VD4048",  "VD4052",
-               "V2001",   "V2005"),
-	`7438` = c("V2005", "VD4019", "VD4048"),
-	`7439` = c("V2009", "VD4002", "VD4052", "V2005"),
-	`7441` = c("VD4019", "V2010"),
-	`7442` = c("VD4019", "V2009"),
-	`7443` = c("VD4019", "VD3004"),
-	`7444` = c("VD4019", "V2007"),
-	`7445` = c("V1023", "VD4019", "VD4020"),
-	`7446` = c("VD4019", "V2005"),
-	`7447` = c("V2009", "VD3004", "V5002A"),
-	`7448` = c("VD3004", "V5002A"),
-	`7449` = c("V2005",  "V5001A", "V5002A",  "V5003A",
-               "VD3004", "S01007", "S01012A", "S01013",
-               "S01014", "S01023", "S01024",  "S01025",
-               "S01028"),
-	`7450` = c("V5002A"),
-	`7451` = c("V5001A"),
-	`7452` = c("V5001A"),
-	`7453` = c("VD4019"),
-	`7454` = c("VD3004", "V5001A"),
-	`7455` = c("VD3004", "V5001A"),
-	`7456` = c("V2001", "V5001A", "V5002A", "V5003A"),
-	`7457` = c("V5001A", "V5002A", "V5003A", "V2005"),
-	`7458` = c("V2005", "VD4019", "VD4048", "V5001A", "V5002A", "V5003A"),
-	`7521` = c("VD4019", "VD4048"),
-	`7526` = c("V2005", "VD4019", "VD4048"),
-	`7527` = c("V2005", "VD4019", "VD4048"),
-	`7529` = c("V2005", "VD4019", "VD4048"),
-	`7530` = c("V2005", "VD4019", "VD4048"),
-	`7531` = c("V2001", "V2005", "VD4019", "VD4048"),
-	`7532` = c("V2005", "VD4019", "VD4048"),
-	`7533` = c("V2005", "VD4019", "VD4048"),
-	`7534` = c("V2005", "VD4019", "VD4048"),
-	`7535` = c("VD4019"),
-	`7536` = c("VD4019"),
-	`7537` = c("V2009", "VD4002", "VD4052", "VD4019"),
-	`7538` = c("VD4019"),
-	`7539` = c("VD4019"),
-	`7540` = c("VD4019"),
-	`7541` = c("V2009", "VD4002", "VD4052", "VD4019"),
-	`7542` = c("VD4019"),
-	`7543` = c("V2009", "VD4002", "VD4019"),
-	`7544` = c("V2009", "VD4002", "VD4019"),
-	`7545` = c("VD4020"),
-	`7546` = c("V2009", "VD4002", "VD4052", "VD4020"),
-	`7547` = c("V2009", "VD4002", "VD4052", "VD4020"),
-	`7548` = c("VD4020"),
-	`7549` = c("VD4019"),
-	`7550` = c("VD4019"),
-	`7551` = c("VD4019"),
-	`7552` = c("VD4019"),
-	`7553` = c("V2009", "VD4002", "VD4020"),
-	`7554` = c("V2009", "VD4002", "VD4020"),
-	`7559` = c("VD420"),
-	`7560` = c("V2009", "VD4002", "VD4052", "VD4020"),
-	`7561` = c("V2005", "VD4019", "VD4048"),
-	`7562` = c("VD4019"),
-	`7563` = c("V2009", "VD4002", "VD4052", "VD4019"),
-	`7564` = c("V2005", "VD4019", "VD4048")
+	tab_7426 = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
+                 "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+                 "VD5008", "VD4019",  "VD4020",  "VD4048", 
+                 "VD4052", "V2001",   "V2005"),
+	tab_7427 = c("V2005", "VD4019", "VD4048"),
+	tab_7428 = c("V2005", "VD4019", "VD4048"),
+	tab_7429 = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
+                 "V5005A2", "V5008A2", "VD4019",  "VD4048",
+                 "V2001", "V2005"),
+	tab_7430 = c("VD4019", "VD4020"),
+	tab_7431 = c("VD4019", "V2010"),
+	tab_7432 = c("V2009", "VD4002", "VD4052"),
+	tab_7433 = c("V2009", "VD4002", "VD4052", "VD3004"),
+	tab_7434 = c("VD4019", "V2007"),
+	tab_7435 = c("V2001", "V2005", "VD4019", "VD4048"),
+	tab_7436 = c(),
+	tab_7437 = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
+                 "V5005A2", "V5006A2", "V5007A2", "V5008A2",
+                 "VD4019",  "VD4020",  "VD4048",  "VD4052",
+                 "V2001",   "V2005"),
+	tab_7438 = c("V2005", "VD4019", "VD4048"),
+	tab_7439 = c("V2009", "VD4002", "VD4052", "V2005"),
+	tab_7441 = c("VD4019", "V2010"),
+	tab_7442 = c("VD4019", "V2009"),
+	tab_7443 = c("VD4019", "VD3004"),
+	tab_7444 = c("VD4019", "V2007"),
+	tab_7445 = c("V1023", "VD4019", "VD4020"),
+	tab_7446 = c("VD4019", "V2005"),
+	tab_7447 = c("V2009", "VD3004", "V5002A"),
+	tab_7448 = c("VD3004", "V5002A"),
+	tab_7449 = c("V2005",  "V5001A", "V5002A",  "V5003A",
+                 "VD3004", "S01007", "S01012A", "S01013",
+                 "S01014", "S01023", "S01024",  "S01025",
+                 "S01028"),
+	tab_7450 = c("V5002A"),
+	tab_7451 = c("V5001A"),
+	tab_7452 = c("V5001A"),
+	tab_7453 = c("VD4019"),
+	tab_7454 = c("VD3004", "V5001A"),
+	tab_7455 = c("VD3004", "V5001A"),
+	tab_7456 = c("V2001", "V5001A", "V5002A", "V5003A"),
+	tab_7457 = c("V5001A", "V5002A", "V5003A", "V2005"),
+	tab_7458 = c("V2005", "VD4019", "VD4048", "V5001A", "V5002A", "V5003A"),
+	tab_7521 = c("VD4019", "VD4048"),
+	tab_7526 = c("V2005", "VD4019", "VD4048"),
+	tab_7527 = c("V2005", "VD4019", "VD4048"),
+	tab_7529 = c("V2005", "VD4019", "VD4048"),
+	tab_7530 = c("V2005", "VD4019", "VD4048"),
+	tab_7531 = c("V2001", "V2005", "VD4019", "VD4048"),
+	tab_7532 = c("V2005", "VD4019", "VD4048"),
+	tab_7533 = c("V2005", "VD4019", "VD4048"),
+	tab_7534 = c("V2005", "VD4019", "VD4048"),
+	tab_7535 = c("VD4019"),
+	tab_7536 = c("VD4019"),
+	tab_7537 = c("V2009", "VD4002", "VD4052", "VD4019"),
+	tab_7538 = c("VD4019"),
+	tab_7539 = c("VD4019"),
+	tab_7540 = c("VD4019"),
+	tab_7541 = c("V2009", "VD4002", "VD4052", "VD4019"),
+	tab_7542 = c("VD4019"),
+	tab_7543 = c("V2009", "VD4002", "VD4019"),
+	tab_7544 = c("V2009", "VD4002", "VD4019"),
+	tab_7545 = c("VD4020"),
+	tab_7546 = c("V2009", "VD4002", "VD4052", "VD4020"),
+	tab_7547 = c("V2009", "VD4002", "VD4052", "VD4020"),
+	tab_7548 = c("VD4020"),
+	tab_7549 = c("VD4019"),
+	tab_7550 = c("VD4019"),
+	tab_7551 = c("VD4019"),
+	tab_7552 = c("VD4019"),
+	tab_7553 = c("V2009", "VD4002", "VD4020"),
+	tab_7554 = c("V2009", "VD4002", "VD4020"),
+	tab_7559 = c("VD420"),
+	tab_7560 = c("V2009", "VD4002", "VD4052", "VD4020"),
+	tab_7561 = c("V2005", "VD4019", "VD4048"),
+	tab_7562 = c("VD4019"),
+	tab_7563 = c("V2009", "VD4002", "VD4052", "VD4019"),
+	tab_7564 = c("V2005", "VD4019", "VD4048")
 )
 
 #----------------------------------------------------------
 # FUNÇÕES
 
-# `tabelas` : um vetor com número de tabelas, cujas variáveis serão importadas;
+# `tabelas` : um vetor com número das tabelas cujas variáveis serão importadas;
 # `ano`     : ano da pesquisa (numérico)
-gerar.desenho <- function(tabelas, ano = pnadc_ano) {
+gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 
 	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
 	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
 
 	# definir variáveis com base nas tabelas passadas como argumentos
-	tabelas <- as.character(tabelas)
+	tabelas <- paste0("tab_", tabelas)
 	variaveis <- unique(                   # idade
 		c(unlist(variaveis[tabelas]), "UF", "V2009")
 	)
@@ -194,7 +194,7 @@ gerar.desenho <- function(tabelas, ano = pnadc_ano) {
 	if (!dir.exists(pnadc_dir)) {
 
 		dir.create(pnadc_dir, recursive = TRUE)
-		dados <- get_pnadc(
+		desenho <- get_pnadc(
 			year = pnadc_ano,
 			interview = visita,
 			design = FALSE,     # ver abaixo pnadc_design()
@@ -213,30 +213,30 @@ gerar.desenho <- function(tabelas, ano = pnadc_ano) {
 			full.names = TRUE
 		)
 
-		dados <- read_pnadc(
+		desenho <- read_pnadc(
 			microdata = microdados,
 			input = input,
 			vars = variaveis
 		)
-		dados <- pnadc_labeller(
-			data_pnadc = dados ,
+		desenho <- pnadc_labeller(
+			data_pnadc = desenho ,
 			dictionary.file = dicionario
 		)
 		if (requer_deflator) {
-			dados <- pnadc_deflator(dados, deflator.file = deflator)
+			desenho <- pnadc_deflator(desenho, deflator.file = deflator)
 		}
 	}
 
 	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
-	dados <- pnadc_design(subset(dados, UF == "Minas Gerais"))
-	dados$variables$Estrato.Geo <- droplevels(dados$variables$UF)
-	dados$variables <- transform(
-		dados$variables,
+	desenho <- pnadc_design(subset(desenho, UF == "Minas Gerais"))
+	desenho$variables$Estrato.Geo <- droplevels(desenho$variables$UF)
+	desenho$variables <- transform(
+		desenho$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
 	)                                                # dão o estrato geografico
 	# agrupar Colar e Entorno metropolitano
-	dados$variables <- transform(
-		dados$variables,
+	desenho$variables <- transform(
+		desenho$variables,
 		Estrato.Geo = factor(
 			ifelse(
 				Estrato.Geo == 3120 | Estrato.Geo == 3130,
@@ -246,8 +246,8 @@ gerar.desenho <- function(tabelas, ano = pnadc_ano) {
 		)
 	)
 	# agrupar Integrada de Brasília e Norte de Minas
-	dados$variables <- transform(
-		dados$variables,
+	desenho$variables <- transform(
+		desenho$variables,
 		Estrato.Geo = factor(
 			ifelse(
 				Estrato.Geo == 3140 | Estrato.Geo == 3154,
@@ -257,12 +257,12 @@ gerar.desenho <- function(tabelas, ano = pnadc_ano) {
 		)
 	)
 
-	return(dados)
+	return(desenho)
 }
 
 
 # estimar totais por Estrato.Geo
-estimar.totais <- function(desenho, formula, por = ~Estrato.Geo) {
+estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
 	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
 		formula = as.formula(formula),
@@ -277,7 +277,7 @@ estimar.totais <- function(desenho, formula, por = ~Estrato.Geo) {
 }
 
 # estimar médias por Estrato.Geo
-estimar.medias <- function(desenho, formula, por = ~Estrato.Geo) {
+estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
 	por = update.formula(por, ~ . + Estrato.Geo)
 	svyby(
 		formula = as.formula(formula),
@@ -292,7 +292,7 @@ estimar.medias <- function(desenho, formula, por = ~Estrato.Geo) {
 }
 
 # estimar quantis das classes percentuais simples e Estrato.Geo
-estimar.quantis <- function(desenho, formula) {
+estimar_quantis <- function(desenho, formula) {
 	svyby(
 		formula,
 		by = ~Estrato.Geo,
@@ -306,12 +306,12 @@ estimar.quantis <- function(desenho, formula) {
 	)
 }
 
-estimar.cap <- function(desenho, formula, csp) {
+estimar_cap <- function(desenho, formula, csp) {
 
 	cap_list <- vector("list", 13)
 	for (i in 1:13) {
 	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
-	    cap_list[[i]] <- estimar.medias(sub_desenho, formula)
+	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
 	}
 
 	# agrupar valores e CV's dos data frames da lista
@@ -330,7 +330,7 @@ estimar.cap <- function(desenho, formula, csp) {
 	return(list(valores, cvs))
 }
 
-estimar.interacao <- function(desenho, formula, FUN, vars) {
+estimar_interacao <- function(desenho, formula, FUN, vars) {
 
 	# preparar fórmula com a interação Estrato x Programas
 	interacao <- reformulate(
@@ -354,26 +354,26 @@ estimar.interacao <- function(desenho, formula, FUN, vars) {
 }
 
 # reformatar tabelas, criando uma coluna para cada categoria da variável
-reshape.wide <- function(df, timevar.pos = 1) {
+reshape_wide <- function(df, timevar_pos = 1) {
 	# usar reshape para passar para o formato wide
 	resultado <- reshape(
 		df, direction = "wide",
 		idvar =  "Estrato.Geo",
-		timevar = colnames(df)[timevar.pos]
+		timevar = colnames(df)[timevar_pos]
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
-	colnames(resultado) <- c("Estrato", levels(df[[timevar.pos]]))
+	colnames(resultado) <- c("Estrato", levels(df[[timevar_pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
 }
 
 # dividir colunas de interação criadas por svybys()  ex: dividir
 # "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
-# lista gerada usando reshape.wide(), funcção criada acima.
-agrupar.progs <- function(lista) {
+# lista gerada usando reshape_wide(), funcção criada acima.
+agrupar_progs <- function(lista) {
 
 	# função que será aplicada a cada item da lista gerada por svyby()
-	dividir.interacao <- function(df) {
+	dividir_interacao <- function(df) {
 
 		# adicionar as duas colunas que formam a interação
 		df$Estrato.Geo <- rep(estratos_geo, times = 2)
@@ -387,7 +387,7 @@ agrupar.progs <- function(lista) {
 		df <- df[, c(4, 3, 1, 2)]
 		return(df)
 	}
-	lista <- lapply(lista, dividir.interacao)
+	lista <- lapply(lista, dividir_interacao)
 
 	# adicionar o nome do programa social às colunas
 	levels(lista[[1]]$Categoria) <- paste0("Bolsa.Familia", ".", c("Sim", "Não"))
@@ -395,15 +395,15 @@ agrupar.progs <- function(lista) {
 	levels(lista[[3]]$Categoria) <- paste0("Outros", ".", c("Sim", "Não"))
 
 	# reformatar e criar lista com valores e cv's
-	valores <- lapply(lista, function(df) reshape.wide(df[, -4]))
-	cv_list <- lapply(lista, function(df) reshape.wide(df[, -3]))
+	valores <- lapply(lista, function(df) reshape_wide(df[, -4]))
+	cv_list <- lapply(lista, function(df) reshape_wide(df[, -3]))
 
 	return(list(valores, cv_list))
 }
 
 # `faixas` : coluna com as faixas simples
 # `limites`: lista com os limites superiores por Estrato.Geo
-ad.classes.simples <- function(renda, geo, limites) {
+ad_classes_simples <- function(renda, geo, limites) {
 
 	# garantir que os CV's não estão inclusos
 	limites <- limites[1:13]
@@ -431,7 +431,7 @@ ad.classes.simples <- function(renda, geo, limites) {
 	return(resultado)
 }
 
-ad.grupos.idade <- function(idade) {
+ad_grupos_idade <- function(idade) {
 	cut(
 		idade,
 		breaks = c(13, 17, 24, 39, 49, Inf),
@@ -441,7 +441,7 @@ ad.grupos.idade <- function(idade) {
 }
 
 # adiciona rendimento domiciliar per capita
-ad.rdpc <- function(df, vars) {
+ad_rdpc <- function(df, vars) {
 	# criar colunas auxiliares, indicando se o morador entra no cálculo
 	# da renda domiciliar e o número de moradores que está incluso no cálculo
 	df$V2005.Rendimento <- ifelse(
@@ -492,8 +492,7 @@ deflacionar <- function(df, vars, ano.base = 1) {
 	return(df)
 }
 
-# Aplica vários casos de ifelse()
-
+# aplica vários casos de ifelse()
 cases <- function(...) {
 	conditions <- list(...)
 	n <- length(conditions)

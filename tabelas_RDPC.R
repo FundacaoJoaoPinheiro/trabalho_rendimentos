@@ -13,8 +13,8 @@ pacotes <- c("PNADcIBGE", "survey", "convey")
 lapply(pacotes, library, character.only = TRUE)
 
 # carregar objetos e funções utilizados no script:
-# gerar_desenho(); ad.classes.simples(); estimar.quantis(); estimar.totais();
-# reshape.wide();
+# gerar_desenho(); ad_classes_simples(); estimar_quantis(); estimar_totais();
+# reshape_wide();
 # `tabelas_RDPC1`; `percentis`, `estratos_geo`
 source("utilitarios.R")
 
@@ -47,16 +47,17 @@ desenho$variables <- transform(
 # rendimento habitual de todos os trabalhos e efetivo de outras fontes
 desenho$variables <- transform(
 	desenho$variables,
-	VD4019.Real = ifelse(is.na(VD4019), NA, VD4019 * CO1),
-	VD4048.Real = ifelse(is.na(VD4048), NA, VD4048 * CO1e)
+	VD4019.Real = VD4019 * CO1,
+	VD4048.Real = VD4048 * CO1e
 )
 
 # rendimento de todas as fontes
 desenho$variables <- transform(
 	desenho$variables,
-	VD4052.Real =
-		ifelse(is.na(VD4019), 0, VD4019.Real) +
-		ifelse(is.na(VD4048), 0, VD4048.Real)
+	VD4052.Real = rowSums(
+		cbind(VD4019.Real, VD4048.Real),
+		na.rm = TRUE
+	)
 )
 
 # rendimento domiciliar a preços médios do último ano
@@ -75,13 +76,13 @@ desenho$variables <- transform(
 )
 
 # função definida em utilitarios.R, estima `percentis` por estrato geográfico
-limites_vd5008real <- estimar.quantis(desenho, formula = ~VD5008.Real)
+limites_vd5008real <- estimar_quantis(desenho, formula = ~VD5008.Real)
 colnames(limites_vd5008real) <- c("Estrato", percentis)
 
 # adiciona coluna com as classes simples de percentual por estrato geográfico
 desenho$variables <- transform(
 	desenho$variables,
-	VD5008.Classes = ad.classes.simples(     # função definida em utilitarios.R
+	VD5008.Classes = ad_classes_simples(     # função definida em utilitarios.R
 		renda = VD5008.Real,
 		geo = Estrato.Geo,
 		limites = limites_vd5008real
@@ -94,21 +95,21 @@ desenho$variables <- transform(
 # Tabela 7428 - Massa de rendimento domiciliar per capita (RDPC) por
 # classe simples de percentual (CSP) e estrato geográfico
 # função definida em utilitarios.R, estima totais por estrato geográfico
-massa_vd5008real <- estimar.totais(
+massa_vd5008real <- estimar_totais(
 	desenho = subset(desenho, V2005.Rendimento == 1),
 	formula = ~VD5008.Real,
 	por = ~VD5008.Classes
 )
 
-tab_7428 <- reshape.wide(massa_vd5008real[, -4])
-cv_7428  <- reshape.wide(massa_vd5008real[, -3])
+tab_7428 <- reshape_wide(massa_vd5008real[, -4])
+cv_7428  <- reshape_wide(massa_vd5008real[, -3])
 
 # Tabela 7438 - limites superiores por estrato geográfico
 tab_7438 <- limites_vd5008real[, c(1, 2:13)]
 cv_7438  <- limites_vd5008real[, c(1, 14:25)]
 
 # Tabela 7521 - População por classe simples de percentual (CSP)
-pop_vd5008classes <- estimar.totais(
+pop_vd5008classes <- estimar_totais(
 	subset(desenho, V2005.Rendimento == 1),
 	~VD5008.Classes
 )
@@ -119,17 +120,17 @@ cv_7521  <- pop_vd5008classes[, c(1, 15:27)]
 colnames(cv_7521) <- c("Estrato", classes_simples)
 
 # Tabela 7531 - RMe real domiciliar per capita, por classe simples
-rme_vd5008classe <- estimar.medias(
+rme_vd5008classe <- estimar_medias(
 	subset(desenho, V2005.Rendimento == 1),
 	~VD5008.Real,
 	~VD5008.Classes
 )
 
-tab_7531 <- reshape.wide(rme_vd5008classe[, -4])
-cv_7531  <- reshape.wide(rme_vd5008classe[, -3])
+tab_7531 <- reshape_wide(rme_vd5008classe[, -4])
+cv_7531  <- reshape_wide(rme_vd5008classe[, -3])
 
 # Tabela 7532 - RMe real domiciliar per capita, por classe acumulada
-rme_vd5008cap <- estimar.cap(
+rme_vd5008cap <- estimar_cap(
 	subset(desenho, V2005.Rendimento == 1),
 	formula = ~VD5008.Real,
 	csp = "VD5008.Classes"

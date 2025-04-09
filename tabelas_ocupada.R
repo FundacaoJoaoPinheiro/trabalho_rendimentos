@@ -10,7 +10,7 @@ pacotes <- c("PNADcIBGE", "survey")
 lapply(pacotes, library, character.only = TRUE)
 
 # carregar objetos e funções utilizados no script:
-# gerar_desenho(); ad.grupos.idade(); estimar.totais(); reshape.wide();
+# gerar_desenho(); ad_grupos_idade(); estimar_totais(); reshape_wide();
 # `tabelas_ocupada`; `areas_geograficas`
 source("utilitarios.R")
 
@@ -26,7 +26,7 @@ desenho$variables <- transform(
 
 desenho$variables <- transform(
 	desenho$variables,
-	Grupo.de.Idade = ad.grupos.idade(idade = V2009)
+	Grupo.de.Idade = ad_grupos_idade(idade = V2009)
 )
 
 desenho$variables <- transform(
@@ -36,21 +36,21 @@ desenho$variables <- transform(
 )
 
 # tabela 7536
-limites_vd4019real <- estimar.quantis(desenho, formula = ~VD4019.Real)
+limites_vd4019real <- estimar_quantis(desenho, formula = ~VD4019.Real)
 colnames(limites_vd4019real) <- c("Estrato", percentis)
 
 # tabela 7546
-limites_vd4020real <- estimar.quantis(desenho, formula = ~VD4020.Real)
+limites_vd4020real <- estimar_quantis(desenho, formula = ~VD4020.Real)
 colnames(limites_vd4020real) <- c("Estrato", percentis)
 
 desenho$variables <- transform(
 	desenho$variables,
-	VD4019.Classe = ad.classes.simples(
+	VD4019.Classe = ad_classes_simples(
 		renda = VD4019.Real,
 		geo = Estrato.Geo,
 		limites = limites_vd4019real
 	),
-	VD4020.Classe = ad.classes.simples(
+	VD4020.Classe = ad_classes_simples(
 		renda = VD4019.Real,
 		geo = Estrato.Geo,
 		limites = limites_vd4019real
@@ -61,7 +61,7 @@ desenho$variables <- transform(
 # Reproduzir tabelas
 
 # Tabela 7431 - população ocupada por cor/raça
-ocupada_cor <- estimar.totais(
+ocupada_cor <- estimar_totais(
 	desenho = subset(desenho, Pessoa.Ocupada == 1),
 	formula = ~V2010
 )
@@ -73,7 +73,7 @@ colnames(tab_7431) <- c("Estrato", "Branca", "Preta", "Parda")
 colnames(cv_7431)  <- c("Estrato", "Branca", "Preta", "Parda")
 
 # Tabela 7432 - população ocupada por grupos de idade
-ocupada_idade <- estimar.totais(
+ocupada_idade <- estimar_totais(
 	subset(desenho, Pessoa.Ocupada == 1),
 	~Grupo.de.Idade
 )
@@ -85,7 +85,7 @@ colnames(tab_7432) <- c("Estrato", levels(desenho$variables$Grupo.de.Idade))
 colnames(cv_7432)  <- c("Estrato", levels(desenho$variables$Grupo.de.Idade))
 
 # Tabela 7433 - população ocupada por VD3004, instrução;
-ocupada_instrucao <- estimar.totais(
+ocupada_instrucao <- estimar_totais(
 	subset(desenho, Pessoa.Ocupada == 1),
 	~VD3004
 )
@@ -98,7 +98,7 @@ colnames(tab_7433) <- c("Estrato", levels(desenho$variables$VD3004))
 colnames(cv_7433)  <- c("Estrato", levels(desenho$variables$VD3004))
 
 # Tabela 7434 - população ocupada por V2007, sexo;
-ocupada_sexo <- estimar.totais(
+ocupada_sexo <- estimar_totais(
 	subset(desenho, Pessoa.Ocupada == 1),
 	~V2007
 )
@@ -156,7 +156,7 @@ tab_7546 <- limites_vd4020real[, c(1, 2:13)]
 cv_7546  <- limites_vd4020real[, c(1, 14:25)]
 
 # Tabela 7537 - população ocupada por classe simples de rendimento habitual
-ocupada_csp_h <- estimar.totais(desenho, ~VD4019.Classe)
+ocupada_csp_h <- estimar_totais(desenho, ~VD4019.Classe)
 
 tab_7537 <- ocupada_csp_h[, c(1, 2:14)]
 cv_7537  <- ocupada_csp_h[, c(1, 15:27)]
@@ -165,7 +165,7 @@ colnames(tab_7537) <- c("Estrato", classes_simples)
 colnames(cv_7537)  <- c("Estrato", classes_simples)
 
 # Tabela 7547 - população ocupada por classe simples de rendimento efetivo
-ocupada_csp_e <- estimar.totais(desenho, ~VD4020.Classe)
+ocupada_csp_e <- estimar_totais(desenho, ~VD4020.Classe)
 tab_7547 <- ocupada_csp_e[, c(1, 2:14)]
 cv_7547  <- ocupada_csp_e[, c(1, 15:27)]
 
