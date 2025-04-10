@@ -87,7 +87,6 @@ classes_simples <- c(
 classes_acumuladas <- c(paste0("Até ", percentis), "Total")
 
 # Lista com variáveis por tabela
-
 variaveis <- list(
 	tab_7426 = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
                  "V5005A2", "V5006A2", "V5007A2", "V5008A2",
@@ -97,7 +96,7 @@ variaveis <- list(
 	tab_7428 = c("V2005", "VD4019", "VD4048"),
 	tab_7429 = c("V5001A2", "V5002A2", "V5003A2", "V5004A2",
                  "V5005A2", "V5008A2", "VD4019",  "VD4048",
-                 "V2001", "V2005"),
+                 "VD5008", "V2001", "V2005"),
 	tab_7430 = c("VD4019", "VD4020"),
 	tab_7431 = c("VD4019", "V2010"),
 	tab_7432 = c("V2009", "VD4002", "VD4052"),
@@ -161,7 +160,7 @@ variaveis <- list(
 	tab_7552 = c("VD4019"),
 	tab_7553 = c("V2009", "VD4002", "VD4020"),
 	tab_7554 = c("V2009", "VD4002", "VD4020"),
-	tab_7559 = c("VD420"),
+	tab_7559 = c("VD4020"),
 	tab_7560 = c("V2009", "VD4002", "VD4052", "VD4020"),
 	tab_7561 = c("V2005", "VD4019", "VD4048"),
 	tab_7562 = c("VD4019"),
@@ -324,8 +323,8 @@ estimar_cap <- function(desenho, formula, csp) {
 		do.call(cbind, lapply(cap_list, `[`, 3))
 	)
 
-	colnames(valores) <- c("Estrato.Geo", classes_acumuladas)
-	colnames(cvs) <- c("Estrato.Geo", classes_acumuladas)
+	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(cvs) <- c("Estrato Geografico", classes_acumuladas)
 
 	return(list(valores, cvs))
 }
@@ -362,7 +361,7 @@ reshape_wide <- function(df, timevar_pos = 1) {
 		timevar = colnames(df)[timevar_pos]
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
-	colnames(resultado) <- c("Estrato", levels(df[[timevar_pos]]))
+	colnames(resultado) <- c("Estrato Geografico", levels(df[[timevar_pos]]))
 	rownames(resultado) <- NULL
 	return(resultado)
 }
@@ -458,45 +457,26 @@ ad_rdpc <- function(df, vars) {
 	# loop para criar as colunas
 	for (v in vars) {
 		# renda domiciliar
-		df$renda <- ifelse(df$V2005.Rendimento == 1, df[[v]], NA)
-		df$renda_dom <- ave(
-			df$renda,
+		renda <- ifelse(df$V2005.Rendimento == 1, df[[v]], NA)
+		renda_dom <- ave(
+			renda,
 			df$ID_DOMICILIO,
-			FUN = function(x) sum(x,na.rm = TRUE)
+			FUN = function(x) sum(x, na.rm = TRUE)
 		)
 		# adicionar ".DPC" como sufixo no nome da coluna
 		col_name <- paste0(v, ".DPC")
 		# criar coluna com a renda domiciliar per capita
 		df[[col_name]] <- ifelse(
 			df$V2005.Rendimento == 1,
-			df$renda_dom / df$V2001.Rendimento,
+			renda_dom / df$V2001.Rendimento,
 			NA
 		)
 	}
 
-	df$renda <- NULL
-	df$renda_dom <- NULL
 	return(df)
 }
 
-# adicionar variáveis deflacionadas
-deflacionar <- function(df, vars, ano.base = 1) {
-	# criar loop entre as variáveis de rendimento
-	for (v in vars) {
-		# deflatores diferentes para rendimentos habituais/efetivos
-		if (v == "VD4019") {
-			deflator <- paste0("CO", ano.base)
-		} else {
-			deflator <- paste0("CO", ano.base, "e")
-		}
-		# adicionar variável deflacionada ao dataframe
-		col_name <- paste0(v, ".Real")
-		df[[col_name]] <- df[[v]] * df[[deflator]]
-	}
-	return(df)
-}
-
-# aplica vários casos de ifelse()
+# aplica vários casos de ifelse() - similar a kit::niif e dplyr::case_when
 cases <- function(...) {
 	conditions <- list(...)
 	n <- length(conditions)
