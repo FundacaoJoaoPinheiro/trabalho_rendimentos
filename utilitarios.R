@@ -51,19 +51,15 @@ estratos_geo <- c(
 	"Central de Minas Gerais "               # 3156
 )
 
-grupos_idade = c(
-	"14-17",
-	"18-24",
-	"25-39",
-	"40-49",
-	"50+"
-)
-
-niveis_instrucao = c(
-	"Sem instrucao + Fund. incompleto",
-	"Fund. completo + Medio incompleto",
-	"Medio completo + Sup. incompleto",
-	"Sup. completo"
+fontes_rendimento <- c(
+	"Todas as Fontes",
+	"Trabalho Hab.",
+	"Trabalho Efet.",
+	"Outras Fontes",
+	"Aposentadoria",
+	"Aluguel",
+	"Pensão Alimenticia",
+	"Outros Rendimentos"
 )
 
 percentis <- paste0("P", c(5, seq(10, 90, by = 10), 95, 99))
@@ -85,6 +81,21 @@ classes_simples <- c(
 )
 
 classes_acumuladas <- c(paste0("Até ", percentis), "Total")
+
+grupos_idade = c(
+	"14-17",
+	"18-24",
+	"25-39",
+	"40-49",
+	"50+"
+)
+
+niveis_instrucao = c(
+	"Sem instrucao + Fund. incompleto",
+	"Fund. completo + Medio incompleto",
+	"Medio completo + Sup. incompleto",
+	"Sup. completo"
+)
 
 # Lista com variáveis por tabela
 variaveis <- list(
@@ -170,95 +181,6 @@ variaveis <- list(
 
 #----------------------------------------------------------
 # FUNÇÕES
-
-# `tabelas` : um vetor com número das tabelas cujas variáveis serão importadas;
-# `ano`     : ano da pesquisa (numérico)
-gerar_desenho <- function(ano = pnadc_ano, tabelas) {
-
-	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
-	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
-
-	# definir variáveis com base nas tabelas passadas como argumentos
-	tabelas <- paste0("tab_", tabelas)
-	variaveis <- unique(                   # idade
-		c(unlist(variaveis[tabelas]), "UF", "V2009")
-	)
-	
-	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
-	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
-
-	# ler os dados
-	pnadc_dir <- file.path("entrada", ano)
-
-	if (!dir.exists(pnadc_dir)) {
-
-		dir.create(pnadc_dir, recursive = TRUE)
-		desenho <- get_pnadc(
-			year = pnadc_ano,
-			interview = visita,
-			design = FALSE,     # ver abaixo pnadc_design()
-			vars = variaveis,
-			deflator = requer_deflator,
-			savedir = pnadc_dir
-		)
-
-	} else {
-
-		microdados <- list.files(pnadc_dir, "^PNADC_.*txt$", full.names = TRUE)
-		input <- list.files(pnadc_dir, "^input_PNADC_.*txt$", full.names = TRUE)
-		dicionario <- list.files(
-			pnadc_dir,
-			"^dicionario_PNADC_microdados_.*xls$",
-			full.names = TRUE
-		)
-
-		desenho <- read_pnadc(
-			microdata = microdados,
-			input = input,
-			vars = variaveis
-		)
-		desenho <- pnadc_labeller(
-			data_pnadc = desenho ,
-			dictionary.file = dicionario
-		)
-		if (requer_deflator) {
-			desenho <- pnadc_deflator(desenho, deflator.file = deflator)
-		}
-	}
-
-	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
-	desenho <- pnadc_design(subset(desenho, UF == "Minas Gerais"))
-	desenho$variables$Estrato.Geo <- droplevels(desenho$variables$UF)
-	desenho$variables <- transform(
-		desenho$variables,
-		Estrato.Geo = factor(substr(Estrato, 1, 4))  # 1o ao 4o num. do Estrato
-	)                                                # dão o estrato geografico
-	# agrupar Colar e Entorno metropolitano
-	desenho$variables <- transform(
-		desenho$variables,
-		Estrato.Geo = factor(
-			ifelse(
-				Estrato.Geo == 3120 | Estrato.Geo == 3130,
-				"3120+3130",
-				as.character(Estrato.Geo)
-			)
-		)
-	)
-	# agrupar Integrada de Brasília e Norte de Minas
-	desenho$variables <- transform(
-		desenho$variables,
-		Estrato.Geo = factor(
-			ifelse(
-				Estrato.Geo == 3140 | Estrato.Geo == 3154,
-				"3140+3154",
-				as.character(Estrato.Geo)
-			)
-		)
-	)
-
-	return(desenho)
-}
-
 
 # estimar totais por Estrato.Geo
 estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
@@ -352,7 +274,22 @@ estimar_interacao <- function(desenho, formula, FUN, vars) {
 	)
 }
 
-# reformatar tabelas, criando uma coluna para cada categoria da variável
+# formatar tabelas SIDRA
+fmt_estrato <- function(df) {
+	df[[1]] <- estratos_geo
+	colnames(df)[1] <- "Estrato Geografico"
+	return(df)
+}
+fmt_porcent <- function(df) {
+	df[, -1] <- round(df[, -1] * 100, 2)
+	return(df)
+}
+fmt_pop <- function(df) {
+	df[, -1] <- round(df[, -1] / 1000, 0)
+	return(df)
+}
+
+# reformatar dataframes, criando uma coluna para cada categoria da variável
 reshape_wide <- function(df, timevar_pos = 1) {
 	# usar reshape para passar para o formato wide
 	resultado <- reshape(
@@ -377,7 +314,7 @@ agrupar_progs <- function(lista) {
 		# adicionar as duas colunas que formam a interação
 		df$Estrato.Geo <- rep(estratos_geo, times = 2)
 		df$Categoria <- factor(
-			rep(c("Sim", "Não"), each = 10),
+			rep(c("Sim", "Não"), each = length(estratos_geo)),
 			levels = c("Sim", "Não")
 		)
 
@@ -494,4 +431,84 @@ cases <- function(...) {
 	}
 
 	return(out)
+}
+
+# gera desenho amostral
+# `tabelas` : um vetor com número das tabelas cujas variáveis serão importadas;
+# `ano`     : ano da pesquisa (numérico)
+gerar_desenho <- function(ano = pnadc_ano, tabelas) {
+
+	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
+	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
+
+	# definir variáveis com base nas tabelas passadas como argumentos
+	tabelas <- paste0("tab_", tabelas)
+	variaveis <- unique(                   # idade
+		c(unlist(variaveis[tabelas]), "UF", "V2009")
+	)
+	
+	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
+	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
+
+	# ler os dados
+	pnadc_dir <- file.path("entrada", ano)
+
+	if (!dir.exists(pnadc_dir)) {
+
+		dir.create(pnadc_dir, recursive = TRUE)
+		desenho <- get_pnadc(
+			year = pnadc_ano,
+			interview = visita,
+			design = FALSE,     # ver abaixo pnadc_design()
+			vars = variaveis,
+			deflator = requer_deflator,
+			savedir = pnadc_dir
+		)
+
+	} else {
+
+		microdados <- list.files(pnadc_dir, "^PNADC_.*txt$", full.names = TRUE)
+		input <- list.files(pnadc_dir, "^input_PNADC_.*txt$", full.names = TRUE)
+		dicionario <- list.files(
+			pnadc_dir,
+			"^dicionario_PNADC_microdados_.*xls$",
+			full.names = TRUE
+		)
+
+		desenho <- read_pnadc(
+			microdata = microdados,
+			input = input,
+			vars = variaveis
+		)
+		desenho <- pnadc_labeller(
+			data_pnadc = desenho ,
+			dictionary.file = dicionario
+		)
+		if (requer_deflator) {
+			desenho <- pnadc_deflator(desenho, deflator.file = deflator)
+		}
+	}
+
+	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
+	desenho <- pnadc_design(subset(desenho, UF == "Minas Gerais"))
+	desenho$variables$Estrato.Geo <- droplevels(desenho$variables$UF)
+	desenho$variables <- transform(
+		desenho$variables,
+		Estrato.Geo = factor(substr(Estrato, 1, 4))
+	)
+	# agrupar Colar + Entorno e Integrada + Norte de Minas (respectivamente)
+	desenho$variables <- transform(
+		desenho$variables,
+		Estrato.Geo = factor(
+			ifelse(
+				Estrato.Geo %in% c("3120", "3130"), "3120+3130",
+				ifelse(
+					Estrato.Geo %in% c("3140", "3154"), "3140+3154",
+					as.character(Estrato.Geo)
+				)
+			)
+		)
+	)
+
+	return(desenho)
 }
