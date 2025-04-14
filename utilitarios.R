@@ -285,6 +285,7 @@ fmt_porcent <- function(df) {
 	return(df)
 }
 fmt_pop <- function(df) {
+	df$Total <- rowSums(df[, -1])
 	df[, -1] <- round(df[, -1] / 1000, 0)
 	return(df)
 }

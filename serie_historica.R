@@ -20,6 +20,25 @@ source("utilitarios.R")
 # pasta onde as tabelas serão salvas
 saida <- "saida/serie_historica/"
 
+titulos <- c(
+	"7429 - Participação das fontes no RMe domiciliar per capita",
+	"7435 - Índice de Gini do rendimento domiciliar per capita",
+	"7453 - Índice de Gini do rendimento médio habitualmente recebido",
+	"7431 - População ocupada por cor/raça",
+	"7434 - População ocupada por sexo",
+	"7457 - Total de domicílios, por recebimento e tipo de programa social",
+	"7559 - População por classe acumulada de rendimento efetivo",
+	"7562 - População por classe acumulada de rendimento habitual",
+	"7441 - Rendimento médio real por cor ou raça",
+	"7442 - Rendimento médio real por grupo de idade",
+	"7443 - Rendimento médio real por nível de instrução",
+	"7444 - Rendimento médio real por sexo",
+	"7446 - Rendimento médio real de pessoas responsáveis pelo domícilio",
+	"7531 - RMe real domiciliar per capita, por classe simples de percentual",
+	"7538 - Rendimento habitual médio por classe acumulada de percentual",
+	"7548 - Rendimento habitual médio por classe acumulada de percentual"
+)
+
 # ---------------------------------------------------------------------
 # IMPORTAR E PREPARAR DADOS
 
@@ -80,23 +99,17 @@ lista_desenhos <- lapply(serie, function(ano) {
 # Adicionar colunas de categorias
 
 # classes simples
-limites_vd5008 <- vector("list", length(serie))
-names(limites_vd5008) <- paste0("limites_", serie)
 limites_vd5008 <- lapply(
 	lista_desenhos, function(desenho) {
 		estimar_quantis(desenho, formula = ~VD5008.Real)
 	}
 )
 
-limites_vd4019 <- vector("list", length(serie))
-names(limites_vd4019) <- paste0("limites_", serie)
 limites_vd4019 <- lapply(
 	lista_desenhos,
 	function(desenho) estimar_quantis(desenho, formula = ~VD4019.Real)
 )
 
-limites_vd4020 <- vector("list", length(serie))
-names(limites_vd4020) <- paste0("limites_", serie)
 limites_vd4020 <- lapply(
 	lista_desenhos, function(desenho) {
 		estimar_quantis(desenho, formula = ~VD4020.Real)
@@ -119,7 +132,7 @@ lista_desenhos <- lapply(seq_along(lista_desenhos), function(idx) {
 			limites_vd4019[[idx]]
 		),
 		VD4020.Classe = ad_classes_simples(
-			VD4019.Real,
+			VD4020.Real,
 			Estrato.Geo,
 			limites_vd4020[[idx]]
 		)
@@ -129,6 +142,8 @@ lista_desenhos <- lapply(seq_along(lista_desenhos), function(idx) {
 })
 
 # grupos de idade, níveis de instrução, cor/raça e ocupação
+niveis_vd3004 <- levels(lista_desenhos[[1]][["variables"]][["VD3004"]])
+
 lista_desenhos <- lapply(lista_desenhos, function(desenho) {
 
 	desenho$variables <- transform(
@@ -136,7 +151,6 @@ lista_desenhos <- lapply(lista_desenhos, function(desenho) {
 		Grupo.de.Idade = ad_grupos_idade(idade = V2009)
 	)
 
-	niveis_vd3004 <- levels(desenho$variables$VD3004)
 	desenho$variables <- transform(
 		desenho$variables,
 		Nivel.de.Instrucao = factor(
@@ -238,13 +252,13 @@ tab_7429 <- lapply(lista_desenhos, function(desenho){
 		na.rm = TRUE
 	)
 
-	tabela <- part_rdpc[c(1, 2:6)]
-	coeficiente <- part_rdpc[c(1, 7:11)]
+	valores <- part_rdpc[c(1, 2:6)]
+	coefvar <- part_rdpc[c(1, 7:11)]
 
-	colnames(tabela)[-1] <- c(fontes_rendimento[c(1, 2, 4, 5, 8)])
-	colnames(coeficientes)[-1] <- c(fontes_rendimento[c(1, 2, 4, 5, 8)])
+	colnames(valores)[-1] <- c(fontes_rendimento[c(1, 2, 4, 5, 8)])
+	colnames(coefvar)[-1] <- c(fontes_rendimento[c(1, 2, 4, 5, 8)])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7429) <- paste0("sidra_", serie)
 
@@ -256,17 +270,17 @@ tab_7431 <- lapply(lista_desenhos, function(desenho){
 		formula = ~Cor.ou.Raca
 	)
 
-	tabela <- ocupada_cor[, c(1, 2:4)]
-	coeficiente <- ocupada_cor[, c(1, 5:7)]
+	valores <- ocupada_cor[, c(1, 2:3)]
+	coefvar <- ocupada_cor[, c(1, 5:6)]
 
-	colnames(tabela)[-1] <- c("Branca", "Negra", "Outra")
-	colnames(coeficientes)[-1] <- ("Branca", "Negra", "Outra")
+	colnames(valores)[-1] <- c("Branca", "Negra")
+	colnames(coefvar)[-1] <- c("Branca", "Negra")
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7431) <- paste0("sidra_", serie)
 
-# 7434 - população ocupada por V2007, sexo
+# 7434 - população ocupada por sexo
 tab_7434 <- lapply(lista_desenhos, function(desenho){
 
 	ocupada_sexo <- estimar_totais(
@@ -274,23 +288,23 @@ tab_7434 <- lapply(lista_desenhos, function(desenho){
 		~V2007
 	)
 
-	tabela <- data.frame(
+	valores <- data.frame(
 		"Estrato Geografico" = estratos_geo,
 		"Homens" = ocupada_sexo[[2]],
 		"Mulheres" = ocupada_sexo[[3]]
 	)
 
-	coeficientes <- data.frame(
+	coefvar <- data.frame(
 		"Estrato Geografico" = estratos_geo,
 		"Homens" = ocupada_sexo[[4]],
 		"Mulheres" = ocupada_sexo[[5]]
 	)
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7434) <- paste0("sidra_", serie)
 
-# 7435 - valores próximos, iguais arredondando
+# 7435 - Índice de Gini do rendimento domiciliar p/ capita
 tab_7435 <- lapply(lista_desenhos, function(desenho){
 
 	gini_vd5008real <- svyby(
@@ -303,13 +317,13 @@ tab_7435 <- lapply(lista_desenhos, function(desenho){
 		na.rm = TRUE
 	)
 
-	tabela <- gini_vd5008real[, -3]
-	colnames(tabela) <- c("Estrato Geografico", "Valor")
+	valores <- gini_vd5008real[, -3]
+	colnames(valores) <- c("Estrato Geografico", "Indice de Gini")
 
-	coeficientes <- gini_vd5008real[, -2]
-	colnames(coeficientes) <- c("Estrato Geografico", "cv")
+	coefvar <- gini_vd5008real[, -2]
+	colnames(coefvar) <- c("Estrato Geografico", "cv")
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7435) <- paste0("sidra_", serie)
 
@@ -327,10 +341,10 @@ tab_7441 <- lapply(lista_desenhos, function(desenho){
 	rme_cor <- subset(rme_cor, Cor.ou.Raca != "Outra")
 	rme_cor$Cor.ou.Raca <- droplevels(rme_cor$Cor.ou.Raca)
 
-	tabela <- reshape_wide(rme_cor[, -4])
-	coeficientes  <- reshape_wide(rme_cor[, -3])
+	valores <- reshape_wide(rme_cor[, -4])
+	coefvar <- reshape_wide(rme_cor[, -3])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7441) <- paste0("sidra_", serie)
 
@@ -343,10 +357,10 @@ tab_7442 <- lapply(lista_desenhos, function(desenho){
 		~Grupo.de.Idade
 	)
 
-	tabela <- reshape_wide(rme_idade[, -4])
-	coeficientes  <- reshape_wide(rme_idade[, -3])
+	valores <- reshape_wide(rme_idade[, -4])
+	coefvar <- reshape_wide(rme_idade[, -3])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7442) <- paste0("sidra_", serie)
 
@@ -360,10 +374,10 @@ tab_7443 <- lapply(lista_desenhos, function(desenho){
 	)
 	levels(rme_instrucao) <- niveis_instrucao
 
-	tabela <- reshape_wide(rme_instrucao[, -4])
-	coeficientes  <- reshape_wide(rme_instrucao[, -3])
+	valores <- reshape_wide(rme_instrucao[, -4])
+	coefvar <- reshape_wide(rme_instrucao[, -3])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7443) <- paste0("sidra_", serie)
 
@@ -376,10 +390,10 @@ tab_7444 <- lapply(lista_desenhos, function(desenho){
 		~V2007
 	)
 
-	tabela <- reshape_wide(rme_sexo[-4])
-	coeficientes  <- reshape_wide(rme_sexo[-3])
+	valores <- reshape_wide(rme_sexo[-4])
+	coefvar <- reshape_wide(rme_sexo[-3])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7444) <- paste0("sidra_", serie)
 
@@ -394,13 +408,13 @@ tab_7446 <- lapply(lista_desenhos, function(desenho){
 		~VD4019.Real
 	)
 
-	tabela <- rme_responsavel
-	colnames(tabela) <- c("Estrato Geografico", "Rendimento")
+	valores <- rme_responsavel[-3]
+	colnames(valores) <- c("Estrato Geografico", "Rendimento Médio")
 
-	coeficientes <- rme_responsavel[, -2]
-	colnames(coeficientes) <- c("Estrato Geografico", "cv")
+	coefvar <- rme_responsavel[, -2]
+	colnames(coefvar) <- c("Estrato Geografico", "cv")
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7446) <- paste0("sidra_", serie)
 
@@ -417,13 +431,13 @@ tab_7453 <- lapply(lista_desenhos, function(desenho){
 		na.rm = TRUE
 	)
 
-	tabela <- gini_vd4019RMe[, -3]
-	colnames(tabela) <- c("Estrato Geografico", "Indice.de.Gini")
+	valores <- gini_vd4019RMe[, -3]
+	colnames(valores) <- c("Estrato Geografico", "Indice de Gini")
 
-	coeficientes <- gini_vd4019RMe[, -2]
-	colnames(coeficientes) <- c("Estrato Geografico", "cv")
+	coefvar <- gini_vd4019RMe[, -2]
+	colnames(coefvar) <- c("Estrato Geografico", "cv")
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7453) <- paste0("sidra_", serie)
 
@@ -445,16 +459,16 @@ tab_7457 <- lapply(lista_desenhos, function(desenho){
 	dom_progs <- lapply(dom_progs, `[`, c(-2, -4))
 	dom_progs <- agrupar_progs(dom_progs)
 
-	tabela <- Reduce(
+	valores <- Reduce(
 		function(...) merge(..., sort = FALSE),
 		dom_progs[[1]]
 	)
-	coeficientes  <- Reduce(
+	coefvar  <- Reduce(
 		function(...) merge(..., sort = FALSE),
 		dom_progs[[2]]
 	)
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7457) <- paste0("sidra_", serie)
 
@@ -467,10 +481,10 @@ tab_7531 <- lapply(lista_desenhos, function(desenho){
 		~VD5008.Classe
 	)
 
-	tabela <- reshape_wide(rme_vd5008classe[, -4])
-	coeficientes  <- reshape_wide(rme_vd5008classe[, -3])
+	valores <- reshape_wide(rme_vd5008classe[, -4])
+	coefvar <- reshape_wide(rme_vd5008classe[, -3])
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7531) <- paste0("sidra_", serie)
 
@@ -483,10 +497,10 @@ tab_7538 <- lapply(lista_desenhos, function(desenho){
 		csp = "VD4019.Classe"
 	)
 
-	tabela <- rme_vd4019cap[[1]]
-	coeficientes  <- rme_vd4019cap[[2]]
+	valores <- rme_vd4019cap[[1]]
+	coefvar  <- rme_vd4019cap[[2]]
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7538) <- paste0("sidra_", serie)
 
@@ -499,10 +513,10 @@ tab_7548 <- lapply(lista_desenhos, function(desenho){
 		"VD4020.Classe"
 	)
 
-	tabela <- rme_vd4020cap[[1]]
-	coeficientes  <- rme_vd4020cap[[2]]
+	valores <- rme_vd4020cap[[1]]
+	coefvar  <- rme_vd4020cap[[2]]
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7548) <- paste0("sidra_", serie)
 
@@ -518,25 +532,25 @@ tab_7559 <- lapply(lista_desenhos, function(desenho){
 			desenho,
 			VD4020.Classe %in% classes_simples[1:i]
 		)
-	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    ocupada_cap_e[[i]] <- cbind(estimativa, cv(estimativa))
+	    valores <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
+	    ocupada_cap_e[[i]] <- cbind(valores, cv(valores))
 	    colnames(ocupada_cap_e[[i]]) <- c(classes_acumuladas[i], "cv")
 	}
-	rm(sub_desenho, estimativa)
+	rm(sub_desenho, valores)
 
-	tabela <- data.frame(
+	valores <- data.frame(
 		estratos_geo,
 		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 1]))
 	)
-	colnames(tabela) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
 
-	coeficientes <- data.frame(
+	coefvar <- data.frame(
 		estratos_geo,
 		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 2]))
 	)
-	colnames(coeficientes) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7559) <- paste0("sidra_", serie)
 
@@ -552,62 +566,64 @@ tab_7562 <- lapply(lista_desenhos, function(desenho){
 			desenho,
 			VD4019.Classe %in% classes_simples[1:i]
 		)
-	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    ocupada_cap_h[[i]] <- cbind(estimativa, cv(estimativa))
+	    valores <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
+	    ocupada_cap_h[[i]] <- cbind(valores, cv(valores))
 	    colnames(ocupada_cap_h[[i]]) <- c(classes_acumuladas[i], "cv")
 	}
-	rm(sub_desenho, estimativa)
+	rm(sub_desenho, valores)
 
-	tabela <- data.frame(
+	valores <- data.frame(
 		estratos_geo,
 		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 1]))
 	)
-	colnames(tabela) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
 
-	coeficientes <- data.frame(
+	coefvar <- data.frame(
 		estratos_geo,
 		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 2]))
 	)
-	colnames(coeficientes) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
 
-	return(list(tabela, coeficientes))
+	return(list(valores, coefvar))
 })
 names(tab_7562) <- paste0("sidra_", serie)
 
 # ---------------------------------------------------------------------
 # FORMATAR TABELAS
 
-nomes_sidra <- ls(pattern = "^tab_7")
-nomes_pop <- c("tab_7431", "tab_7434", "tab_7559", "tab_7562")
-nomes_porcent <- c("tab_7429", "tab_7435", "tab_7453")
+objetos <- ls(pattern = "^tab_7")
+objetos_porcent <- c("tab_7429", "tab_7435", "tab_7453")
+objetos_pop     <- c("tab_7431", "tab_7434", "tab_7457", "tab_7559", "tab_7562")
+objetos_real    <- c("tab_7441", "tab_7442", "tab_7443", "tab_7444",
+                     "tab_7446", "tab_7531", "tab_7538", "tab_7548")
 
-for (nome in nomes_sidra) {
-	sidra <- get(nome)
+for (obj in objetos) {
+	tab_serie <- get(obj)
 
-	sidra <- lapply(sidra, function(ano) {
+	tab_serie <- lapply(tab_serie, function(sublista) {
 
-		if (is.null(ano)) return(NULL)
+		if (is.null(sublista)) return(NULL)
 
-		ano[[1]] <- fmt_estrato(ano[[1]])
-		ano[[2]] <- fmt_estrato(ano[[2]])
+		sublista[[1]] <- fmt_estrato(sublista[[1]])
+		sublista[[2]] <- fmt_estrato(sublista[[2]])
 
-		ano[[2]] <- fmt_porcent(ano[[2]])
+		sublista[[2]] <- fmt_porcent(sublista[[2]])
 
-		if (nome %in% nomes_pop) {
-			ano[[1]] <- fmt_pop(ano[[1]])
+		if (obj %in% objetos_pop) {
+			sublista[[1]] <- fmt_pop(sublista[[1]])
 		}
 
-		if (nome %in% nomes_porcent) {
-			ano[[1]] <- fmt_porcent(ano[[1]])
+		if (obj %in% objetos_porcent) {
+			sublista[[1]] <- fmt_porcent(sublista[[1]])
 		}
 
-		if (!nome %in% c(nomes_pop, nomes_porcent)) {
-			ano[[1]][, -1] <- round(ano[[1]][, -1], 0)
+		if (obj %in% objetos_real) {
+			sublista[[1]][, -1] <- round(sublista[[1]][, -1], 0)
 		}
-		return(ano)
+		return(sublista)
 	})
 
-	assign(nome, sidra)
+	assign(obj, tab_serie)
 }
 
 # ---------------------------------------------------------------------
@@ -616,39 +632,64 @@ for (nome in nomes_sidra) {
 openxlsx_setOp("keepNA", TRUE)
 openxlsx_setOp("na.string", "-")
 
-for (nome in nomes_sidra) {
-	sidra <- get(nome)
+titulos <- setNames(
+        titulos,
+        c(objetos_porcent, objetos_pop, objetos_real)
+)
+
+linhas <- length(estratos_geo)
+
+# um arquivo .xlsx por tabela; uma aba por ano da série.
+# tabelas de valores e CV's na mesma aba.
+# aplicar destaque em células com CV > 15%
+for (obj in objetos) {
+
+	tab_serie <- get(obj)
+	titulo <- titulos[[obj]]
 	wb <- createWorkbook()
 	estilo_cv_alto <- createStyle(fontColour = "#9C0006", bgFill = "#FFC7CE")
 
 	for (i in seq_along(serie)) {
-		ano <- as.character(serie[i])
-		sublista <- sidra[[i]]
-
+		sublista <- tab_serie[[i]]
 		if (is.null(sublista)) next
 
-		tabela <- sublista[[1]]
-		coeficiente <- sublista[[2]]
+		ano <- as.character(serie[i])
+		valores <- sublista[[1]]
+		coefvar <- sublista[[2]]
 
+		# definir títulos
+		if (obj %in% objetos_porcent) {
+			titulo_val <- paste0("Tabela ", titulo, " (%)")
+			titulo_cv  <- paste0("CV's ", titulo, " (%)")
+		} else if (obj %in% objetos_pop) {
+			titulo_val <- paste0("Tabela ", titulo, " (Mil pessoas)")
+			titulo_cv  <- paste0("CV's ", titulo, " (%)")
+		} else {
+			titulo_val <- paste0("Tabela ", titulo, " (Reais)")
+			titulo_cv  <- paste0("CV's ", titulo, " (%)")
+		}
+
+		# adicionar aba e escrever dados
 		addWorksheet(wb, ano)
-		writeData(wb, sheet = ano, x = tabela, startCol = 1, startRow = 1)
-		start_cv <- nrow(tabela) + 3
-		writeData(wb, ano, coeficientes, startCol = 1, startRow = start_cv)
+		writeData(wb, ano, titulo_val, startCol = 1, startRow = 1)
+		writeData(wb, ano, valores   , startCol = 1, startRow = 2)
+		
+		writeData(wb, ano, titulo_cv , startCol = 1, startRow = linhas + 4)
+		writeData(wb, ano, coefvar   , startCol = 1, startRow = linhas + 5)
 
-		# Aplicar destaque em células com CV > 15%
-		num_cols <- ncol(coeficientes)
-		if (num_cols > 1) {
-			for (col in 2:num_cols) {
-				conditionalFormatting(
-					wb, sheet = ano,
-					cols = col,
-					rows = (start_cv + 1):(start_cv + nrow(coeficientes)),
-					rule = ">15",
-					style = estilo_cv_alto,
-					type = "expression"
-				)
-			}
+		# destaque para CVs altos
+		for (col in 2:ncol(coefvar)) {
+			conditionalFormatting(
+				wb, sheet = ano,
+				cols = col,
+				rows = (linhas + 6):(2 * linhas + 6),
+				rule = ">15",
+				style = estilo_cv_alto,
+				type = "expression"
+			)
 		}
 	}
-	saveWorkbook(wb, file = paste0(saida, nome, ".xlsx"), overwrite = TRUE)
+
+	# salvar planilha (um arquivo por objeto/tabela)
+	saveWorkbook(wb, file = paste0(saida, obj, ".xlsx"), overwrite = TRUE)
 }
