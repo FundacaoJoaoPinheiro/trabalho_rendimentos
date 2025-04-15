@@ -251,6 +251,7 @@ tab_7429 <- lapply(lista_desenhos, function(desenho){
 		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
+	part_rdpc[2:6] <- round(part_rdpc[2:6] * 100, 2)    # porcentagem
 
 	valores <- part_rdpc[c(1, 2:6)]
 	coefvar <- part_rdpc[c(1, 7:11)]
@@ -319,6 +320,7 @@ tab_7435 <- lapply(lista_desenhos, function(desenho){
 
 	valores <- gini_vd5008real[, -3]
 	colnames(valores) <- c("Estrato Geografico", "Indice de Gini")
+	valores[[2]] <- round(valores[[2]], 3)
 
 	coefvar <- gini_vd5008real[, -2]
 	colnames(coefvar) <- c("Estrato Geografico", "cv")
@@ -433,6 +435,7 @@ tab_7453 <- lapply(lista_desenhos, function(desenho){
 
 	valores <- gini_vd4019RMe[, -3]
 	colnames(valores) <- c("Estrato Geografico", "Indice de Gini")
+	valores[[2]] <- round(valores[[2]], 3)
 
 	coefvar <- gini_vd4019RMe[, -2]
 	colnames(coefvar) <- c("Estrato Geografico", "cv")
@@ -592,10 +595,10 @@ names(tab_7562) <- paste0("sidra_", serie)
 # FORMATAR TABELAS
 
 objetos <- ls(pattern = "^tab_7")
-objetos_porcent <- c("tab_7429", "tab_7435", "tab_7453")
-objetos_pop     <- c("tab_7431", "tab_7434", "tab_7457", "tab_7559", "tab_7562")
-objetos_real    <- c("tab_7441", "tab_7442", "tab_7443", "tab_7444",
-                     "tab_7446", "tab_7531", "tab_7538", "tab_7548")
+objetos_gini <- c("tab_7435", "tab_7453")
+objetos_pop  <- c("tab_7431", "tab_7434", "tab_7457", "tab_7559", "tab_7562")
+objetos_real <- c("tab_7441", "tab_7442", "tab_7443", "tab_7444",
+                  "tab_7446", "tab_7531", "tab_7538", "tab_7548")
 
 for (obj in objetos) {
 	tab_serie <- get(obj)
@@ -607,19 +610,13 @@ for (obj in objetos) {
 		sublista[[1]] <- fmt_estrato(sublista[[1]])
 		sublista[[2]] <- fmt_estrato(sublista[[2]])
 
-		sublista[[2]] <- fmt_porcent(sublista[[2]])
-
 		if (obj %in% objetos_pop) {
 			sublista[[1]] <- fmt_pop(sublista[[1]])
 		}
-
-		if (obj %in% objetos_porcent) {
-			sublista[[1]] <- fmt_porcent(sublista[[1]])
-		}
-
 		if (obj %in% objetos_real) {
 			sublista[[1]][, -1] <- round(sublista[[1]][, -1], 0)
 		}
+
 		return(sublista)
 	})
 
@@ -634,7 +631,7 @@ openxlsx_setOp("na.string", "-")
 
 titulos <- setNames(
         titulos,
-        c(objetos_porcent, objetos_pop, objetos_real)
+        c(objetos)
 )
 
 linhas <- length(estratos_geo)
@@ -658,8 +655,8 @@ for (obj in objetos) {
 		coefvar <- sublista[[2]]
 
 		# definir títulos
-		if (obj %in% objetos_porcent) {
-			titulo_val <- paste0("Tabela ", titulo, " (%)")
+		if (obj %in% objetos_gini) {
+			titulo_val <- paste0("Tabela ", titulo)
 			titulo_cv  <- paste0("CV's ", titulo, " (%)")
 		} else if (obj %in% objetos_pop) {
 			titulo_val <- paste0("Tabela ", titulo, " (Mil pessoas)")
