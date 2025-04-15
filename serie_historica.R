@@ -158,8 +158,9 @@ lista_desenhos <- lapply(lista_desenhos, function(desenho) {
 				VD3004 %in% niveis_vd3004[1:2], niveis_instrucao[1],
 				VD3004 %in% niveis_vd3004[3:4], niveis_instrucao[2],
 				VD3004 %in% niveis_vd3004[5:6], niveis_instrucao[3],
-				VD3004 %in% niveis_vd3004[6],   niveis_instrucao[4]
-			)
+				VD3004 %in% niveis_vd3004[7],   niveis_instrucao[4]
+			),
+			levels = niveis_instrucao
 		)
 	)
 	
@@ -374,7 +375,7 @@ tab_7443 <- lapply(lista_desenhos, function(desenho){
 		~VD4019.Real,
 		~Nivel.de.Instrucao
 	)
-	levels(rme_instrucao) <- niveis_instrucao
+	levels(rme_instrucao[1]) <- niveis_instrucao
 
 	valores <- reshape_wide(rme_instrucao[, -4])
 	coefvar <- reshape_wide(rme_instrucao[, -3])
