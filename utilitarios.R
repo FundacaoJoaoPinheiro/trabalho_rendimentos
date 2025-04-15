@@ -82,6 +82,17 @@ classes_simples <- c(
 
 classes_acumuladas <- c(paste0("Até ", percentis), "Total")
 
+#grupos_idade = c(
+#	"14-17",
+#	"18-19",
+#	"20-24",
+#	"25-29",
+#	"30-39",
+#	"40-49",
+#	"50-59",
+#	"60+"
+#)
+
 grupos_idade = c(
 	"14-17",
 	"18-24",
@@ -89,6 +100,16 @@ grupos_idade = c(
 	"40-49",
 	"50+"
 )
+
+#niveis_instrucao = c(
+#	"Sem instrucao",
+#	"Fund. incompleto",
+#	"Fund. completo",
+#	"Medio incompleto",
+#	"Medio completo",
+#	"Sup. incompleto",
+#	"Sup. completo"
+#)
 
 niveis_instrucao = c(
 	"Sem instrucao + Fund. incompleto",
@@ -372,6 +393,7 @@ ad_grupos_idade <- function(idade) {
 	cut(
 		idade,
 		breaks = c(13, 17, 24, 39, 49, Inf),
+		#breaks = c(13, 17, 19, 24, 29, 39, 49, 59, Inf),
 		labels = grupos_idade,
 		right = TRUE
 	)
@@ -444,8 +466,8 @@ gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- paste0("tab_", tabelas)
-	variaveis <- unique(                   # idade
-		c(unlist(variaveis[tabelas]), "UF", "V2009")
+	variaveis <- unique(
+		c(unlist(variaveis[tabelas]), "UF")
 	)
 	
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)

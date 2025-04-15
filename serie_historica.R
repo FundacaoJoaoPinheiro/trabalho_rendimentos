@@ -610,6 +610,7 @@ for (obj in objetos) {
 
 		sublista[[1]] <- fmt_estrato(sublista[[1]])
 		sublista[[2]] <- fmt_estrato(sublista[[2]])
+		sublista[[2]] <- fmt_porcent(sublista[[2]])
 
 		if (obj %in% objetos_pop) {
 			sublista[[1]] <- fmt_pop(sublista[[1]])
