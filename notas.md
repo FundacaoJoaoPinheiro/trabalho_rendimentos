@@ -51,6 +51,33 @@ acima de 20%), 7548 (2 NA's);
 ## Não consegui reproduzir os CV's
 * RPDC: 7527, 7530
 
+## Série histórica de 2012 a 2023:
+
+* tabelas com cv's acima de 30 (ou NA/NaN):
+	- 7441(2023:1);
+	- 7442(2021:1);
+	- 7443(2020:1,2022:1);
+	- 7457(2015:19,2016:8,2017:8,2019:8,2020:8,2021:8,2022:8,2023:8);
+	- 7531(2023:1);
+	- 7548(2014:2,2015:1,2016:1,2017:1,2018:3,2019:2,2020:3,2021:1,2022:1,2022:1,
+2023:1);
+	- 7559(2014:2,2015:3,2016:2;2017:3;2018:4;2019:4;2020:7,2021:1,2022:2,2023:2);
+
+* Observações CV's: para programs sociais os CV's ficaram especialmente altos
+na categoria "Outros". Não foram altos pros anos da pandemia, 2020 e 2021.
+Comparei os anos de 2020 a 2023 da tabela 7457 e apenas 2022 não bateu.
+Na tabela 7559 os cv's altos ficaram concentrados em "Até P5". A tabela 7562
+é análoga à 7559, só que para rendimento habitualmente recebido; neste segundo
+caso, não teve nenhum cv acima de 30% ou NA/NaN, embora os cv's acima de 15%
+também estão concentrados em "Até P5".
+
+* Observações por tabela:
+- 7429:
+	+ cv's: em geral cv's acima de 15% estão concentrados em "Outros Rendimentos";
+cv's mais altos em 2015.
+	+ valores: trabalho 70-75% e outras fontes 20-25%; participação da
+aposentadoria estranhamente baixa em 2015.
+
 # Variáveis utilizadas
 
 | Variável     | Descrição
