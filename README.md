@@ -1,4 +1,4 @@
-# Projeto: Estatísticas experimentais de mercado de trabalho para o estratos geográficos de Minas Gerais
+# Projeto: Estatísticas experimentais de mercado de trabalho para o estratos geográficos de Minas Gerais - anual
 
 Projeto desenvolvido pela **Coordenação de Indicadores Sociais da Diretoria de Estatística e Informações da Fundação João Pinheiro / Grupo de Pesquisa em Estatística Públicas (EstatPúblicas)**.  
 
@@ -9,7 +9,7 @@ Projeto desenvolvido pela **Coordenação de Indicadores Sociais da Diretoria de
 ## Conteúdo do Diretório
 Nesse diretório são apresentados os scripts em R que reproduzem as tabelas do SIDRA do tema
 "Rendimento de todas as fontes" (referentes à  PNAD contínua anual,
-5ª visiita), adicionando o recorte territorial dos estratos geográficos de
+5ª visita), adicionando o recorte territorial dos estratos geográficos de
 Minas Gerais.
 
 ## Requisitos
