@@ -1,21 +1,25 @@
-# EM CONSTRUÇÃO
+# Projeto: Estatísticas experimentais de mercado de trabalho para o estratos geográficos de Minas Gerais
 
-# Pesquisa Nacional por Amostra de Domicílios Contínua Anual
+Projeto desenvolvido pela **Coordenação de Indicadores Sociais da Diretoria de Estatística e Informações da Fundação João Pinheiro / Grupo de Pesquisa em Estatística Públicas (EstatPúblicas)**.  
 
-Scripts em R que reproduzem as tabelas do SIDRA do tema
-"Rendimento de todas as fontes" (referentes à PNAD contínua anual,
+**Objetivo:** Estudar a qualidade das informações da Pesquisa Nacional por Amostra de Domicílios Contínua Anual (PNAD Contínua) em estratos geográficos de Minas Gerais.  
+
+**Financiamento:** FAPEMIG  
+
+## Conteúdo do Diretório
+Nesse diretório são apresentados os scripts em R que reproduzem as tabelas do SIDRA do tema
+"Rendimento de todas as fontes" (referentes à  PNAD contínua anual,
 5ª visiita), adicionando o recorte territorial dos estratos geográficos de
 Minas Gerais.
 
-# Requisitos
+## Requisitos
+- **R** (versão >= 4.1.0)
+- Pacotes R necessários:
+  - [`PNADcIBGE`](https://cran.r-project.org/web/packages/PNADcIBGE/index.html) (para acesso aos microdados da PNAD Contínua)
+  - [`survey`](https://cran.r-project.org/web/packages/survey/index.html) (para análise de dados amostrais complexos)
+  - *Opcional*: [`sidrar`](https://cran.r-project.org/web/packages/sidrar/index.html) (para comparação com tabelas oficiais do SIDRA)
 
-- R >= 4.1.0
-- [PNADcIBGE](https://cran.r-project.org/web/packages/PNADcIBGE/index.html)
-- [survey](https://cran.r-project.org/web/packages/survey/index.html)
-
-- opcional: [sidrar](https://cran.r-project.org/web/packages/sidrar/index.html)).
-
-# Instruções
+## Instruções
 
 O arquivo `utilitarios.R` define alguns objetos e funções que podem ser utilizados
 manualmente. Abaixo, seguem alguns exemplos de como utilizar essas funções.
@@ -338,10 +342,19 @@ das pessoas por rendimento domiciliar per capita, a preços médios do
 ## Notas Técnicas Relevantes
 
 - [Sobre a composição da variável renda domiciliar per capita](https://www.ibge.gov.br/novo-portal-destaques/25466-pnad-continua-mudanca-no-calculo-do-rendimento-domiciliar.html)
-- 
 
 ## Links úteis:
 
 - [Tabelas de referência](https://sidra.ibge.gov.br/pesquisa/pnadca/tabelas)
 - [Pacote do R para análise da PNADc](https://rpubs.com/gabriel-assuncao-ibge/pnadc)
 - [PNADcIBGE Renda Domiciliar Per Capita](https://github.com/Gabriel-Assuncao/PNADcIBGE-RDPC/tree/main)
+
+## Equipe Técnica:
+- Coordenação de Indicadores Sociais: Caio Gonçalves
+- Núcleo de Emprego, Renda, Educação e Gênero: Nícia Raies
+- Desenvolvimento dos Scripts: João Paulo Garcia
+
+## Dúvidas ou Contribuições
+Abra uma issue neste repositório ou contate-nos via: dados@fjp.mg.gov.br
+
+
