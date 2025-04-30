@@ -206,7 +206,7 @@ variaveis <- list(
 # abreviar a função svyby()
 estimar_por <- function(desenho, formula, por = ~Estrato.Geo, FUN) {
 
-	estimativa <- svyby(
+	por_estrato <- svyby(
 		formula = as.formula(formula),
 		by = update.formula(por, ~ . + Estrato.Geo),
 		design = desenho,
@@ -216,15 +216,8 @@ estimar_por <- function(desenho, formula, por = ~Estrato.Geo, FUN) {
 		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
-	levels(estimativa$Estrato.Geo) <- c(
-		levels(estimativa$Estrato.Geo),
-		"Minas Gerais"
-	)
 
-	if (por == ~Estrato.Geo) {
-		por <- ~UF
-	}
-	estimativa_mg <- svyby(
+	por_uf <- svyby(
 		formula = as.formula(formula),
 		by = update.formula(por, ~ . + UF),
 		design = desenho,
@@ -234,9 +227,14 @@ estimar_por <- function(desenho, formula, por = ~Estrato.Geo, FUN) {
 		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
-	colnames(por_mg) <- colnames(por_estrato)
-
-	resultado <- rbind(por_estrato, por_mg)
+	
+	colnames(por_uf) <- colnames(por_estrato)
+	por_uf$Estrato.Geo <- "Minas Gerais"
+	levels(por_estrato$Estrato.Geo) <- c(
+		levels(por_estrato$Estrato.Geo),
+		"Minas Gerais"
+	)
+	resultado <- rbind(por_estrato, por_uf)
 
 	return(resultado)
 }

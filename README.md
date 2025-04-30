@@ -52,290 +52,290 @@ as tabelas disponíveis no SIDRA (opcinonalmente, utilizando o pacote
 
 ## Tabelas reproduzidas
 
-- Tabela 7426 (x) - População residente com rendimento, por tipo de rendimento
+- Tabela 7426 - População residente com rendimento, por tipo de rendimento
 
-- Tabela 7427 (x) - Massa de rendimento mensal real domiciliar per capita,
+- Tabela 7427 - Massa de rendimento mensal real domiciliar per capita,
 a preços médios do último ano, por classes simples de percentual das
 pessoas em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7428 (x) - Massa de rendimento mensal real domiciliar per capita,
+- Tabela 7428 - Massa de rendimento mensal real domiciliar per capita,
 a preços médios do ano, por classes simples de percentual das pessoas
 em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7429 (x) - Participação percentual na composição do rendimento
+- Tabela 7429 - Participação percentual na composição do rendimento
 médio mensal real domiciliar per capita, a preços médios do ano, por
 tipo de rendimento
 
-- Tabela 7430 (-) - Massa de rendimento mensal real das pessoas de 14 anos ou
+- Tabela 7430 - Massa de rendimento mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos
 
-- Tabela 7431 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7431 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento, por cor ou raça
 
-- Tabela 7432 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7432 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento, por grupo de idade
 
-- Tabela 7433 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7433 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento, por nível de instrução
 
-- Tabela 7434 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7434 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento, por sexo
 
-- Tabela 7435 (x) - Índice de Gini do rendimento domiciliar per capita,
+- Tabela 7435 - Índice de Gini do rendimento domiciliar per capita,
 a preços médios do ano
 
-- Tabela 7436 (x) - População residente
+- Tabela 7436 - População residente
 
-- Tabela 7437 (x) - Rendimento médio mensal real da população residente
+- Tabela 7437 - Rendimento médio mensal real da população residente
 com rendimento, por tipo de rendimento
 
-- Tabela 7438 (x) - Limites superiores das classes de percentual das pessoas em
+- Tabela 7438 - Limites superiores das classes de percentual das pessoas em
 ordem crescente de rendimento domiciliar per capita, a preços médios do ano
 
-- Tabela 7439 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7439 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento e responsáveis pelo domicílio
 
-- Tabela 7441 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7441 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos, a preços médios do último ano, por cor ou raça
 
-- Tabela 7442 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7442 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos, a preços médios do último ano, por grupo de idade
 
-- Tabela 7443 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7443 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos, a preços médios do último ano, por nível de
 instrução
 
-- Tabela 7444 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7444 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 de todos os trabalhos, a preços médios do último ano, por sexo
 
-- Tabela 7445 (x) - Rendimento médio mensal real das pessoas de 14 anos
+- Tabela 7445 - Rendimento médio mensal real das pessoas de 14 anos
 ou mais de idade ocupadas na semana de referência com rendimento de
 trabalho, de todos os trabalhos, a preços médios do último ano, por
 tipo de área geográfica
 
-- Tabela 7446 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7446 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho
 e responsáveis pelo domicílio, de todos os trabalhos, a preços médios
 do último ano
 
-- Tabela 7447 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+- Tabela 7447 - Pessoas de 10 anos ou mais de idade cujo domicílio possui
 algum morador que recebeu rendimento do Programa Bolsa Família, por nível
 de instrução
 
-- Tabela 7448 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio não
+- Tabela 7448 - Pessoas de 10 anos ou mais de idade cujo domicílio não
 possui morador que recebeu rendimento do Programa Bolsa Família, por
 nível de instrução
 
-- Tabela 7449 (x) - Domicílios em que algum morador do domicílio recebeu
+- Tabela 7449 - Domicílios em que algum morador do domicílio recebeu
 rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
 serviços
 
-- Tabela 7450 (x) - Domicílios em que nenhum morador do domicílio recebeu
+- Tabela 7450 - Domicílios em que nenhum morador do domicílio recebeu
 rendimento do Programa Bolsa Família, por posse ou acesso a bens ou
 serviços
 
-- Tabela 7451 (x) - Domicílios em que algum morador do domicílio recebeu
+- Tabela 7451 - Domicílios em que algum morador do domicílio recebeu
 rendimento do Benefício de Prestação Continuada, por posse ou acesso
 a bens ou serviços
 
-- Tabela 7452 (x) - Domicílios em que nenhum morador do domicílio recebeu
+- Tabela 7452 - Domicílios em que nenhum morador do domicílio recebeu
 rendimento do Benefício de Prestação Continuada, por posse ou acesso
 a bens ou serviços
 
-- Tabela 7453 (x) - Índice de Gini do rendimento médio mensal real das
+- Tabela 7453 - Índice de Gini do rendimento médio mensal real das
 pessoas de 14 anos ou mais de idade ocupadas na semana de referência
 com rendimento de trabalho, habitualmente recebido em todos os trabalhos,
 a preços médios do ano
 
-- Tabela 7454 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio possui
+- Tabela 7454 - Pessoas de 10 anos ou mais de idade cujo domicílio possui
 algum morador que recebeu rendimento do Benefício de Prestação Continuada,
 por nível de instrução
 
-- Tabela 7455 (x) - Pessoas de 10 anos ou mais de idade cujo domicílio
+- Tabela 7455 - Pessoas de 10 anos ou mais de idade cujo domicílio
 não possui morador que recebeu rendimento do Benefício de Prestação
 Continuada, por nível de instrução
 
-- Tabela 7456 (x) - Número médio de moradores por domicílio, por recebimento
+- Tabela 7456 - Número médio de moradores por domicílio, por recebimento
 de rendimento de programa social e tipo de programa social
 
-- Tabela 7457 (x) - Domicílios, por recebimento de rendimento de programa
+- Tabela 7457 - Domicílios, por recebimento de rendimento de programa
 social e tipo de programa social
 
-- Tabela 7458 (x) - Rendimento médio mensal real domiciliar per capita, a
+- Tabela 7458 - Rendimento médio mensal real domiciliar per capita, a
 preços médios do último ano, por recebimento de rendimento de programa
 social e tipo de programa social
 
-- Tabela 7521 (x) - População residente, por classes simples de percentual
+- Tabela 7521 - População residente, por classes simples de percentual
 das pessoas por rendimento domiciliar per capita, a preços médios do ano
 
-- Tabela 7526 (x) - Limites superiores das classes de percentual das pessoas
+- Tabela 7526 - Limites superiores das classes de percentual das pessoas
 em ordem crescente de rendimento domiciliar per capita, a preços médios
 do último ano
 
-- Tabela 7527 (x) - Distribuição da massa de rendimento mensal real domiciliar
+- Tabela 7527 - Distribuição da massa de rendimento mensal real domiciliar
 per capita, a preços médios do ano, por classes simples de percentual
 das pessoas em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7529 (x) - População residente, por classes simples de percentual
+- Tabela 7529 - População residente, por classes simples de percentual
 das pessoas por rendimento domiciliar per capita, a preços médios do
 último ano
 
-- Tabela 7530 (x) - Distribuição da massa de rendimento mensal real domiciliar
+- Tabela 7530 - Distribuição da massa de rendimento mensal real domiciliar
 per capita, a preços médios do ano, por classes acumuladas de percentual
 das pessoas em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7531 (x) - Rendimento médio mensal real domiciliar per capita,
+- Tabela 7531 - Rendimento médio mensal real domiciliar per capita,
 a preços médios do ano, por classes simples de percentual das pessoas
 em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7532 (x) - Rendimento médio mensal real domiciliar per capita, a
+- Tabela 7532 - Rendimento médio mensal real domiciliar per capita, a
 preços médios do ano, por classes acumuladas de percentual das pessoas
 em ordem crescente de rendimento domiciliar per capita
 
-- Tabel 7533 (x) - Rendimento médio mensal real domiciliar per capita,
+- Tabel 7533 - Rendimento médio mensal real domiciliar per capita,
 a preços médios do último ano, por classes simples de percentual das
 pessoas em ordem crescente de rendimento domiciliar per capita
 
-- Tabel 7534 (x) - Rendimento médio mensal real domiciliar per capita, a
+- Tabel 7534 - Rendimento médio mensal real domiciliar per capita, a
 preços médios do último ano, por classes acumuladas de percentual das
 pessoas em ordem crescente de rendimento domiciliar per capita
 
-- Tabela 7535 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7535 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 habitualmente recebido em todos os trabalhos, a preços médios do ano, por
 classes simples de percentual das pessoas em ordem crescente de rendimento
 habitualmente recebido
 
-- Tabela 7536 (x) - Limites superiores das classes de percentual das pessoas
+- Tabela 7536 - Limites superiores das classes de percentual das pessoas
 em ordem crescente de rendimento habitualmente recebido, a preços médios
 do ano
 
-- Tabela 7537 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7537 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento de trabalho, por classes simples de percentual
 das pessoas em ordem crescente de rendimento habitualmente recebido,
 a preços médios do ano
 
-- Tabela 7538 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7538 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 habitualmente recebido em todos os trabalhos, a preços médios do ano,
 por classes acumuladas de percentual das pessoas em ordem crescente de
 rendimento habitualmente recebido
 
-- Tabela 7539 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7539 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 habitualmente recebido em todos os trabalhos, a preços médios do último
 ano, por classes simples de percentual das pessoas em ordem crescente de
 rendimento habitualmente recebido
 
-- Tabela 7540 (x) - Limites superiores das classes de percentual das pessoas
+- Tabela 7540 - Limites superiores das classes de percentual das pessoas
 em ordem crescente de rendimento habitualmente recebido, a preços médios
 do último ano
 
-- Tabela 7541 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7541 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento de trabalho, por classes simples de percentual
 das pessoas em ordem crescente de rendimento habitualmente recebido,
 a preços médios do último ano
 
-- Tabela 7542 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7542 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 habitualmente recebido em todos os trabalhos, a preços médios do último
 ano, por classes acumuladas de percentual das pessoas em ordem crescente
 de rendimento habitualmente recebido
 
-- Tabela 7543 (-) - Distribuição da massa de rendimento mensal real das
+- Tabela 7543 - Distribuição da massa de rendimento mensal real das
 pessoas de 14 anos ou mais de idade ocupadas na semana de referência
 com rendimento de trabalho, habitualmente recebido em todos os trabalhos,
 a preços médios do ano, por classes simples de percentual das pessoas
 em ordem crescente de rendimento habitualmente recebido
 
-- Tabela 7544 (x) - Distribuição da massa de rendimento mensal real das
+- Tabela 7544 - Distribuição da massa de rendimento mensal real das
 pessoas de 14 anos ou mais de idade ocupadas na semana de referência com
 rendimento de trabalho, habitualmente recebido em todos os trabalhos, a
 preços médios do ano, por classes acumuladas de percentual das pessoas
 em ordem crescente de rendimento habitualmente recebido
 
-- Tabela 7545 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7545 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 efetivamente recebido em todos os trabalhos, a preços médios do ano, por
 classes simples de percentual das pessoas em ordem crescente de rendimento
 efetivamente recebido
 
-- Tabela 7546 (x) - Limites superiores das classes de percentual das pessoas em
+- Tabela 7546 - Limites superiores das classes de percentual das pessoas em
 ordem crescente de rendimento efetivamente recebido, a preços médios do ano
 
-- Tabela 7547 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7547 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento de trabalho, por classes simples de percentual
 das pessoas em ordem crescente de rendimento efetivamente recebido,
 a preços médios do ano
 
-- Tabela 7548 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7548 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 efetivamente recebido em todos os trabalhos, a preços médios do ano,
 por classes acumuladas de percentual das pessoas em ordem crescente de
 rendimento efetivamente recebido
 
-- Tabela 7549 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7549 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 efetivamente recebido em todos os trabalhos, a preços médios do último
 ano, por classes simples de percentual das pessoas em ordem crescente de
 rendimento efetivamente recebido
 
-- Tabela 7550 (x) - Limites superiores das classes de percentual das pessoas
+- Tabela 7550 - Limites superiores das classes de percentual das pessoas
 em ordem crescente de rendimento efetivamente recebido, a preços médios
 do último ano
 
-- Tabela 7551 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana de
+- Tabela 7551 - Pessoas de 14 anos ou mais de idade ocupadas na semana de
 referência com rendimento de trabalho, por classes simples de percentual
 das pessoas em ordem crescente de rendimento efetivamente recebido,
 a preços médios do último ano
 
-- Tabela 7552 (x) - Rendimento médio mensal real das pessoas de 14 anos ou
+- Tabela 7552 - Rendimento médio mensal real das pessoas de 14 anos ou
 mais de idade ocupadas na semana de referência com rendimento de trabalho,
 efetivamente recebido em todos os trabalhos, a preços médios do último
 ano, por classes acumuladas de percentual das pessoas em ordem crescente
 de rendimento efetivamente recebido
 
-- Tabela 7553 (x) - Distribuição da massa de rendimento mensal real das
+- Tabela 7553 - Distribuição da massa de rendimento mensal real das
 pessoas de 14 anos ou mais de idade ocupadas na semana de referência
 com rendimento de trabalho, efetivamente recebido em todos os trabalhos,
 a preços médios do ano, por classes simples de percentual das pessoas
 em ordem crescente de rendimento efetivamente recebido
 
-- Tabela 7554 (x) - Distribuição da massa de rendimento mensal real das
+- Tabela 7554 - Distribuição da massa de rendimento mensal real das
 pessoas de 14 anos ou mais de idade ocupadas na semana de referência
 com rendimento de trabalho, efetivamente recebido em todos os trabalhos,
 a preços médios do ano, por classes acumuladas de percentual das pessoas
 em ordem crescente de rendimento efetivamente recebido
 
-- Tabela 7559 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana
+- Tabela 7559 - Pessoas de 14 anos ou mais de idade ocupadas na semana
 de referência com rendimento de trabalho, por classes acumuladas de
 percentual das pessoas em ordem crescente de rendimento efetivamente
 recebido, a preços médios do ano
 
-- Tabela 7560 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana
+- Tabela 7560 - Pessoas de 14 anos ou mais de idade ocupadas na semana
 de referência com rendimento de trabalho, por classes acumuladas de
 percentual das pessoas em ordem crescente de rendimento efetivamente
 recebido, a preços médios do último ano
 
-- Tabela 7561 (x) - População residente, por classes acumuladas de percentual
+- Tabela 7561 - População residente, por classes acumuladas de percentual
 das pessoas por rendimento domiciliar per capita, a preços médios do ano
 
-- Tabela 7562 (x) - Pessoas de 14 anos ou mais de idade ocupadas na semana
+- Tabela 7562 - Pessoas de 14 anos ou mais de idade ocupadas na semana
 de referência com rendimento de trabalho, por classes acumuladas de
 percentual das pessoas em ordem crescente de rendimento habitualmente
 recebido, a preços médios do ano
 
-- Tabela 7563 (-) - Pessoas de 14 anos ou mais de idade ocupadas na semana
+- Tabela 7563 - Pessoas de 14 anos ou mais de idade ocupadas na semana
 de referência com rendimento de trabalho, por classes acumuladas de
 percentual das pessoas em ordem crescente de rendimento habitualmente
 recebido, a preços médios do último ano
 
-- Tabela 7564 (x) - População residente, por classes acumuladas de percentual
+- Tabela 7564 - População residente, por classes acumuladas de percentual
 das pessoas por rendimento domiciliar per capita, a preços médios do
 último ano
 
