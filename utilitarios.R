@@ -203,49 +203,58 @@ variaveis <- list(
 #----------------------------------------------------------
 # FUNÇÕES
 
-# estimar totais por Estrato.Geo
-estimar_totais <- function(desenho, formula, por = ~Estrato.Geo) {
-	por = update.formula(por, ~ . + Estrato.Geo)
-	svyby(
+# abreviar a função svyby()
+estimar_por <- function(desenho, formula, por = ~Estrato.Geo, FUN) {
+
+	estimativa <- svyby(
 		formula = as.formula(formula),
-		by = as.formula(por),
+		by = update.formula(por, ~ . + Estrato.Geo),
 		design = desenho,
-		FUN = svytotal,
+		FUN = FUN,
 		vartype = "cv",
 		keep.names = FALSE,
 		drop.empty.groups = FALSE,
 		na.rm = TRUE
 	)
+	levels(estimativa$Estrato.Geo) <- c(
+		levels(estimativa$Estrato.Geo),
+		"Minas Gerais"
+	)
+
+	if (por == ~Estrato.Geo) {
+		por <- ~UF
+	}
+	estimativa_mg <- svyby(
+		formula = as.formula(formula),
+		by = update.formula(por, ~ . + UF),
+		design = desenho,
+		FUN = FUN,
+		vartype = "cv",
+		keep.names = FALSE,
+		drop.empty.groups = FALSE,
+		na.rm = TRUE
+	)
+	colnames(por_mg) <- colnames(por_estrato)
+
+	resultado <- rbind(por_estrato, por_mg)
+
+	return(resultado)
+}
+
+
+# estimar totais por Estrato.Geo
+estimar_totais <- function(desenho, formula, por) {
+	estimar_por(desenho, formula, por, FUN = svytotal)
 }
 
 # estimar médias por Estrato.Geo
 estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
-	por = update.formula(por, ~ . + Estrato.Geo)
-	svyby(
-		formula = as.formula(formula),
-		by = as.formula(por),
-		design = desenho,
-		FUN = svymean,
-		vartype = "cv",
-		keep.names = FALSE,
-		drop.empty.groups = FALSE,
-		na.rm = TRUE
-	)
+	estimar_por(desenho, formula, por, FUN = svymean)
 }
 
 # estimar quantis das classes percentuais simples e Estrato.Geo
 estimar_quantis <- function(desenho, formula) {
-	svyby(
-		formula,
-		by = ~Estrato.Geo,
-		design = desenho,
-		FUN = svyquantile,
-		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
-		vartype = "cv",
-		keep.names = FALSE,
-		drop.empty.groups = FALSE,
-		na.rm = TRUE
-	)
+	estimar_por(desenho, formula, por, FUN = svyquantile)
 }
 
 estimar_cap <- function(desenho, formula, csp) {
@@ -258,16 +267,16 @@ estimar_cap <- function(desenho, formula, csp) {
 
 	# agrupar valores e CV's dos data frames da lista
 	valores <- data.frame(
-		estratos_geo,     # selecionar coluna de valores
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(cap_list, `[`, 2))
 	)
 	cvs <- data.frame(
-		estratos_geo,     # selecionar coluna de CV's
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(cap_list, `[`, 3))
 	)
 
-	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
-	colnames(cvs) <- c("Estrato Geografico", classes_acumuladas)
+	colnames(valores) <- c("Região", classes_acumuladas)
+	colnames(cvs) <- c("Região", classes_acumuladas)
 
 	return(list(valores, cvs))
 }
@@ -298,7 +307,7 @@ estimar_interacao <- function(desenho, formula, FUN, vars) {
 # formatar tabelas SIDRA
 fmt_estrato <- function(df) {
 	df[[1]] <- estratos_geo
-	colnames(df)[1] <- "Estrato Geografico"
+	colnames(df)[1] <- "Região"
 	return(df)
 }
 fmt_porcent <- function(df) {
