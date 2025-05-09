@@ -23,28 +23,20 @@ saida <- "saida/serie_historica/"
 titulos <- c(
 	"7429 - Participação das fontes no RMe domiciliar per capita",
 	"7435 - Índice de Gini do rendimento domiciliar per capita",
-	"7453 - Índice de Gini do rendimento médio habitualmente recebido",
-	"7431 - População ocupada por cor/raça",
-	"7434 - População ocupada por sexo",
-	"7457 - Total de domicílios, por recebimento e tipo de programa social",
-	"7559 - População por classe acumulada de rendimento efetivo",
-	"7562 - População por classe acumulada de rendimento habitual",
-	"7441 - Rendimento médio real por cor ou raça",
-	"7442 - Rendimento médio real por grupo de idade",
 	"7443 - Rendimento médio real por nível de instrução",
-	"7444 - Rendimento médio real por sexo",
-	"7446 - Rendimento médio real de pessoas responsáveis pelo domícilio",
+	"7453 - Índice de Gini do rendimento médio habitualmente recebido",
 	"7531 - RMe real domiciliar per capita, por classe simples de percentual",
 	"7538 - Rendimento habitual médio por classe acumulada de percentual",
-	"7548 - Rendimento habitual médio por classe acumulada de percentual"
+	"7548 - Rendimento habitual médio por classe acumulada de percentual",
+	"7559 - População por classe acumulada de rendimento efetivo",
+	"7562 - População por classe acumulada de rendimento habitual"
 )
 
 # ---------------------------------------------------------------------
 # IMPORTAR E PREPARAR DADOS
 
-serie <- 2012:2023
-tabelas <- c(7429, 7431, 7434, 7435, 7441, 7442, 7443, 7444,
-	7446, 7453, 7457, 7531, 7538, 7548, 7559, 7562)
+serie <- 2012:2024
+tabelas <- c(7429, 7435, 7443, 7453, 7531, 7538, 7548, 7559, 7562)
 
 # Adicionar colunas de rendimento
 lista_desenhos <- lapply(serie, function(ano) {
@@ -119,37 +111,29 @@ limites_vd4020 <- lapply(
 lista_desenhos <- lapply(seq_along(lista_desenhos), function(idx) {
 	desenho <- lista_desenhos[[idx]]
 
-	desenho$variables <- transform(
+	desenho$variables <- ad_classes_simples(
 		desenho$variables,
-		VD5008.Classe = ad_classes_simples(
-			renda = VD5008.Real,
-			geo = Estrato.Geo,
-			limites = limites_vd5008[[idx]]
-		),
-		VD4019.Classe = ad_classes_simples(
-			VD4019.Real,
-			Estrato.Geo,
-			limites_vd4019[[idx]]
-		),
-		VD4020.Classe = ad_classes_simples(
-			VD4020.Real,
-			Estrato.Geo,
-			limites_vd4020[[idx]]
-		)
+		renda = "VD4019",
+		limites_vd4019[[idx]]
+	)
+	desenho$variables <- ad_classes_simples(
+		desenho$variables,
+		renda = "VD4020",
+		limites_vd4020[[idx]]
+	)
+	desenho$variables <- ad_classes_simples(
+		desenho$variables,
+		renda = "VD5008",
+		limites_vd5008[[idx]]
 	)
 
 	return(desenho)
 })
 
-# grupos de idade, níveis de instrução, cor/raça e ocupação
+# níveis de instrução
 niveis_vd3004 <- levels(lista_desenhos[[1]][["variables"]][["VD3004"]])
 
 lista_desenhos <- lapply(lista_desenhos, function(desenho) {
-
-	desenho$variables <- transform(
-		desenho$variables,
-		Grupo.de.Idade = ad_grupos_idade(idade = V2009)
-	)
 
 	desenho$variables <- transform(
 		desenho$variables,
@@ -161,67 +145,6 @@ lista_desenhos <- lapply(lista_desenhos, function(desenho) {
 				VD3004 %in% niveis_vd3004[7],   niveis_instrucao[4]
 			),
 			levels = niveis_instrucao
-		)
-	)
-	
-	desenho$variables <- transform(
-		desenho$variables,
-		Cor.ou.Raca = factor(
-			cases(
-				V2010 %in% c("Preta", "Parda"), "Negra",
-				V2010 == "Branca", "Branca",
-				TRUE, "Outra"
-			)
-		)
-	)
-
-	desenho$variables <- transform(
-		desenho$variables,
-		Pessoa.Ocupada = ifelse(VD4019 > 0, 1, 0)
-	)
-
-	return(desenho)
-})
-
-# programas socias
-lista_desenhos <- lapply(lista_desenhos, function(desenho) {
-
-	variaveis_necessarias <- c("V5001A", "V5002A", "V5003A")
-	if(!all(variaveis_necessarias %in% names(desenho$variables))) {
-		return(desenho)
-	}
-
-	# indica se ao menos um morador do domicílio recebe Bolsa Família
-	desenho$variables <- transform(
-		desenho$variables,
-		Domicilio.Bolsa.Familia = factor(
-			ifelse(
-				ID_DOMICILIO %in% unique(ID_DOMICILIO[V5002A == "Sim"]),
-				"Sim", "Não"
-			),
-			levels = c("Sim", "Não")
-		)
-	)
-
-	desenho$variables <- transform(
-		desenho$variables,
-		Domicilio.BPC = factor(
-			ifelse(
-				ID_DOMICILIO %in% unique(ID_DOMICILIO[V5001A == "Sim"]),
-				"Sim", "Não"
-			),
-			levels = c("Sim", "Não")
-		)
-	)
-
-	desenho$variables <- transform(
-		desenho$variables,
-		Domicilio.Outros.Programas = factor(
-			ifelse(
-				ID_DOMICILIO %in% unique(ID_DOMICILIO[V5003A == "Sim"]),
-				"Sim", "Não"
-			),
-			levels = c("Sim", "Não")
 		)
 	)
 
@@ -236,21 +159,16 @@ names(lista_desenhos) <- paste0("desenho_", serie)
 # 7429 - participação % de cada fonte no rendimento médio domiciliar per capita
 tab_7429 <- lapply(lista_desenhos, function(desenho){
 
-	variaveis_necessarias <- c("V5001A", "V5002A", "V5003A")
+	variaveis_necessarias <- "Outros.Rendimentos.DPC"
 	if(!all(variaveis_necessarias %in% names(desenho$variables))) {
 		return(NULL)
 	}
 
-	part_rdpc <- svyby(
-		~VD5008 + VD4019.DPC + VD4048.DPC + V5004A2.DPC + Outros.Rendimentos.DPC,
-		by = ~Estrato.Geo,
-		denominator = ~VD5008,
-		design = subset(desenho, V2005.Rendimento == 1),
-		FUN = svyratio,
-		vartype = "cv",
-		keep.names = FALSE,
-		drop.empty.groups = FALSE,
-		na.rm = TRUE
+	part_rdpc <- estimar_razao(
+		desenho = subset(desenho, V2005.Rendimento == 1),
+		numerador = ~VD5008 + VD4019.DPC + VD4048.DPC + V5004A2.DPC +
+			Outros.Rendimentos.DPC,
+		denominador = ~VD5008
 	)
 	part_rdpc[2:6] <- round(part_rdpc[2:6] * 100, 2)    # porcentagem
 
@@ -264,59 +182,12 @@ tab_7429 <- lapply(lista_desenhos, function(desenho){
 })
 names(tab_7429) <- paste0("sidra_", serie)
 
-# 7431 - população ocupada por cor/raça
-tab_7431 <- lapply(lista_desenhos, function(desenho){
-
-	ocupada_cor <- estimar_totais(
-		desenho = subset(desenho, Pessoa.Ocupada == 1),
-		formula = ~Cor.ou.Raca
-	)
-
-	valores <- ocupada_cor[, c(1, 2:3)]
-	coefvar <- ocupada_cor[, c(1, 5:6)]
-
-	colnames(valores)[-1] <- c("Branca", "Negra")
-	colnames(coefvar)[-1] <- c("Branca", "Negra")
-
-	return(list(valores, coefvar))
-})
-names(tab_7431) <- paste0("sidra_", serie)
-
-# 7434 - população ocupada por sexo
-tab_7434 <- lapply(lista_desenhos, function(desenho){
-
-	ocupada_sexo <- estimar_totais(
-		subset(desenho, Pessoa.Ocupada == 1),
-		~V2007
-	)
-
-	valores <- data.frame(
-		"Estrato Geografico" = estratos_geo,
-		"Homens" = ocupada_sexo[[2]],
-		"Mulheres" = ocupada_sexo[[3]]
-	)
-
-	coefvar <- data.frame(
-		"Estrato Geografico" = estratos_geo,
-		"Homens" = ocupada_sexo[[4]],
-		"Mulheres" = ocupada_sexo[[5]]
-	)
-
-	return(list(valores, coefvar))
-})
-names(tab_7434) <- paste0("sidra_", serie)
-
 # 7435 - Índice de Gini do rendimento domiciliar p/ capita
 tab_7435 <- lapply(lista_desenhos, function(desenho){
 
-	gini_vd5008real <- svyby(
-		~VD5008.Real,
-		~Estrato.Geo,
+	gini_vd5008real <- estimar_gini(
 		subset(desenho, V2005.Rendimento == 1),
-		FUN = svygini,
-		keep.names = FALSE,	
-		vartype = "cv",
-		na.rm = TRUE
+		~VD5008.Real
 	)
 
 	valores <- gini_vd5008real[, -3]
@@ -330,52 +201,14 @@ tab_7435 <- lapply(lista_desenhos, function(desenho){
 })
 names(tab_7435) <- paste0("sidra_", serie)
 
-# 7441 - Rendimento médio real por cor ou raça
-tab_7441 <- lapply(lista_desenhos, function(desenho){
-	
-	rme_cor <- estimar_medias(
-		subset(
-			desenho,
-			VD4019 > 0 & Cor.ou.Raca != "Outra"
-		),
-		~VD4019.Real,
-		~Cor.ou.Raca
-	)
-	rme_cor <- subset(rme_cor, Cor.ou.Raca != "Outra")
-	rme_cor$Cor.ou.Raca <- droplevels(rme_cor$Cor.ou.Raca)
-
-	valores <- reshape_wide(rme_cor[, -4])
-	coefvar <- reshape_wide(rme_cor[, -3])
-
-	return(list(valores, coefvar))
-})
-names(tab_7441) <- paste0("sidra_", serie)
-
-# 7442 - Rendimento médio real por grupo de idade
-tab_7442 <- lapply(lista_desenhos, function(desenho){
-
-	rme_idade <- estimar_medias(
-		subset(desenho, VD4019 > 0),
-		~VD4019.Real,
-		~Grupo.de.Idade
-	)
-
-	valores <- reshape_wide(rme_idade[, -4])
-	coefvar <- reshape_wide(rme_idade[, -3])
-
-	return(list(valores, coefvar))
-})
-names(tab_7442) <- paste0("sidra_", serie)
-
 # 7443 - Rendimento médio real por nível de instrução
 tab_7443 <- lapply(lista_desenhos, function(desenho){
 
 	rme_instrucao <- estimar_medias(
-		subset(desenho, VD4019 > 0),
+		desenho,
 		~VD4019.Real,
-		~Nivel.de.Instrucao
+		por1 = ~Nivel.de.Instrucao
 	)
-	levels(rme_instrucao[1]) <- niveis_instrucao
 
 	valores <- reshape_wide(rme_instrucao[, -4])
 	coefvar <- reshape_wide(rme_instrucao[, -3])
@@ -384,105 +217,30 @@ tab_7443 <- lapply(lista_desenhos, function(desenho){
 })
 names(tab_7443) <- paste0("sidra_", serie)
 
-# 7444 - Rendimento médio real por sexo
-tab_7444 <- lapply(lista_desenhos, function(desenho){
-
-	rme_sexo <- estimar_medias(
-		subset(desenho, VD4019 > 0),
-		~VD4019.Real,
-		~V2007
-	)
-
-	valores <- reshape_wide(rme_sexo[-4])
-	coefvar <- reshape_wide(rme_sexo[-3])
-
-	return(list(valores, coefvar))
-})
-names(tab_7444) <- paste0("sidra_", serie)
-
-# 7446 - Rendimento médio real de pessoas responsáveis pelo domícilio
-tab_7446 <- lapply(lista_desenhos, function(desenho){
-
-	rme_responsavel <- estimar_medias(
-		subset(
-			desenho,
-			VD4019 > 0 & V2005 == "Pessoa responsável pelo domicílio"
-		),
-		~VD4019.Real
-	)
-
-	valores <- rme_responsavel[-3]
-	colnames(valores) <- c("Estrato Geografico", "Rendimento Médio")
-
-	coefvar <- rme_responsavel[, -2]
-	colnames(coefvar) <- c("Estrato Geografico", "cv")
-
-	return(list(valores, coefvar))
-})
-names(tab_7446) <- paste0("sidra_", serie)
-
 # 7453 - Índice de Gini do rendimento médio habitualmente recebido
 tab_7453 <- lapply(lista_desenhos, function(desenho){
 
-	gini_vd4019RMe <- svyby(
-		~VD4019.Real,
-		~Estrato.Geo,
-		desenho,
-		FUN = svygini,
-		vartype = "cv",
-		keep.names = FALSE,
-		na.rm = TRUE
-	)
-
-	valores <- gini_vd4019RMe[, -3]
+	gini_vd4019real <- estimar_gini(subset(desenho, VD4019 > 0), ~VD4019.Real)
+	
+	valores <- gini_vd4019real[, -3]
 	colnames(valores) <- c("Estrato Geografico", "Indice de Gini")
 	valores[[2]] <- round(valores[[2]], 3)
 
-	coefvar <- gini_vd4019RMe[, -2]
+	coefvar <- gini_vd4019real[, -2]
 	colnames(coefvar) <- c("Estrato Geografico", "cv")
 
 	return(list(valores, coefvar))
 })
 names(tab_7453) <- paste0("sidra_", serie)
 
-# 7457 - Total de domicílios, por recebimento e tipo de programa social
-tab_7457 <- lapply(lista_desenhos, function(desenho){
-
-	variaveis_necessarias <- c("V5001A", "V5002A", "V5003A")
-	if(!all(variaveis_necessarias %in% names(desenho$variables))) {
-		return(NULL)
-	}
-
-	dom_progs <- estimar_interacao(
-		subset(desenho, V2005 == "Pessoa responsável pelo domicílio"),
-		~V2005 == "Pessoa responsável pelo domicílio",
-		FUN = svytotal,
-		c("Domicilio.Bolsa.Familia", "Domicilio.BPC", "Domicilio.Outros.Programas")
-	)
-	# remover colunas em que o teste foi FALSE
-	dom_progs <- lapply(dom_progs, `[`, c(-2, -4))
-	dom_progs <- agrupar_progs(dom_progs)
-
-	valores <- Reduce(
-		function(...) merge(..., sort = FALSE),
-		dom_progs[[1]]
-	)
-	coefvar  <- Reduce(
-		function(...) merge(..., sort = FALSE),
-		dom_progs[[2]]
-	)
-
-	return(list(valores, coefvar))
-})
-names(tab_7457) <- paste0("sidra_", serie)
-
 # 7531 - RMe real domiciliar per capita, por classe simples
 tab_7531 <- lapply(lista_desenhos, function(desenho){
 
 	rme_vd5008classe <- estimar_medias(
 		subset(desenho, V2005.Rendimento == 1),
-		~VD5008.Real,
-		~VD5008.Classe
+		formula = ~VD5008.Real,
+		por1 = ~VD5008.Classe,
+		por2 = ~VD5008.Classe.MG
 	)
 
 	valores <- reshape_wide(rme_vd5008classe[, -4])
@@ -527,29 +285,46 @@ names(tab_7548) <- paste0("sidra_", serie)
 # 7559 - população por classe acumulada de rendimento efetivo
 tab_7559 <- lapply(lista_desenhos, function(desenho){
 
-	ocupada_csp_e <- estimar_totais(desenho, ~VD4020.Classe)
+	ocupada_csp_e <- estimar_totais(
+		desenho,
+		form1 = ~VD4020.Classe,
+		form2 = ~VD4020.Classe.MG
+	)
+
 	ocupada_cap_e <- vector("list", 13)
 	ocupada_cap_e[[1]] <- ocupada_csp_e[, c(2, 15)]
 
 	for (i in 2:13) {
+
 		sub_desenho <- subset(
 			desenho,
 			VD4020.Classe %in% classes_simples[1:i]
 		)
-	    valores <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    ocupada_cap_e[[i]] <- cbind(valores, cv(valores))
-	    colnames(ocupada_cap_e[[i]]) <- c(classes_acumuladas[i], "cv")
+	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
+	    estimativa <- cbind(coef(estimativa), cv(estimativa))
+	    colnames(estimativa) <- c(classes_acumuladas[i], "cv")
+
+		sub_desenho <- subset(
+			desenho,
+			VD4020.Classe.MG %in% classes_simples[1:i]
+		)
+	    linha_mg <- svytotal(~(VD4020 > 0), sub_desenho, na.rm = TRUE)
+	    linha_mg <- cbind(coef(linha_mg)[2], cv(linha_mg)[2])
+	    colnames(linha_mg) <- c(classes_acumuladas[i], "cv")
+
+	    ocupada_cap_e[[i]] <- rbind(estimativa, linha_mg)
+	    row.names(ocupada_cap_e[[i]]) <- NULL
 	}
 	rm(sub_desenho, valores)
 
 	valores <- data.frame(
-		estratos_geo,
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 1]))
 	)
 	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
 
 	coefvar <- data.frame(
-		estratos_geo,
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 2]))
 	)
 	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
@@ -561,29 +336,46 @@ names(tab_7559) <- paste0("sidra_", serie)
 # 7562 - população por classe acumulada de rendimento habitual
 tab_7562 <- lapply(lista_desenhos, function(desenho){
 
-	ocupada_csp_h <- estimar_totais(desenho, ~VD4019.Classe)
+	ocupada_csp_h <- estimar_totais(
+		desenho,
+		form1 = ~VD4020.Classe,
+		form2 = ~VD4020.Classe.MG
+	)
+
 	ocupada_cap_h <- vector("list", 13)
 	ocupada_cap_h[[1]] <- ocupada_csp_h[, c(2, 15)]
 
 	for (i in 2:13) {
+
 		sub_desenho <- subset(
 			desenho,
 			VD4019.Classe %in% classes_simples[1:i]
 		)
-	    valores <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    ocupada_cap_h[[i]] <- cbind(valores, cv(valores))
-	    colnames(ocupada_cap_h[[i]]) <- c(classes_acumuladas[i], "cv")
+	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
+	    estimativa <- cbind(coef(estimativa), cv(estimativa))
+	    colnames(estimativa) <- c(classes_acumuladas[i], "cv")
+
+		sub_desenho <- subset(
+			desenho,
+			VD4019.Classe.MG %in% classes_simples[1:i]
+		)
+	    linha_mg <- svytotal(~(VD4019 > 0), sub_desenho, na.rm = TRUE)
+	    linha_mg <- cbind(coef(linha_mg)[2], cv(linha_mg)[2])
+	    colnames(linha_mg) <- c(classes_acumuladas[i], "cv")
+
+	    ocupada_cap_h[[i]] <- rbind(estimativa, linha_mg)
+	    row.names(ocupada_cap_h[[i]]) <- NULL
 	}
 	rm(sub_desenho, valores)
 
 	valores <- data.frame(
-		estratos_geo,
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 1]))
 	)
 	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
 
 	coefvar <- data.frame(
-		estratos_geo,
+		c(estratos_geo, "Minas Gerais"),
 		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 2]))
 	)
 	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
