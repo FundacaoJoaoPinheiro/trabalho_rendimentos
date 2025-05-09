@@ -6,7 +6,6 @@
 # OBJETOS
 
 # Caminhos
-pnadc_ano <- 2023
 entrada <- "entrada"
 deflator  <- list.files(entrada, pattern = "^deflator", full.names = TRUE)
 
@@ -203,65 +202,190 @@ variaveis <- list(
 #----------------------------------------------------------
 # FUNÇÕES
 
-# abreviar a função svyby()
-estimar_por <- function(desenho, formula, por = ~Estrato.Geo, FUN) {
-
-	por_estrato <- svyby(
-		formula = as.formula(formula),
-		by = update.formula(por, ~ . + Estrato.Geo),
+# abreviar a função svyby() e adicionar estimativas para MG
+estimar_por <- function(desenho, formula, por, FUN, ...) {
+	svyby(
+		formula,
+		by = por,
 		design = desenho,
 		FUN = FUN,
 		vartype = "cv",
 		keep.names = FALSE,
 		drop.empty.groups = FALSE,
-		na.rm = TRUE
+		na.rm = TRUE,
+		...
 	)
+}
 
-	por_uf <- svyby(
-		formula = as.formula(formula),
-		by = update.formula(por, ~ . + UF),
-		design = desenho,
-		FUN = FUN,
-		vartype = "cv",
-		keep.names = FALSE,
-		drop.empty.groups = FALSE,
-		na.rm = TRUE
-	)
+# abreviar estimativas para Minas Gerais
+estimar_mg <- function(desenho, formula, FUN, ...) {
+
+	estimativa_mg <- FUN(formula, design = desenho, na.rm = TRUE, ...)
 	
-	colnames(por_uf) <- colnames(por_estrato)
-	por_uf$Estrato.Geo <- "Minas Gerais"
-	levels(por_estrato$Estrato.Geo) <- c(
-		levels(por_estrato$Estrato.Geo),
-		"Minas Gerais"
+	linha_mg <- data.frame(
+		"Minas Gerais",
+		t(coef(estimativa_mg)),
+		t(cv(estimativa_mg)),
+		check.names = FALSE
 	)
-	resultado <- rbind(por_estrato, por_uf)
 
+	return(linha_mg)
+}
+
+# estimar totais por estrato geografico
+estimar_totais <- function(desenho, form1, form2 = form1, por = ~Estrato.Geo) {
+	
+	estimativa1 <- estimar_por(
+		desenho,
+		formula = form1,
+		por = update.formula(por, ~ . + Estrato.Geo),
+		FUN = svytotal
+	)
+	levels(estimativa1$Estrato.Geo) <- c(
+		levels(estimativa1$Estrato.Geo),
+		"Minas Gerias"
+	)
+
+	if (por == ~Estrato.Geo) {
+
+		estimativa2 <- estimar_mg(desenho, form2, svytotal)
+		colnames(estimativa2) <- colnames(estimativa1)
+
+	} else {
+		estimativa2 <- estimar_por(desenho, form2, por, FUN = svytotal)
+		estimativa2$Estrato.Geo <- "Minas Gerais"
+		colnames(estimativa2)[1] <- colnames(estimativa1)[1]
+		estimativa2 <- estimativa2[, colnames(estimativa1)]
+	}
+
+	resultado <- rbind(estimativa1, estimativa2)
 	return(resultado)
 }
 
+# estimar médias por estrato geografico
+estimar_medias <- function(desenho, formula, por1 = ~Estrato.Geo, por2 = por1) {
 
-# estimar totais por Estrato.Geo
-estimar_totais <- function(desenho, formula, por) {
-	estimar_por(desenho, formula, por, FUN = svytotal)
-}
+	por <- update.formula(por1, ~ . + Estrato.Geo)
+	estimativa1 <- estimar_por(desenho, formula, por, FUN = svymean)
+	levels(estimativa1$Estrato.Geo) <- c(
+			levels(estimativa1$Estrato.Geo),
+		"Minas Gerias"
+	)
 
-# estimar médias por Estrato.Geo
-estimar_medias <- function(desenho, formula, por = ~Estrato.Geo) {
-	estimar_por(desenho, formula, por, FUN = svymean)
+	if (identical(por1, ~Estrato.Geo)) {
+
+		estimativa2 <- estimar_mg(desenho, formula, FUN = svymean)
+		colnames(estimativa2) <- colnames(estimativa1)
+
+	} else {
+
+		por <- por2
+		estimativa2 <- estimar_por(desenho, formula, por, FUN = svymean)
+		estimativa2$Estrato.Geo <- "Minas Gerais"
+		colnames(estimativa2)[1] <- colnames(estimativa1)[1]
+		estimativa2 <- estimativa2[, colnames(estimativa1)]
+
+	}
+
+	resultado <- rbind(estimativa1, estimativa2)
+	return(resultado)
 }
 
 # estimar quantis das classes percentuais simples e Estrato.Geo
 estimar_quantis <- function(desenho, formula) {
-	estimar_por(desenho, formula, por, FUN = svyquantile)
+
+	estimativa <- estimar_por(
+		desenho,
+		formula,
+		por = ~Estrato.Geo,
+		FUN = svyquantile,
+		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99)
+	)
+	levels(estimativa$Estrato.Geo) <- c(estratos_geo, "Minas Gerais")
+	estimativa$Estrato.Geo <- as.factor(estratos_geo)
+
+	linha_mg <- estimar_mg(
+		desenho,
+		formula,
+		FUN = svyquantile,
+		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99),
+	)
+	colnames(linha_mg) <- colnames(estimativa)
+
+	resultado <- rbind(estimativa, linha_mg)
+	return(resultado)
 }
 
+# estimar razão/proporção por estrato geográfico e MG
+estimar_razao <- function(desenho, numerador, denominador) {
+
+	estimativa <- estimar_por(
+		desenho = desenho,
+		formula = numerador,
+		denominator = denominador,
+		por = ~Estrato.Geo,
+		FUN = svyratio
+	)
+	estimativa[[1]] <- as.factor(estratos_geo)
+	levels(estimativa[[1]]) <- c(estratos_geo, "Minas Gerais")
+
+	linha_mg <- estimar_mg(
+		desenho,
+		numerador,
+		denominator = denominador,
+		FUN = svyratio
+	)
+	colnames(linha_mg) <- colnames(estimativa)
+
+	resultado <- rbind(estimativa, linha_mg)
+	return(resultado)
+}
+
+# estimar gini, por estrato geográfico
+estimar_gini <- function(desenho, formula) {
+
+	estimativa <- estimar_por(
+		desenho,
+		formula,
+		por = ~Estrato.Geo,
+		FUN = svygini
+	)
+	levels(estimativa$Estrato.Geo) <- c(estratos_geo, "Minas Gerais")
+	estimativa$Estrato.Geo <- as.factor(estratos_geo)
+
+	linha_mg <- estimar_mg(
+		desenho,
+		formula,
+		FUN = svygini
+	)
+	colnames(linha_mg) <- colnames(estimativa)
+
+	resultado <- rbind(estimativa, linha_mg)
+	return(resultado)
+}
+
+# estimar quantis das classes percentuais acumuladas e Estrato.Geo
 estimar_cap <- function(desenho, formula, csp) {
+
+	csp_mg <- paste0(csp, ".MG")
 
 	cap_list <- vector("list", 13)
 	for (i in 1:13) {
+
 	    sub_desenho <- subset(desenho, get(csp) %in% classes_simples[1:i])
-	    cap_list[[i]] <- estimar_medias(sub_desenho, formula)
-	}
+	    estimativa <- estimar_por(
+	    	sub_desenho,
+		    formula,
+		    por = ~Estrato.Geo,
+		    FUN = svymean
+	    )
+
+	    sub_desenho <- subset(desenho, get(csp_mg) %in% classes_simples[1:i])
+	    linha_mg <- estimar_mg(sub_desenho, formula, FUN = svymean)
+	    colnames(linha_mg) <- colnames(estimativa)
+
+	    cap_list[[i]] <- rbind(estimativa, linha_mg)
+    }
 
 	# agrupar valores e CV's dos data frames da lista
 	valores <- data.frame(
@@ -273,8 +397,8 @@ estimar_cap <- function(desenho, formula, csp) {
 		do.call(cbind, lapply(cap_list, `[`, 3))
 	)
 
-	colnames(valores) <- c("Região", classes_acumuladas)
-	colnames(cvs) <- c("Região", classes_acumuladas)
+	colnames(valores)[-1] <- classes_acumuladas
+	colnames(cvs)[-1] <- classes_acumuladas
 
 	return(list(valores, cvs))
 }
@@ -291,8 +415,8 @@ estimar_interacao <- function(desenho, formula, FUN, vars) {
 	)
 
 	svybys(
+		formula,
 		design = desenho,
-		formula = formula,
 		bys = interacao,
 		FUN = FUN,
 		vartype = "cv",
@@ -304,8 +428,8 @@ estimar_interacao <- function(desenho, formula, FUN, vars) {
 
 # formatar tabelas SIDRA
 fmt_estrato <- function(df) {
-	df[[1]] <- estratos_geo
-	colnames(df)[1] <- "Região"
+	df[[1]] <- c(estratos_geo, "Minas Gerais")
+	colnames(df)[1] <- "Região de MG"
 	return(df)
 }
 fmt_porcent <- function(df) {
@@ -327,7 +451,7 @@ reshape_wide <- function(df, timevar_pos = 1) {
 		timevar = colnames(df)[timevar_pos]
 	)
 	# adicionar os nomes das colunas e excluir nomes de linhas
-	colnames(resultado) <- c("Estrato Geografico", levels(df[[timevar_pos]]))
+	colnames(resultado)[-1] <- levels(df[[timevar_pos]])
 	rownames(resultado) <- NULL
 	return(resultado)
 }
@@ -367,33 +491,44 @@ agrupar_progs <- function(lista) {
 }
 
 # `faixas` : coluna com as faixas simples
-# `limites`: lista com os limites superiores por Estrato.Geo
-ad_classes_simples <- function(renda, geo, limites) {
-
-	# garantir que os CV's não estão inclusos
-	limites <- limites[1:13]
+# `limites`: lista com os limites superiores por estrato geografico
+ad_classes_simples <- function(df, renda, limites) {
 
 	# criar listas com um item por unidade territorial
-	renda_geo <- split(renda, geo)
-	limites_geo <- split(limites[, -1], limites[[1]])
-	limites_geo <- lapply(limites_geo, as.numeric)
-
-	classes_geo <- Map(
-		function(y, lim) {
-			cut(
-				y,
-				breaks = c(-Inf, lim, Inf),
-				labels = classes_simples,
-				right = FALSE,
-				include.lowest = TRUE
-			)
-		},
-		renda_geo,
-		limites_geo
-	)
+	renda_real <- df[[paste0(renda, ".Real")]]
+	renda_estrato <- split(renda_real, df$Estrato.Geo)
 	
-	resultado <- unsplit(classes_geo, geo)
-	return(resultado)
+	limites_estrato <- limites[seq(length(estratos_geo)), 1:13]
+	limites_estrato$Estrato.Geo <- droplevels(limites_estrato$Estrato.Geo)
+	limites_estrato <- split(limites_estrato[, -1], limites_estrato[[1]])
+	limites_estrato <- lapply(limites_estrato, as.numeric)
+
+	classes_estrato <- Map(
+		function(r, lim) {
+			idx <- findInterval(
+				r,
+				vec = c(-Inf, lim, Inf),
+				left.open = FALSE,
+				rightmost.closed = FALSE
+			)
+			factor(classes_simples[idx], levels = classes_simples)
+		},
+		renda_estrato,
+		limites_estrato
+	)
+
+	limites_mg <- as.numeric(limites[length(estratos_geo) + 1, 2:13])
+	idx_mg <- findInterval(
+		renda_real,
+		vec = c(-Inf, limites_mg, Inf),
+		left.open = FALSE,
+		rightmost.closed = FALSE
+	)
+	classes_mg <- factor(classes_simples[idx_mg], levels = classes_simples)
+	
+	df[[paste0(renda, ".Classe")]] <- unsplit(classes_estrato, df$Estrato.Geo)
+	df[[paste0(renda, ".Classe.MG")]] <- classes_mg
+	return(df)
 }
 
 ad_grupos_idade <- function(idade) {
@@ -466,9 +601,9 @@ cases <- function(...) {
 # gera desenho amostral
 # `tabelas` : um vetor com número das tabelas cujas variáveis serão importadas;
 # `ano`     : ano da pesquisa (numérico)
-gerar_desenho <- function(ano = pnadc_ano, tabelas) {
+gerar_desenho <- function(ano = 2023, tabelas) {
 
-	# importar dados da 1a visita, com exceção dos anos 2020 e 2021 (5a visita)
+	# importar dados da 5a visita para 2020 e 2021; 5a visita nos demais anos
 	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
 
 	# definir variáveis com base nas tabelas passadas como argumentos
@@ -486,8 +621,8 @@ gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 	if (!dir.exists(pnadc_dir)) {
 
 		dir.create(pnadc_dir, recursive = TRUE)
-		desenho <- get_pnadc(
-			year = pnadc_ano,
+		amostra <- get_pnadc(
+			year = ano,
 			interview = visita,
 			design = FALSE,     # ver abaixo pnadc_design()
 			vars = variaveis,
@@ -505,23 +640,23 @@ gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 			full.names = TRUE
 		)
 
-		desenho <- read_pnadc(
+		amostra <- read_pnadc(
 			microdata = microdados,
 			input = input,
 			vars = variaveis
 		)
-		desenho <- pnadc_labeller(
-			data_pnadc = desenho ,
+		amostra <- pnadc_labeller(
+			data_pnadc = amostra ,
 			dictionary.file = dicionario
 		)
 		if (requer_deflator) {
-			desenho <- pnadc_deflator(desenho, deflator.file = deflator)
+			amostra <- pnadc_deflator(amostra, deflator.file = deflator)
 		}
 	}
 
 	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
-	desenho <- pnadc_design(subset(desenho, UF == "Minas Gerais"))
-	desenho$variables$Estrato.Geo <- droplevels(desenho$variables$UF)
+	desenho <- pnadc_design(subset(amostra, UF == "Minas Gerais"))
+	desenho$variables$MG <- 1
 	desenho$variables <- transform(
 		desenho$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))
