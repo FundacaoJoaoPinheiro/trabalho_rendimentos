@@ -428,7 +428,7 @@ titulos <- setNames(
         c(objetos)
 )
 
-linhas <- length(estratos_geo)
+linhas <- length(estratos_geo) + 1
 
 # um arquivo .xlsx por tabela; uma aba por ano da série.
 # tabelas de valores e CV's na mesma aba.
@@ -465,15 +465,15 @@ for (obj in objetos) {
 		writeData(wb, ano, titulo_val, startCol = 1, startRow = 1)
 		writeData(wb, ano, valores   , startCol = 1, startRow = 2)
 		
-		writeData(wb, ano, titulo_cv , startCol = 1, startRow = linhas + 4)
-		writeData(wb, ano, coefvar   , startCol = 1, startRow = linhas + 5)
+		writeData(wb, ano, titulo_cv , startCol = 1, startRow = linhas + 5)
+		writeData(wb, ano, coefvar   , startCol = 1, startRow = linhas + 6)
 
 		# destaque para CVs altos
 		for (col in 2:ncol(coefvar)) {
 			conditionalFormatting(
 				wb, sheet = ano,
 				cols = col,
-				rows = (linhas + 6):(2 * linhas + 6),
+				rows = (linhas + 7):(2 * linhas + 7),
 				rule = ">15",
 				style = estilo_cv_alto,
 				type = "expression"
