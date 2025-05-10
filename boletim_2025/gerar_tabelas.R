@@ -23,19 +23,17 @@ saida <- "saida/serie_historica/"
 titulos <- c(
 	"7429 - Participação das fontes no RMe domiciliar per capita",
 	"7435 - Índice de Gini do rendimento domiciliar per capita",
-	"7443 - Rendimento médio real por nível de instrução",
+	"7443 - Rendimento habitual médio real mensal por nível de instrução",
 	"7453 - Índice de Gini do rendimento médio habitualmente recebido",
-	"7531 - RMe real domiciliar per capita, por classe simples de percentual",
-	"7538 - Rendimento habitual médio por classe acumulada de percentual",
-	"7548 - Rendimento habitual médio por classe acumulada de percentual",
-	"7559 - População por classe acumulada de rendimento efetivo",
-	"7562 - População por classe acumulada de rendimento habitual"
+	"7531 - RMe real mensal domiciliar per capita, por classe simples de percentual",
+	"7538 - Rendimento habitual médio real mensal por classe acumulada de percentual"
 )
 
 # ---------------------------------------------------------------------
 # IMPORTAR E PREPARAR DADOS
 
 serie <- 2012:2024
+pnadc_ano <- serie[length(serie)]
 tabelas <- c(7429, 7435, 7443, 7453, 7531, 7538, 7548, 7559, 7562)
 
 # Adicionar colunas de rendimento
@@ -64,9 +62,12 @@ lista_desenhos <- lapply(serie, function(ano) {
 	# deflacionar
 	desenho$variables <- transform(
 		desenho$variables,
-		VD4019.Real = VD4019 * CO1,    # habitualmente recebido de trabalho
-		VD4020.Real = VD4020 * CO1e,   # efetivamente recebido de trabalho
-		VD4048.Real = VD4048 * CO1e    # efetivamente recebido de outras fontes
+		# habitualmente recebido de trabalho
+		VD4019.Real = VD4019 * ifelse(ano == pnadc_ano, 1, CO1),
+		# efetivamente recebido de trabalho
+		VD4020.Real = VD4020 * ifelse(ano == pnadc_ano, 1, CO1e),
+		# efetivamente recebido de outras fontes
+		VD4048.Real = VD4048 * ifelse(ano == pnadc_ano, 1, CO1e)
 	)
 	desenho$variables <- transform(    # recebido de todas as fontes
 		desenho$variables,
@@ -246,6 +247,10 @@ tab_7531 <- lapply(lista_desenhos, function(desenho){
 	valores <- reshape_wide(rme_vd5008classe[, -4])
 	coefvar <- reshape_wide(rme_vd5008classe[, -3])
 
+	total <- estimar_medias(desenho, ~VD5008.Real)
+	valores$Total <- total[[2]]
+	coefvar$Total <- total[[3]]
+
 	return(list(valores, coefvar))
 })
 names(tab_7531) <- paste0("sidra_", serie)
@@ -254,7 +259,7 @@ names(tab_7531) <- paste0("sidra_", serie)
 tab_7538 <- lapply(lista_desenhos, function(desenho){
 
 	rme_vd4019cap <- estimar_cap(
-		desenho = subset(desenho, VD4019 > 0),
+		desenho = desenho,
 		formula = ~VD4019.Real,
 		csp = "VD4019.Classe"
 	)
@@ -262,127 +267,13 @@ tab_7538 <- lapply(lista_desenhos, function(desenho){
 	valores <- rme_vd4019cap[[1]]
 	coefvar  <- rme_vd4019cap[[2]]
 
+	total <- estimar_medias(desenho, ~VD4019.Real)
+	valores$Total <- total[[2]]
+	coefvar$Total <- total[[3]]
+
 	return(list(valores, coefvar))
 })
 names(tab_7538) <- paste0("sidra_", serie)
-
-# 7548 - Rendimento habitual médio por classe acumulada de percentual
-tab_7548 <- lapply(lista_desenhos, function(desenho){
-
-	rme_vd4020cap <- estimar_cap(
-		subset(desenho, VD4020 > 0),
-		~VD4020.Real,
-		"VD4020.Classe"
-	)
-
-	valores <- rme_vd4020cap[[1]]
-	coefvar  <- rme_vd4020cap[[2]]
-
-	return(list(valores, coefvar))
-})
-names(tab_7548) <- paste0("sidra_", serie)
-
-# 7559 - população por classe acumulada de rendimento efetivo
-tab_7559 <- lapply(lista_desenhos, function(desenho){
-
-	ocupada_csp_e <- estimar_totais(
-		desenho,
-		form1 = ~VD4020.Classe,
-		form2 = ~VD4020.Classe.MG
-	)
-
-	ocupada_cap_e <- vector("list", 13)
-	ocupada_cap_e[[1]] <- ocupada_csp_e[, c(2, 15)]
-
-	for (i in 2:13) {
-
-		sub_desenho <- subset(
-			desenho,
-			VD4020.Classe %in% classes_simples[1:i]
-		)
-	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    estimativa <- cbind(coef(estimativa), cv(estimativa))
-	    colnames(estimativa) <- c(classes_acumuladas[i], "cv")
-
-		sub_desenho <- subset(
-			desenho,
-			VD4020.Classe.MG %in% classes_simples[1:i]
-		)
-	    linha_mg <- svytotal(~(VD4020 > 0), sub_desenho, na.rm = TRUE)
-	    linha_mg <- cbind(coef(linha_mg)[2], cv(linha_mg)[2])
-	    colnames(linha_mg) <- c(classes_acumuladas[i], "cv")
-
-	    ocupada_cap_e[[i]] <- rbind(estimativa, linha_mg)
-	    row.names(ocupada_cap_e[[i]]) <- NULL
-	}
-	rm(sub_desenho, valores)
-
-	valores <- data.frame(
-		c(estratos_geo, "Minas Gerais"),
-		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 1]))
-	)
-	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
-
-	coefvar <- data.frame(
-		c(estratos_geo, "Minas Gerais"),
-		do.call(cbind, lapply(ocupada_cap_e, function(x) x[, 2]))
-	)
-	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
-
-	return(list(valores, coefvar))
-})
-names(tab_7559) <- paste0("sidra_", serie)
-
-# 7562 - população por classe acumulada de rendimento habitual
-tab_7562 <- lapply(lista_desenhos, function(desenho){
-
-	ocupada_csp_h <- estimar_totais(
-		desenho,
-		form1 = ~VD4020.Classe,
-		form2 = ~VD4020.Classe.MG
-	)
-
-	ocupada_cap_h <- vector("list", 13)
-	ocupada_cap_h[[1]] <- ocupada_csp_h[, c(2, 15)]
-
-	for (i in 2:13) {
-
-		sub_desenho <- subset(
-			desenho,
-			VD4019.Classe %in% classes_simples[1:i]
-		)
-	    estimativa <- svytotal(~Estrato.Geo, sub_desenho, na.rm = TRUE)
-	    estimativa <- cbind(coef(estimativa), cv(estimativa))
-	    colnames(estimativa) <- c(classes_acumuladas[i], "cv")
-
-		sub_desenho <- subset(
-			desenho,
-			VD4019.Classe.MG %in% classes_simples[1:i]
-		)
-	    linha_mg <- svytotal(~(VD4019 > 0), sub_desenho, na.rm = TRUE)
-	    linha_mg <- cbind(coef(linha_mg)[2], cv(linha_mg)[2])
-	    colnames(linha_mg) <- c(classes_acumuladas[i], "cv")
-
-	    ocupada_cap_h[[i]] <- rbind(estimativa, linha_mg)
-	    row.names(ocupada_cap_h[[i]]) <- NULL
-	}
-	rm(sub_desenho, valores)
-
-	valores <- data.frame(
-		c(estratos_geo, "Minas Gerais"),
-		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 1]))
-	)
-	colnames(valores) <- c("Estrato Geografico", classes_acumuladas)
-
-	coefvar <- data.frame(
-		c(estratos_geo, "Minas Gerais"),
-		do.call(cbind, lapply(ocupada_cap_h, function(x) x[, 2]))
-	)
-	colnames(coefvar) <- c("Estrato Geografico", classes_acumuladas)
-
-	return(list(valores, coefvar))
-})
-names(tab_7562) <- paste0("sidra_", serie)
 
 # ---------------------------------------------------------------------
 # FORMATAR TABELAS
@@ -437,7 +328,14 @@ for (obj in objetos) {
 
 	tab_serie <- get(obj)
 	titulo <- titulos[[obj]]
-	wb <- createWorkbook()
+	caminho_arquivo <- paste0(saida, obj, ".xlsx")
+
+	if (file.exists(caminho_arquivo)) {
+		wb <- loadWorkbook(caminho_arquivo)
+	} else {
+		wb <- createWorkbook()
+	}
+
 	estilo_cv_alto <- createStyle(fontColour = "#9C0006", bgFill = "#FFC7CE")
 
 	for (i in seq_along(serie)) {
@@ -448,27 +346,25 @@ for (obj in objetos) {
 		valores <- sublista[[1]]
 		coefvar <- sublista[[2]]
 
-		# definir títulos
-		if (obj %in% objetos_gini) {
-			titulo_val <- paste0("Tabela ", titulo)
-			titulo_cv  <- paste0("CV's ", titulo, " (%)")
-		} else if (obj %in% objetos_pop) {
-			titulo_val <- paste0("Tabela ", titulo, " (Mil pessoas)")
-			titulo_cv  <- paste0("CV's ", titulo, " (%)")
-		} else {
-			titulo_val <- paste0("Tabela ", titulo, " (Reais)")
-			titulo_cv  <- paste0("CV's ", titulo, " (%)")
+		if (ano %in% names(wb)) {
+			removeWorksheet(wb, ano)
 		}
 
-		# adicionar aba e escrever dados
+		titulo_val <- paste0("Tabela ", titulo)
+		titulo_cv  <- paste0("CV's ", titulo, " (%)")
+
+		if (obj %in% objetos_pop) {
+			titulo_val <- paste0(titulo_val, " (Mil pessoas)")
+		} else if (!(obj %in% objetos_gini)) {
+			titulo_val <- paste0(titulo_val, " (Reais)")
+		}
+
 		addWorksheet(wb, ano)
 		writeData(wb, ano, titulo_val, startCol = 1, startRow = 1)
 		writeData(wb, ano, valores   , startCol = 1, startRow = 2)
-		
 		writeData(wb, ano, titulo_cv , startCol = 1, startRow = linhas + 5)
 		writeData(wb, ano, coefvar   , startCol = 1, startRow = linhas + 6)
 
-		# destaque para CVs altos
 		for (col in 2:ncol(coefvar)) {
 			conditionalFormatting(
 				wb, sheet = ano,
@@ -481,6 +377,5 @@ for (obj in objetos) {
 		}
 	}
 
-	# salvar planilha (um arquivo por objeto/tabela)
-	saveWorkbook(wb, file = paste0(saida, obj, ".xlsx"), overwrite = TRUE)
+	saveWorkbook(wb, file = caminho_arquivo, overwrite = TRUE)
 }

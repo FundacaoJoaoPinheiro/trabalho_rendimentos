@@ -5,6 +5,8 @@
 #----------------------------------------------------------
 # OBJETOS
 
+pnadc_ano <- 2024
+
 # Caminhos
 entrada <- "entrada"
 deflator  <- list.files(entrada, pattern = "^deflator", full.names = TRUE)
@@ -143,7 +145,7 @@ variaveis <- list(
 	tab_7439 = c("V2009", "VD4002", "VD4052", "V2005"),
 	tab_7441 = c("VD4019", "V2010"),
 	tab_7442 = c("VD4019", "V2009"),
-	tab_7443 = c("VD4019", "VD3004"),
+	tab_7443 = c("VD4019", "VD3004", "V4009", "V2009"),
 	tab_7444 = c("VD4019", "V2007"),
 	tab_7445 = c("V1023", "VD4019", "VD4020"),
 	tab_7446 = c("VD4019", "V2005"),
@@ -243,7 +245,7 @@ estimar_totais <- function(desenho, form1, form2 = form1, por = ~Estrato.Geo) {
 	)
 	levels(estimativa1$Estrato.Geo) <- c(
 		levels(estimativa1$Estrato.Geo),
-		"Minas Gerias"
+		"Minas Gerais"
 	)
 
 	if (por == ~Estrato.Geo) {
@@ -269,7 +271,7 @@ estimar_medias <- function(desenho, formula, por1 = ~Estrato.Geo, por2 = por1) {
 	estimativa1 <- estimar_por(desenho, formula, por, FUN = svymean)
 	levels(estimativa1$Estrato.Geo) <- c(
 			levels(estimativa1$Estrato.Geo),
-		"Minas Gerias"
+		"Minas Gerais"
 	)
 
 	if (identical(por1, ~Estrato.Geo)) {
@@ -301,8 +303,10 @@ estimar_quantis <- function(desenho, formula) {
 		FUN = svyquantile,
 		quantiles = c(0.05, seq(0.10, 0.90, by = 0.10), 0.95, 0.99)
 	)
-	levels(estimativa$Estrato.Geo) <- c(estratos_geo, "Minas Gerais")
-	estimativa$Estrato.Geo <- as.factor(estratos_geo)
+	levels(estimativa$Estrato.Geo) <- c(
+		levels(estimativa$Estrato.Geo),
+		"Minas Gerais"
+	)
 
 	linha_mg <- estimar_mg(
 		desenho,
@@ -327,7 +331,10 @@ estimar_razao <- function(desenho, numerador, denominador) {
 		FUN = svyratio
 	)
 	estimativa[[1]] <- as.factor(estratos_geo)
-	levels(estimativa[[1]]) <- c(estratos_geo, "Minas Gerais")
+	levels(estimativa$Estrato.Geo) <- c(
+		levels(estimativa$Estrato.Geo),
+		"Minas Gerais"
+	)
 
 	linha_mg <- estimar_mg(
 		desenho,
@@ -350,8 +357,10 @@ estimar_gini <- function(desenho, formula) {
 		por = ~Estrato.Geo,
 		FUN = svygini
 	)
-	levels(estimativa$Estrato.Geo) <- c(estratos_geo, "Minas Gerais")
-	estimativa$Estrato.Geo <- as.factor(estratos_geo)
+	levels(estimativa$Estrato.Geo) <- c(
+		levels(estimativa$Estrato.Geo),
+		"Minas Gerais"
+	)
 
 	linha_mg <- estimar_mg(
 		desenho,
@@ -601,10 +610,10 @@ cases <- function(...) {
 # gera desenho amostral
 # `tabelas` : um vetor com número das tabelas cujas variáveis serão importadas;
 # `ano`     : ano da pesquisa (numérico)
-gerar_desenho <- function(ano = 2023, tabelas) {
+gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 
 	# importar dados da 5a visita para 2020 e 2021; 5a visita nos demais anos
-	visita <- ifelse(ano == 2020 | ano == 2021, 5, 1)
+	visita <- ifelse(ano == 2020 | ano == 2021 | ano == 2022, 5, 1)
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- paste0("tab_", tabelas)
