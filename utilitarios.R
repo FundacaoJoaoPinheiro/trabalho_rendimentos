@@ -5,6 +5,7 @@
 #----------------------------------------------------------
 # OBJETOS
 
+# ano mais recente disponível
 pnadc_ano <- 2024
 
 # Caminhos
@@ -213,7 +214,7 @@ estimar_por <- function(desenho, formula, por, FUN, ...) {
 		FUN = FUN,
 		vartype = "cv",
 		keep.names = FALSE,
-		drop.empty.groups = FALSE,
+		#drop.empty.groups = FALSE,
 		na.rm = TRUE,
 		...
 	)
@@ -223,7 +224,6 @@ estimar_por <- function(desenho, formula, por, FUN, ...) {
 estimar_mg <- function(desenho, formula, FUN, ...) {
 
 	estimativa_mg <- FUN(formula, design = desenho, na.rm = TRUE, ...)
-	
 	linha_mg <- data.frame(
 		"Minas Gerais",
 		t(coef(estimativa_mg)),
@@ -270,7 +270,7 @@ estimar_medias <- function(desenho, formula, por1 = ~Estrato.Geo, por2 = por1) {
 	por <- update.formula(por1, ~ . + Estrato.Geo)
 	estimativa1 <- estimar_por(desenho, formula, por, FUN = svymean)
 	levels(estimativa1$Estrato.Geo) <- c(
-			levels(estimativa1$Estrato.Geo),
+		levels(estimativa1$Estrato.Geo),
 		"Minas Gerais"
 	)
 
@@ -467,7 +467,7 @@ reshape_wide <- function(df, timevar_pos = 1) {
 
 # dividir colunas de interação criadas por svybys()  ex: dividir
 # "Pará.Sim" em "Pará" e "Sim"  e então reagrupar os dataframes da
-# lista gerada usando reshape_wide(), funcção criada acima.
+# lista gerada usando reshape_wide(), função criada acima.
 agrupar_progs <- function(lista) {
 
 	# função que será aplicada a cada item da lista gerada por svyby()
@@ -613,7 +613,7 @@ cases <- function(...) {
 gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 
 	# importar dados da 5a visita para 2020 e 2021; 5a visita nos demais anos
-	visita <- ifelse(ano == 2020 | ano == 2021 | ano == 2022, 5, 1)
+	visita <- ifelse(ano %in% 2020:2022, 5, 1)
 
 	# definir variáveis com base nas tabelas passadas como argumentos
 	tabelas <- paste0("tab_", tabelas)
@@ -624,8 +624,8 @@ gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 	# incorporar deflatores de acordo com as tabelas desejadas (TRUE ou FALSE)
 	requer_deflator <- length(setdiff(tabelas, sem_deflator)) > 0
 
-	# ler os dados
-	pnadc_dir <- file.path("entrada", ano)
+	# Ler os dados
+	pnadc_dir <- file.path(entrada, ano)
 
 	if (!dir.exists(pnadc_dir)) {
 
@@ -665,7 +665,7 @@ gerar_desenho <- function(ano = pnadc_ano, tabelas) {
 
 	# gerar desenho amostral para MG, incluindo coluna com estratos geográficos
 	desenho <- pnadc_design(subset(amostra, UF == "Minas Gerais"))
-	desenho$variables$MG <- 1
+	desenho$variables$Unitario <- 1
 	desenho$variables <- transform(
 		desenho$variables,
 		Estrato.Geo = factor(substr(Estrato, 1, 4))

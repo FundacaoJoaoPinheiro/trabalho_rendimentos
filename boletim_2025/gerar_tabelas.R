@@ -33,8 +33,7 @@ titulos <- c(
 # IMPORTAR E PREPARAR DADOS
 
 serie <- 2012:2024
-pnadc_ano <- serie[length(serie)]
-tabelas <- c(7429, 7435, 7443, 7453, 7531, 7538, 7548, 7559, 7562)
+tabelas <- c(7429, 7435, 7443, 7453, 7531, 7538)
 
 # Adicionar colunas de rendimento
 lista_desenhos <- lapply(serie, function(ano) {
@@ -63,11 +62,9 @@ lista_desenhos <- lapply(serie, function(ano) {
 	desenho$variables <- transform(
 		desenho$variables,
 		# habitualmente recebido de trabalho
-		VD4019.Real = VD4019 * ifelse(ano == pnadc_ano, 1, CO1),
-		# efetivamente recebido de trabalho
-		VD4020.Real = VD4020 * ifelse(ano == pnadc_ano, 1, CO1e),
+		VD4019.Real = VD4019 * CO1,
 		# efetivamente recebido de outras fontes
-		VD4048.Real = VD4048 * ifelse(ano == pnadc_ano, 1, CO1e)
+		VD4048.Real = VD4048 * CO1e
 	)
 	desenho$variables <- transform(    # recebido de todas as fontes
 		desenho$variables,
@@ -103,12 +100,6 @@ limites_vd4019 <- lapply(
 	function(desenho) estimar_quantis(desenho, formula = ~VD4019.Real)
 )
 
-limites_vd4020 <- lapply(
-	lista_desenhos, function(desenho) {
-		estimar_quantis(desenho, formula = ~VD4020.Real)
-	}
-)
-
 lista_desenhos <- lapply(seq_along(lista_desenhos), function(idx) {
 	desenho <- lista_desenhos[[idx]]
 
@@ -116,11 +107,6 @@ lista_desenhos <- lapply(seq_along(lista_desenhos), function(idx) {
 		desenho$variables,
 		renda = "VD4019",
 		limites_vd4019[[idx]]
-	)
-	desenho$variables <- ad_classes_simples(
-		desenho$variables,
-		renda = "VD4020",
-		limites_vd4020[[idx]]
 	)
 	desenho$variables <- ad_classes_simples(
 		desenho$variables,
@@ -212,6 +198,7 @@ tab_7443 <- lapply(lista_desenhos, function(desenho){
 	)
 
 	valores <- reshape_wide(rme_instrucao[, -4])
+	valores[-1] <- round(valores[-1], 0)
 	coefvar <- reshape_wide(rme_instrucao[, -3])
 
 	return(list(valores, coefvar))
@@ -249,6 +236,7 @@ tab_7531 <- lapply(lista_desenhos, function(desenho){
 
 	total <- estimar_medias(desenho, ~VD5008.Real)
 	valores$Total <- total[[2]]
+	valores[-1] <- round(valores[-1], 0)
 	coefvar$Total <- total[[3]]
 
 	return(list(valores, coefvar))
@@ -269,6 +257,7 @@ tab_7538 <- lapply(lista_desenhos, function(desenho){
 
 	total <- estimar_medias(desenho, ~VD4019.Real)
 	valores$Total <- total[[2]]
+	valores[-1] <- round(valores[-1], 0)
 	coefvar$Total <- total[[3]]
 
 	return(list(valores, coefvar))
@@ -280,9 +269,7 @@ names(tab_7538) <- paste0("sidra_", serie)
 
 objetos <- ls(pattern = "^tab_7")
 objetos_gini <- c("tab_7435", "tab_7453")
-objetos_pop  <- c("tab_7431", "tab_7434", "tab_7457", "tab_7559", "tab_7562")
-objetos_real <- c("tab_7441", "tab_7442", "tab_7443", "tab_7444",
-                  "tab_7446", "tab_7531", "tab_7538", "tab_7548")
+objetos_real <- c("tab_7443", "tab_7531", "tab_7538")
 
 for (obj in objetos) {
 	tab_serie <- get(obj)
@@ -294,13 +281,6 @@ for (obj in objetos) {
 		sublista[[1]] <- fmt_estrato(sublista[[1]])
 		sublista[[2]] <- fmt_estrato(sublista[[2]])
 		sublista[[2]] <- fmt_porcent(sublista[[2]])
-
-		if (obj %in% objetos_pop) {
-			sublista[[1]] <- fmt_pop(sublista[[1]])
-		}
-		if (obj %in% objetos_real) {
-			sublista[[1]][, -1] <- round(sublista[[1]][, -1], 0)
-		}
 
 		return(sublista)
 	})
@@ -353,10 +333,10 @@ for (obj in objetos) {
 		titulo_val <- paste0("Tabela ", titulo)
 		titulo_cv  <- paste0("CV's ", titulo, " (%)")
 
-		if (obj %in% objetos_pop) {
-			titulo_val <- paste0(titulo_val, " (Mil pessoas)")
-		} else if (!(obj %in% objetos_gini)) {
+		if (obj %in% objetos_real) {
 			titulo_val <- paste0(titulo_val, " (Reais)")
+		} else if (!(obj %in% objetos_gini)) {
+			titulo_val <- paste0(titulo_val, " (Índice)")
 		}
 
 		addWorksheet(wb, ano)
@@ -379,3 +359,254 @@ for (obj in objetos) {
 
 	saveWorkbook(wb, file = caminho_arquivo, overwrite = TRUE)
 }
+
+# ---------------------------------------------------------------------
+# VISUALIZAÇÃO
+
+# Carregar pacotes necessários
+library(ggplot2)
+library(RColorBrewer)
+
+# 7429 - Participação % de cada fonte no rendimento médio domiciliar per capita
+
+# Construir data.frame longo (2015–2024), ignorando "Minas Gerais" (última linha)
+dados_longos <- do.call(rbind, lapply(seq_along(tab_7429), function(i) {
+	ano <- gsub("sidra_", "", names(tab_7429)[i])
+	obj <- tab_7429[[i]][[1]]
+	
+	# Verificações
+	if (is.null(obj)) return(NULL)
+	if (!("Região de MG" %in% names(obj)) || !("Trabalho Hab." %in% names(obj))) return(NULL)
+	if (nrow(obj) == 0) return(NULL)
+	
+	# Remover a linha de "Minas Gerais"
+	obj <- obj[ obj$`Região de MG` != "Minas Gerais", ]
+	
+	data.frame(
+		Ano = ano,
+		Regiao = obj$`Região de MG`,
+		Trabalho_Hab = as.numeric(gsub(",", ".", obj$`Trabalho Hab.`))
+	)
+}))
+
+# Garantir que os anos estejam ordenados corretamente
+dados_longos$Ano <- factor(dados_longos$Ano, levels = as.character(2015:2024))
+
+# Paleta de cores para as regiões
+n_regioes <- length(unique(dados_longos$Regiao))
+cores_regioes <- brewer.pal(n = n_regioes, name = "Set3")
+
+# Criar gráfico
+ggplot(dados_longos, aes(x = Ano, y = Trabalho_Hab, fill = Regiao)) +
+	geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+	geom_text(
+		aes(label = sprintf("%.1f", Trabalho_Hab)),
+		position = position_dodge(width = 0.9),
+		vjust = -0.3,
+		size = 3
+	) +
+	scale_fill_manual(values = cores_regioes) +
+	labs(
+		title = "Participação % de cada fonte no rendimento médio domiciliar per capita",
+		x = "Ano",
+		y = "% do rendimento de Trabalho Hab.",
+		fill = "Região"
+	) +
+	theme_minimal(base_size = 12) +
+	theme(
+		axis.text.x = element_text(angle = 45, hjust = 1),
+		plot.title = element_text(face = "bold"),
+		legend.position = "bottom"
+	) +
+	guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+
+ggsave("boletim_2025/grafico_7429.png")
+
+# Minas Gerais
+
+# Extrair dados apenas de "Minas Gerais" para os anos 2015–2024
+dados_mg <- do.call(rbind, lapply(seq_along(tab_7429), function(i) {
+	ano <- gsub("sidra_", "", names(tab_7429)[i])
+	obj <- tab_7429[[i]][[1]]
+	
+	# Verificações
+	if (is.null(obj)) return(NULL)
+	if (!("Região de MG" %in% names(obj))) return(NULL)
+	if (nrow(obj) == 0) return(NULL)
+	
+	# Selecionar apenas a linha "Minas Gerais"
+	obj <- obj[ obj$`Região de MG` == "Minas Gerais", ]
+	if (nrow(obj) != 1) return(NULL)
+
+	# Converter colunas desejadas
+	data.frame(
+		Ano = ano,
+		Fonte = c("Trabalho Hab.", "Outras Fontes", "Aposentadoria", "Outros Rendimentos"),
+		Participacao = as.numeric(gsub(",", ".", unlist(obj[c("Trabalho Hab.", "Outras Fontes", "Aposentadoria", "Outros Rendimentos")])))
+	)
+}))
+
+# Garantir ordenação dos anos
+dados_mg$Ano <- factor(dados_mg$Ano, levels = as.character(2015:2024))
+
+# Cores fixas para cada fonte
+cores_fontes <- c(
+	"Trabalho Hab." = "#1b9e77",
+	"Outras Fontes" = "#66c2a5",
+	"Aposentadoria" = "#fc8d62",
+	"Outros Rendimentos" = "#8da0cb"
+)
+
+# Criar gráfico
+ggplot(dados_mg, aes(x = Ano, y = Participacao, fill = Fonte)) +
+	geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+	geom_text(
+		aes(label = sprintf("%.1f", Participacao)),
+		position = position_dodge(width = 0.9),
+		vjust = -0.3,
+		size = 3
+	) +
+	scale_fill_manual(values = cores_fontes) +
+	labs(
+		x = "Ano",
+		y = "% do rendimento",
+		fill = "Fonte"
+	) +
+	theme_minimal(base_size = 12) +
+	theme(
+		axis.text.x = element_text(angle = 45, hjust = 1),
+		plot.title = element_text(face = "bold"),
+		legend.position = "bottom"
+	) +
+	guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+
+ggsave("boletim_2025/grafico_7429_MG.png")
+
+# 7443 - Rendimento médio real por nível de instrução
+
+# Extrair tabelas de 2019 e 2024
+dados_2019 <- tab_7443[["sidra_2019"]][[1]]
+dados_2024 <- tab_7443[["sidra_2024"]][[1]]
+
+# Verificar se ambas as tabelas têm a mesma ordem de regiões
+stopifnot(identical(dados_2019$`Região de MG`, dados_2024$`Região de MG`))
+
+# Níveis de instrução que queremos comparar
+niveis_instrucao <- c(
+	"Sem instrucao + Fund. incompleto",
+	"Fund. completo + Medio incompleto",
+	"Medio completo + Sup. incompleto",
+	"Sup. completo"
+)
+
+# Construir data.frame longo com variação percentual
+dados_variacao <- do.call(rbind, lapply(niveis_instrucao, function(instrucao) {
+	valores_2019 <- as.numeric(gsub(",", ".", dados_2019[[instrucao]]))
+	valores_2024 <- as.numeric(gsub(",", ".", dados_2024[[instrucao]]))
+	
+	var_perc <- 100 * (valores_2024 - valores_2019) / valores_2019
+	
+	data.frame(
+		Regiao = dados_2019$`Região de MG`,
+		Instrucao = instrucao,
+		Variacao = var_perc
+	)
+}))
+
+# Garantir que região e instrução sejam fatores para controle de ordem, se quiser
+dados_variacao$Instrucao <- factor(
+	dados_variacao$Instrucao,
+	levels = niveis_instrucao
+)
+
+# Paleta para níveis de instrução
+cores_instrucao <- c(
+	"Sem instrucao + Fund. incompleto" = "#e41a1c",
+	"Fund. completo + Medio incompleto" = "#377eb8",
+	"Medio completo + Sup. incompleto" = "#4daf4a",
+	"Sup. completo" = "#984ea3"
+)
+dados_variacao$Regiao <- factor(
+	dados_variacao$Regiao,
+	levels = unique(dados_variacao$Regiao)  # mantém a ordem original
+)
+
+# Gráfico com ajustes
+ggplot(dados_variacao, aes(x = Regiao, y = Variacao, fill = Instrucao)) +
+	geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+	geom_text(
+		aes(label = sprintf("%.1f%%", Variacao)),
+		position = position_dodge(width = 0.9),
+		vjust = ifelse(dados_variacao$Variacao >= 0, -0.3, 1.2),
+		size = 3
+	) +
+	scale_fill_manual(values = cores_instrucao) +
+	labs(
+		title = "Variação percentual do rendimento por nível de instrução (2019–2024)",
+		x = "Região de MG",
+		y = "Variação percentual (%)",
+		fill = "Nível de instrução"
+	) +
+	theme_minimal(base_size = 12) +
+	theme(
+		axis.text.x = element_text(angle = 45, hjust = 1),
+		plot.title = element_text(face = "bold"),
+		legend.position = "bottom",
+		panel.grid.major = element_blank(),  # remove linhas horizontais maiores
+		panel.grid.minor = element_blank(),  # remove linhas horizontais menores
+		panel.grid.major.x = element_blank(),  # remove verticais também, por garantia
+		panel.grid.minor.x = element_blank()
+	) +
+	guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+
+# 7435 - Índice de Gini do rendimento domiciliar p/ capita
+
+
+# Construir data.frame longo com os dados de 2012 a 2024
+dados_gini <- do.call(rbind, lapply(names(tab_7435), function(nome) {
+	ano <- gsub("sidra_", "", nome)
+	obj <- tab_7435[[nome]][[1]]
+	
+	if (is.null(obj)) return(NULL)
+	if (!("Região de MG" %in% names(obj)) || !("Indice de Gini" %in% names(obj))) return(NULL)
+	
+	data.frame(
+		Ano = as.integer(ano),
+		Regiao = obj$`Região de MG`,
+		Gini = as.numeric(gsub(",", ".", obj$`Indice de Gini`))
+	)
+}))
+
+# Garantir ordem das regiões conforme 2024
+ordem_regioes <- tab_7435[["sidra_2024"]][[1]]$`Região de MG`
+dados_gini$Regiao <- factor(dados_gini$Regiao, levels = ordem_regioes)
+
+# Paleta semelhante ao Excel (usando tons pastéis)
+n_cores <- length(unique(dados_gini$Regiao))
+cores_excel <- brewer.pal(n = min(12, n_cores), name = "Pastel1")
+
+# Gráfico
+ggplot(dados_gini, aes(x = factor(Ano), y = Gini, fill = Regiao)) +
+	geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+	geom_text(
+		aes(label = sprintf("%.3f", Gini)),
+		position = position_dodge(width = 0.9),
+		vjust = -0.3,
+		size = 3
+	) +
+	scale_fill_manual(values = cores_excel) +
+	labs(
+		title = "Índice de Gini por região de MG (2012–2024)",
+		x = "Ano",
+		y = "Índice de Gini",
+		fill = "Região"
+	) +
+	theme_minimal(base_size = 12) +
+	theme(
+		axis.text.x = element_text(angle = 45, hjust = 1),
+		plot.title = element_text(face = "bold"),
+		legend.position = "bottom",
+		panel.grid.major.x = element_blank(),
+		panel.grid.minor.x = element_blank()
+	) +
+	guides(fill = guide_legend(nrow = 2, byrow = TRUE))
